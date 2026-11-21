@@ -100,7 +100,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Discover 81 Cities • Verified Safety • Live Rates',
+                  'Discover 81 Cities • Offline Ready • Trusted Guidance',
                   style: TextStyle(color: Colors.white60, fontSize: 13),
                 ),
                 const SizedBox(height: 36),
@@ -121,7 +121,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             right: 0,
             child: Center(
               child: Text(
-                'TDCP Verified Tourism Platform',
+                'Explore Punjab. Travel with Confidence.',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.4),
                   fontSize: 11,

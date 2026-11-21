@@ -166,10 +166,6 @@ class _CityGuideScreenState extends State<CityGuideScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).primaryColor;
     final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -338,10 +334,10 @@ class _CityGuideScreenState extends State<CityGuideScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildOverviewTab(city, isDark, cardBg, cardBorder, primaryTextColor, secondaryTextColor, primaryColor),
-            _buildPlacesTab(city, isDark, cardBg, cardBorder, primaryTextColor, secondaryTextColor, primaryColor),
-            _buildFoodAndCakesTab(city, isDark, cardBg, cardBorder, primaryTextColor, secondaryTextColor, primaryColor),
-            _buildTransportAndEmergencyTab(city, isDark, cardBg, cardBorder, primaryTextColor, secondaryTextColor, primaryColor),
+            _buildOverviewTab(city),
+            _buildPlacesTab(city),
+            _buildFoodAndCakesTab(city),
+            _buildTransportAndEmergencyTab(city),
           ],
         ),
       ),
