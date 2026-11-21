@@ -2,6 +2,7 @@ const express = require('express');
 const Place = require('../models/Place');
 const Category = require('../models/Category');
 const asyncHandler = require('../utils/asyncHandler');
+const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ router.post(
 
     const filters = await parseQuery(message);
 
-    const query = { verified: true };
+    const query = { ...publishedPlaceFilter() };
     if (filters.categoryId) query.categoryId = filters.categoryId;
     if (filters.priceRange) query.priceRange = filters.priceRange;
     if (filters.minRating) query.rating = { $gte: filters.minRating };
@@ -75,7 +76,7 @@ router.post(
 
     let usedFallback = false;
     if (places.length === 0) {
-      const fallbackQuery = { verified: true };
+      const fallbackQuery = { ...publishedPlaceFilter() };
       if (hasLocation) fallbackQuery.location = query.location;
       places = await Place.find(fallbackQuery).populate('categoryId', 'name').sort({ rating: -1 }).limit(5).lean();
       usedFallback = true;

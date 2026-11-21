@@ -7,9 +7,9 @@
 
 | Phase | Scope | Status | Evidence |
 |---|---|---|---|
-| 1 | Project audit and baseline | In progress | This document; analyze baseline (see below) |
-| 2 | Competitor + Pakistan problem research | In progress | Research agents running → `docs/COMPETITOR_RESEARCH.md`, `docs/PAKISTAN_TOURIST_PROBLEMS.md` |
-| 3 | Data audit and cleanup | Not started | — |
+| 1 | Project audit and baseline | Verified | Baseline commit `d06b3c3`/`74532e7`; analyze 0 errors/0 warnings; widget smoke test passes |
+| 2 | Competitor + Pakistan problem research | Implemented | `docs/COMPETITOR_RESEARCH.md` (12 products, 18 sources); `docs/PAKISTAN_TOURIST_PROBLEMS.md` (20 problems, 22 sources) |
+| 3 | Data audit and cleanup | Tested | `docs/DATA_AUDIT.md`; honest verification labels in seeds/offline data; `publishedPlaceFilter`; canonical category taxonomy; analyze/test green |
 | 4 | Design system, branding, splash, home | Not started | — |
 | 5 | Critical functional bug fixes | Not started | — |
 | 6 | Offline and reliability foundation | Not started | — |
@@ -38,8 +38,8 @@
 
 ### Baseline commands
 
-- `flutter analyze` — see `docs/.flutter_analyze.txt` (temporary artifact, excluded from git)
-- `flutter test` — to be run after analyze baseline is recorded
+- `flutter analyze` — 0 errors, 0 warnings, 18 infos (all pre-existing `use_build_context_synchronously` style hints)
+- `flutter test` — `All tests passed!` (splash renders, exits cleanly with hermetic provider overrides)
 
 ### Findings from repository inspection
 
@@ -58,12 +58,56 @@
 - [x] README rewritten to reflect actual project state
 - [x] `docs/FEATURE_STATUS.md` baseline
 - [x] `docs/IMPLEMENTATION_PROGRESS.md` (this file)
-- [ ] `flutter analyze` baseline recorded
-- [ ] `flutter test` baseline recorded
-- [ ] Baseline Git commit
+- [x] `flutter analyze` baseline recorded (0 errors, 0 warnings)
+- [x] `flutter test` baseline recorded (smoke test passes)
+- [x] Baseline Git commit
 
-### Next actions (Phase 2 → 3)
+---
 
-1. Complete research documents (in progress via research agents).
-2. Record analyze/test results and close Phase 1.
-3. Begin Phase 3 data audit: 81-city dataset integrity, category mappings, duplicate detection, image URL validity, seed script consistency.
+## Phase 2 log — 2026-11-21
+
+Research documents produced (accessed 2026-11-21; unverified items flagged inside each doc):
+
+- `docs/COMPETITOR_RESEARCH.md` — 12 products across 13 dimensions, comparison matrix, gap analysis, 18 sources.
+- `docs/PAKISTAN_TOURIST_PROBLEMS.md` — 20 documented tourist problems with evidence, regional/seasonal context, software intervention mapping, honesty constraints, 22 sources (FCDO, NHMP, NDMA, NHA, PTA DIRBS, etc.).
+
+Open item: re-verify time-sensitive claims (road status, permit rules, app store availability) before release.
+
+---
+
+## Phase 3 log — 2026-11-21
+
+Full findings and evidence in `docs/DATA_AUDIT.md`. Summary of changes:
+
+### Flutter
+
+- `PlaceModel`: added `city`, `verificationStatus`, `lastVerifiedAt`, `source`; `isFemaleSafe`/`isFamilyFriendly` default to `false`.
+- `punjab_offline_data.dart`: removed all unverified `verified: true`, female-safe and family-friendly claims (27 places).
+- Splash screen: removed "TDCP Verified Tourism Platform" and "Verified Safety • Live Rates" (no such verification exists); now uses the approved tagline.
+
+### Backend
+
+- `Place` model: `city` (indexed), `verificationStatus` enum (default `needs_verification`), `lastVerifiedAt`, `source`.
+- New `utils/publishedPlaceFilter.js`; applied to places list/search/nearby/related, AI recommendations, and trip generation.
+- `businessRoutes`: approval sets `verificationStatus` + `lastVerifiedAt`; revoke drops back to `community_reported`.
+- All four seed scripts now write `verified: false`, `verificationStatus: 'community_reported'`, `source`, and derive `city`; re-seeding never downgrades verified records.
+- New `config/categories.js` canonical taxonomy (11 categories) and `scripts/seedCategories.js`; seeds ensure the taxonomy exists instead of silently mislabeling unknown categories as "Restaurants" (now skipped with a warning).
+
+### Verification
+
+- `flutter analyze`: 0 errors, 0 warnings (18 infos).
+- `flutter test`: all pass.
+- `node --check`: all modified backend files OK.
+
+### Known gaps (Blocked — require real data, not fabricated)
+
+- No seed records for Fast Food, Adventure, or Family Attractions; categories exist, data must be sourced.
+- Ratings/review counts are placeholder values, not real reviews.
+- Imagery is Unsplash stock photography, not real photos of the named places.
+- `mobile/lib/core/data/punjab_cities_data.dart` is unused legacy data; deletion was blocked by the environment safety classifier and needs explicit confirmation.
+- Database reseed not executed (no MongoDB instance available during this phase).
+
+### Next actions
+
+1. Phase 4: design system, branding, splash, home per `docs/MASTER_PROMPT.md` §4.
+

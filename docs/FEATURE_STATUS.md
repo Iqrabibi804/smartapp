@@ -12,7 +12,7 @@
 | Feature | Location | Status | Notes |
 |---|---|---|---|
 | Flutter app shell (Riverpod, theme modes) | `mobile/lib/main.dart` | Implemented | Single smoke test only |
-| Splash screen | `features/splash/` | Implemented | Not yet redesigned to brand identity |
+| Splash screen | `features/splash/` | Implemented | Honesty fixes applied (no fake verification claims); brand redesign pending Phase 4 |
 | Onboarding | `features/onboarding/` | Implemented | Not yet reviewed for brand/accessibility |
 | Auth (register/login, JWT, RBAC) | `features/auth/`, `backend/` | Implemented | No automated auth tests |
 | English/Urdu localization | `core/localization/app_language.dart` | In progress | Interface-wide switching incomplete; RTL unverified |
@@ -23,15 +23,15 @@
 
 | Feature | Location | Status | Notes |
 |---|---|---|---|
-| 81-city Punjab dataset | `core/data/punjab_81_cities_data.dart` | Implemented | Data integrity audit pending (Phase 3) |
+| 81-city Punjab dataset | `core/data/punjab_81_cities_data.dart` | Verified | Structural audit passed: 81 cities, 0 duplicates, all fields complete, HTTPS images (see `docs/DATA_AUDIT.md`) |
 | All Cities screen | `features/places/screens/city_explorer_screen.dart` | Implemented | Journey test pending |
-| City guide / city-specific attractions | `features/places/screens/city_guide_screen.dart` | Implemented | Category mapping audit pending |
+| City guide / city-specific attractions | `features/places/screens/city_guide_screen.dart` | Implemented | Now compiles cleanly; journey/category test pending |
 | Place details | `features/places/screens/place_details_screen.dart` | Implemented | Journey test pending |
 | Search and filters | `features/search/` | Implemented | Journey test pending |
 | Saved places / favorites | `features/favorites/` | Implemented | Test pending |
 | Reviews and media submissions | `features/reviews/` | Implemented | Moderation/back-end path to review |
 | Events | `features/events/` | Implemented | Test pending |
-| Business registration / my businesses | `features/business/` | Implemented | Verification status workflow to audit |
+| Business registration / my businesses | `features/business/` | Implemented | Approval/revoke now writes `verificationStatus` + `lastVerifiedAt` |
 | Map screen | `features/map/` | Implemented | API key + permission handling unverified |
 | Directions | `features/directions/` | Implemented | Depends on external API; document dependency |
 | AI assistant | `features/ai/`, `/api/ai` | Implemented | Grounding and honest-failure handling in progress |
@@ -93,8 +93,10 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | In progress | Canonical tokens defined; implementation pending |
-| Automated tests | In progress | Only smoke test exists; expansion is a roadmap requirement |
-| Static analysis | In progress | Baseline run in Phase 1 |
+| Automated tests | In progress | Splash smoke test passes hermetically; expansion is a roadmap requirement |
+| Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
+| Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
+| Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
 | Offline cache honesty (live/cached/expired labels) | Not started | Phase 6 |
 | Release signing / production applicationId | Not started | Currently debug signing + `com.example.smartmap_ai` |
 | Security review (secrets, identity data) | In progress | `MONGO_URI` found in `mobile/.env` — must be removed |

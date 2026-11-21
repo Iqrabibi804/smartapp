@@ -206,15 +206,26 @@ router.put(
         phone: business.phone,
         website: business.website,
         verified: true,
+        verificationStatus: 'verified',
+        lastVerifiedAt: new Date(),
+        source: 'Business owner submission, verified by moderator',
         submittedBy: business.ownerId,
       });
       business.placeId = place._id;
     }
 
     if (status !== 'verified' && business.placeId) {
-      await Place.findByIdAndUpdate(business.placeId, { verified: false });
+      await Place.findByIdAndUpdate(business.placeId, {
+        verified: false,
+        verificationStatus: 'needs_verification',
+        lastVerifiedAt: null,
+      });
     } else if (status === 'verified' && business.placeId) {
-      await Place.findByIdAndUpdate(business.placeId, { verified: true });
+      await Place.findByIdAndUpdate(business.placeId, {
+        verified: true,
+        verificationStatus: 'verified',
+        lastVerifiedAt: new Date(),
+      });
     }
 
     await business.save();

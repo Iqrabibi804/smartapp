@@ -5,11 +5,15 @@ class PlaceModel {
   final double latitude;
   final double longitude;
   final String address;
+  final String? city;
   final double rating;
   final int reviewCount;
   final String priceRange;
   final List<String> images;
   final bool verified;
+  final String? verificationStatus; // verified | community_reported | needs_verification | unavailable
+  final String? lastVerifiedAt;
+  final String? source;
   final bool featured;
   final String? phone;
   final String? website;
@@ -30,11 +34,15 @@ class PlaceModel {
     required this.latitude,
     required this.longitude,
     required this.address,
+    this.city,
     required this.rating,
     required this.reviewCount,
     required this.priceRange,
     required this.images,
     required this.verified,
+    this.verificationStatus,
+    this.lastVerifiedAt,
+    this.source,
     required this.featured,
     this.phone,
     this.website,
@@ -42,8 +50,8 @@ class PlaceModel {
     this.openingHours = const {},
     this.categoryName,
     this.paymentMethods = const ['Cash', 'Easypaisa'],
-    this.isFemaleSafe = true,
-    this.isFamilyFriendly = true,
+    this.isFemaleSafe = false,
+    this.isFamilyFriendly = false,
     this.localPrice,
     this.touristPrice,
     this.audioGuideUrdu,
@@ -64,11 +72,15 @@ class PlaceModel {
       longitude: (coords.isNotEmpty ? coords[0] : 0).toDouble(),
       latitude: (coords.length > 1 ? coords[1] : 0).toDouble(),
       address: json['address'] as String? ?? '',
+      city: json['city'] as String?,
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       priceRange: json['priceRange'] as String? ?? 'medium',
       images: (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       verified: json['verified'] as bool? ?? false,
+      verificationStatus: json['verificationStatus'] as String?,
+      lastVerifiedAt: json['lastVerifiedAt']?.toString(),
+      source: json['source'] as String?,
       featured: json['featured'] as bool? ?? false,
       phone: json['phone'] as String?,
       website: json['website'] as String?,
@@ -78,8 +90,8 @@ class PlaceModel {
           {},
       categoryName: categoryField is Map ? categoryField['name'] as String? : null,
       paymentMethods: payments,
-      isFemaleSafe: json['isFemaleSafe'] as bool? ?? true,
-      isFamilyFriendly: json['isFamilyFriendly'] as bool? ?? true,
+      isFemaleSafe: json['isFemaleSafe'] as bool? ?? false,
+      isFamilyFriendly: json['isFamilyFriendly'] as bool? ?? false,
       localPrice: (json['localPrice'] as num?)?.toInt(),
       touristPrice: (json['touristPrice'] as num?)?.toInt(),
       audioGuideUrdu: json['audioGuideUrdu'] as String?,

@@ -5,6 +5,7 @@ const Category = require('../models/Category');
 const asyncHandler = require('../utils/asyncHandler');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 
 const router = express.Router();
 
@@ -15,12 +16,12 @@ router.get(
     const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
 
     const [places, total] = await Promise.all([
-      Place.find({ verified: true })
+      Place.find(publishedPlaceFilter())
         .populate('categoryId', 'name icon')
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
-      Place.countDocuments({ verified: true }),
+      Place.countDocuments(publishedPlaceFilter()),
     ]);
 
     res.json({ success: true, page, limit, total, places });
@@ -36,7 +37,7 @@ router.get(
     const radiusKm = parseFloat(req.query.radiusKm) || 25;
     const hasLocation = !Number.isNaN(lat) && !Number.isNaN(lng);
 
-    const conditions = [{ verified: true }];
+    const conditions = [publishedPlaceFilter()];
 
     if (q && q.trim()) {
       const term = q.trim();
@@ -53,6 +54,7 @@ router.get(
       const cityRegex = new RegExp(city.trim(), 'i');
       conditions.push({
         $or: [
+          { city: cityRegex },
           { address: cityRegex },
           { name: cityRegex },
         ],
@@ -65,11 +67,17 @@ router.get(
         conditions.push({ categoryId: new mongoose.Types.ObjectId(catParam) });
       } else {
         let searchPattern = catParam.trim();
-        if (/hospital/i.test(searchPattern)) searchPattern = 'Hospital';
-        else if (/cake|baker/i.test(searchPattern)) searchPattern = 'Baker';
-        else if (/hotel/i.test(searchPattern)) searchPattern = 'Hotel';
-        else if (/restaurant/i.test(searchPattern)) searchPattern = 'Restaurant';
-        else if (/tourist|attraction/i.test(searchPattern)) searchPattern = 'Tourist';
+        if (/hospital|medical|clinic/i.test(searchPattern)) searchPattern = 'Hospital';
+        else if (/cake|baker|sweet/i.test(searchPattern)) searchPattern = 'Baker';
+        else if (/hotel|guest/i.test(searchPattern)) searchPattern = 'Hotel';
+        else if (/fast.?food|burger|pizza|fried/i.test(searchPattern)) searchPattern = 'Fast Food';
+        else if (/restaurant|food|dining/i.test(searchPattern)) searchPattern = 'Restaurant';
+        else if (/tourist|attraction|sight/i.test(searchPattern)) searchPattern = 'Tourist';
+        else if (/histor|religio|shrine|mosque|heritage|monument/i.test(searchPattern)) searchPattern = 'Historical';
+        else if (/adventure|trek|hiking|jeep/i.test(searchPattern)) searchPattern = 'Adventure';
+        else if (/family|kids|children/i.test(searchPattern)) searchPattern = 'Family';
+        else if (/nature|park|natural|garden/i.test(searchPattern)) searchPattern = 'Park';
+        else if (/shopp|market|bazaar|mall/i.test(searchPattern)) searchPattern = 'Shopping';
 
         const matchedCats = await Category.find({ name: { $regex: searchPattern, $options: 'i' } });
         if (matchedCats.length > 0) {
@@ -118,7 +126,7 @@ router.get(
     }
 
     const places = await Place.find({
-      verified: true,
+      ...publishedPlaceFilter(),
       location: {
         $near: {
           $geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -147,7 +155,7 @@ router.get(
 
     const nearbyFilter = {
       _id: { $ne: place._id },
-      verified: true,
+      ...publishedPlaceFilter(),
       location: {
         $near: {
           $geometry: place.location,

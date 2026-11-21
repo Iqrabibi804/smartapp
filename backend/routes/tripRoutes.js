@@ -5,6 +5,7 @@ const Category = require('../models/Category');
 const asyncHandler = require('../utils/asyncHandler');
 const { protect } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 
 const router = express.Router();
 
@@ -29,13 +30,13 @@ async function generateItinerary({ days, interests, travelers }) {
     categoryIds = categories.map((c) => c._id);
   }
 
-  const filter = { verified: true };
+  const filter = { ...publishedPlaceFilter() };
   if (categoryIds.length > 0) filter.categoryId = { $in: categoryIds };
 
   let places = await Place.find(filter).sort({ rating: -1 }).limit(days * 3).lean();
 
   if (places.length < days * 2) {
-    const fallback = await Place.find({ verified: true }).sort({ rating: -1 }).limit(days * 3).lean();
+    const fallback = await Place.find(publishedPlaceFilter()).sort({ rating: -1 }).limit(days * 3).lean();
     const seen = new Set(places.map((p) => String(p._id)));
     for (const p of fallback) {
       if (!seen.has(String(p._id))) places.push(p);

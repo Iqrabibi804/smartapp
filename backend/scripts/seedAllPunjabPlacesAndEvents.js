@@ -3,6 +3,17 @@ const mongoose = require('mongoose');
 const Category = require('../models/Category');
 const Place = require('../models/Place');
 const Event = require('../models/Event');
+const { CATEGORIES } = require('../config/categories');
+
+// Seeded records are compiled from public information, not field-verified.
+const SEED_SOURCE = 'Compiled public directory (unverified)';
+
+function cityFromAddress(address = '') {
+  const parts = address.split(',').map((s) => s.trim()).filter(Boolean);
+  const punjabIdx = parts.findIndex((p) => /^punjab$/i.test(p));
+  if (punjabIdx > 0) return parts[punjabIdx - 1];
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+}
 
 const COMPREHENSIVE_PLACES = [
   // ==========================================
@@ -481,6 +492,15 @@ async function seed() {
   await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/smartmap_ai');
   console.log('Connected to MongoDB');
 
+  // Ensure the canonical category taxonomy exists so category names resolve accurately.
+  for (const data of CATEGORIES) {
+    const existingCategory = await Category.findOne({ name: data.name });
+    if (!existingCategory) {
+      await Category.create(data);
+      console.log(`Created category: ${data.name}`);
+    }
+  }
+
   const categories = await Category.find();
   const catMap = {};
   categories.forEach(c => catMap[c.name] = c._id);
@@ -502,10 +522,13 @@ async function seed() {
         categoryId: catId,
         location: p.location,
         address: p.address,
+        city: cityFromAddress(p.address),
         priceRange: p.priceRange,
         rating: p.rating,
         reviewCount: p.reviewCount,
-        verified: p.verified,
+        verified: false,
+        verificationStatus: 'community_reported',
+        source: SEED_SOURCE,
         featured: p.featured,
         facilities: p.facilities,
         phone: p.phone,
@@ -517,6 +540,13 @@ async function seed() {
       existing.categoryId = catId;
       existing.phone = p.phone || existing.phone;
       existing.address = p.address;
+      existing.city = existing.city || cityFromAddress(p.address);
+      // Never downgrade records that an administrator has genuinely verified.
+      if (existing.verificationStatus !== 'verified') {
+        existing.verified = false;
+        existing.verificationStatus = 'community_reported';
+        existing.source = existing.source || SEED_SOURCE;
+      }
       await existing.save();
     }
   }

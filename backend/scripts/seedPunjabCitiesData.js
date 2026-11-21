@@ -2,7 +2,18 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Category = require('../models/Category');
+const { CATEGORIES } = require('../config/categories');
 const Place = require('../models/Place');
+
+// Seeded records are compiled from public information, not field-verified.
+const SEED_SOURCE = 'Compiled public directory (unverified)';
+
+function cityFromAddress(address = '') {
+  const parts = address.split(',').map((s) => s.trim()).filter(Boolean);
+  const punjabIdx = parts.findIndex((p) => /^punjab$/i.test(p));
+  if (punjabIdx > 0) return parts[punjabIdx - 1];
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+}
 
 const PUNJAB_CITIES_PLACES = [
   // ==========================================
@@ -669,15 +680,13 @@ async function seedPunjabCities() {
   await connectDB();
   console.log('Connected to MongoDB.');
 
-  // Ensure category 'Bakeries & Cakes' exists
-  let bakeryCat = await Category.findOne({ name: 'Bakeries & Cakes' });
-  if (!bakeryCat) {
-    bakeryCat = await Category.create({
-      name: 'Bakeries & Cakes',
-      icon: 'cake',
-      sortOrder: 8,
-    });
-    console.log('Created category: Bakeries & Cakes');
+  // Ensure the canonical category taxonomy exists so category names resolve accurately.
+  for (const data of CATEGORIES) {
+    const existing = await Category.findOne({ name: data.name });
+    if (!existing) {
+      await Category.create(data);
+      console.log(`Created category: ${data.name}`);
+    }
   }
 
   // Fetch all category IDs
@@ -691,7 +700,11 @@ async function seedPunjabCities() {
 
   let addedCount = 0;
   for (const item of PUNJAB_CITIES_PLACES) {
-    const categoryId = catMap[item.categoryName] || catMap['Restaurants'];
+    const categoryId = catMap[item.categoryName];
+    if (!categoryId) {
+      console.warn(`Skipped (unknown category "${item.categoryName}"): ${item.name}`);
+      continue;
+    }
     
     // Check if place already exists by name
     const existing = await Place.findOne({ name: item.name });
@@ -703,10 +716,13 @@ async function seedPunjabCities() {
         categoryId: categoryId,
         location: item.location,
         address: item.address,
+        city: cityFromAddress(item.address),
         priceRange: item.priceRange,
         rating: item.rating,
         reviewCount: item.reviewCount,
-        verified: item.verified,
+        verified: false,
+        verificationStatus: 'community_reported',
+        source: SEED_SOURCE,
         featured: item.featured,
         facilities: item.facilities,
         phone: item.phone,
@@ -715,6 +731,14 @@ async function seedPunjabCities() {
       console.log(`Added: [${item.categoryName}] ${item.name} (${item.address})`);
       addedCount++;
     } else {
+      // Never downgrade records that an administrator has genuinely verified.
+      if (existing.verificationStatus !== 'verified') {
+        existing.city = existing.city || cityFromAddress(item.address);
+        existing.verified = false;
+        existing.verificationStatus = 'community_reported';
+        existing.source = existing.source || SEED_SOURCE;
+        await existing.save();
+      }
       console.log(`Already exists: ${item.name}`);
     }
   }

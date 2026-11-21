@@ -27,6 +27,7 @@ const placeSchema = new mongoose.Schema(
     },
 
     address: { type: String, default: '' },
+    city: { type: String, default: '', index: true },
     images: [{ type: String }],
 
     rating: { type: Number, default: 0, min: 0, max: 5 },
@@ -51,6 +52,14 @@ const placeSchema = new mongoose.Schema(
     website: { type: String, default: null },
 
     verified: { type: Boolean, default: false },
+    verificationStatus: {
+      type: String,
+      enum: ['verified', 'community_reported', 'needs_verification', 'unavailable'],
+      default: 'needs_verification',
+      index: true,
+    },
+    lastVerifiedAt: { type: Date, default: null },
+    source: { type: String, default: null },
     featured: { type: Boolean, default: false },
 
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
