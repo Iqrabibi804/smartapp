@@ -38,6 +38,10 @@ import '../../places/screens/offline_payment_guide_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
 import '../../places/screens/facility_finder_screen.dart';
 import '../../places/screens/culture_companion_screen.dart';
+import '../../places/screens/permits_screen.dart';
+import '../../places/screens/foreigner_toolkit_screen.dart';
+import '../../places/screens/digital_tourist_pass_screen.dart';
+import '../../places/screens/complaints_screen.dart';
 import '../../trips/screens/journey_readiness_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -852,6 +856,70 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const RoadInfrastructureAlertsScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _build3DAssistantCard(
+                    title: 'Permits & NOC',
+                    urduTitle: 'پرمٹ و این او سی',
+                    subtitle: 'Guidance — no online submission',
+                    badge: '📋 Guidance',
+                    icon: Icons.assignment_outlined,
+                    colors: [const Color(0xFF1E3A8A), const Color(0xFF1D4ED8)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PermitsScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _build3DAssistantCard(
+                    title: 'Visitor Toolkit',
+                    urduTitle: 'غیر ملکی مسافر ٹول کٹ',
+                    subtitle: 'PTA, currency & embassies',
+                    badge: '🌍 Foreigners',
+                    icon: Icons.public_rounded,
+                    colors: [const Color(0xFF134E4A), const Color(0xFF0F766E)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ForeignerToolkitScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _build3DAssistantCard(
+                    title: 'Digital Pass',
+                    urduTitle: 'ڈیجیٹل ٹورسٹ پاس',
+                    subtitle: 'App ID — not a government pass',
+                    badge: '🪪 On-device',
+                    icon: Icons.badge_outlined,
+                    colors: [const Color(0xFF01411C), const Color(0xFF166534)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DigitalTouristPassScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _build3DAssistantCard(
+                    title: 'Report an Issue',
+                    urduTitle: 'شکایت درج کریں',
+                    subtitle: 'Saved on device — not submitted',
+                    badge: '📝 Local only',
+                    icon: Icons.report_problem_outlined,
+                    colors: [const Color(0xFF7C2D12), const Color(0xFFB45309)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
                       );
                     },
                   ),
@@ -2147,9 +2215,13 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
           context: context,
           icon: Icons.gavel_outlined,
           color: const Color(0xFF8B5CF6),
-          title: 'Citizen Portal (Complaints & Feedback)',
-          subtitle: 'Report overcharging, hotel issues, or roadside complaints',
-          onTap: () => _openUrl('https://citizenportal.gov.pk'),
+          title: 'Complaints & Reports',
+          subtitle: 'Save a local report or open the Pakistan Citizen Portal',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
+            );
+          },
         ),
 
         _dashboardTile(

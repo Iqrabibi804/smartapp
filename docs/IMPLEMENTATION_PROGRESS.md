@@ -15,7 +15,7 @@
 | 6 | Offline and reliability foundation | Tested | TTL cache + honest freshness states wired into categories/search/nearby/details; offline banner; 11 tests green |
 | 7 | Core tourist features | Tested | Facility finder; honest road advisories with sources; travel reality check; price fairness + DC-rate unavailability; 14 tests green |
 | 8 | Differentiating features | Tested | Journey Readiness checklist (persisted, honest score), Local Culture Companion, facility freshness dates; 16 tests green |
-| 9 | Permits, foreigner toolkit, digital pass, complaints | Not started | — |
+| 9 | Permits, foreigner toolkit, digital pass, complaints | Tested | Guidance-only permits; on-device pass; PTA/currency/embassy toolkit; local complaint records; 20 tests green |
 | 10 | Backend, admin, security hardening | Not started | — |
 | 11 | Performance, compatibility, regression | Not started | — |
 | 12 | Release signing and APK | Not started | — |
@@ -148,7 +148,7 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 9: permits (guidance), foreigner toolkit, digital pass, complaints.
+1. Phase 10: backend, admin, security hardening (including removing MONGO_URI from mobile/.env).
 
 ---
 
@@ -195,3 +195,18 @@ Prioritised two differentiators with real, verifiable behaviour and deferred the
 Deferred with reasons: **Facility Freshness Score** (needs a verified facility-verification feed, not just labels), **Tourist Truth Reports** and **Lost and Found** (need a moderated backend — planned with complaints in Phase 9), **Smart Stop Finder / Smart Trip Optimizer / Crowd Intelligence / Destination Change Alerts** (need live or geospatial data and notification infrastructure that does not exist yet), **Accessibility Explorer** (dataset lacks reliable accessibility attributes).
 
 Verification: `flutter test` 16/16 pass; `flutter analyze` 0 errors / 0 warnings.
+
+---
+
+## Phase 9 log — 2026-11-21
+
+All four workflows are guidance-first and clearly non-official:
+
+- **Permits & NOC** (`permits_screen.dart`): destination and nationality selection, preparation steps, explicit statement that no permit office is connected, no submission/approval/tracking, and "Fee and processing time: information unavailable". Status tracking is described but not faked.
+- **Foreign visitor toolkit** (`foreigner_toolkit_screen.dart`): PTA temporary-registration steps with no hardcoded duration (links to `pta.gov.pk`); an offline currency converter that only uses a rate the traveller enters, labelled as not live; embassy section reports contact information unavailable and links to `mofa.gov.pk` rather than inventing addresses or numbers.
+- **Digital tourist pass** (`digital_tourist_pass_screen.dart`): consent-gated, app-generated ID stored on-device via `OfflineCache`, prominent "not a government credential" labelling, optional blood group, display validity, delete control. No QR code is claimed; the screen states it is not included in this build.
+- **Complaints** (`complaints_screen.dart`): eight categories, location and description, saved on-device with a reference number and status "Saved on device — not submitted"; photo attachments disclosed as unavailable; link to the official Pakistan Citizen Portal. Home tile now opens this screen instead of directly leaving the app.
+
+Verification: `flutter test` 20/20 pass (added permit/toolkit/complaint content tests, including checks that no unverified 120-day PTA limit is hardcoded). `flutter analyze`: 0 errors / 0 warnings.
+
+Open items: no official submission, tracking or QR integration exists; documents/attachments need secure storage before they can be accepted; SOS SMS fallback remains Phase 10+ (requires platform permission testing).

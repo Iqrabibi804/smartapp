@@ -65,10 +65,10 @@
 
 | Feature | Status | Notes |
 |---|---|---|
-| Permit / NOC guidance workflow | Not started | Guidance-only unless official API exists |
-| Digital tourist pass | Not started | Must be clearly labeled app-generated |
-| Foreign tourist toolkit (PTA, currency, embassies) | Not started | Verify PTA rules before content |
-| Complaints tracking | Not started | Local workflow, labeled non-official |
+| Permit / NOC guidance workflow | Tested | Guidance-only; no submission/tracking; fees and times reported unavailable |
+| Digital tourist pass | Tested | Consent-gated on-device ID; "not a government credential"; no QR claim |
+| Foreign tourist toolkit (PTA, currency, embassies) | Tested | PTA steps without fixed durations; manual-rate converter; embassy info unavailable with official directory link |
+| Complaints tracking | Tested | Local records with reference IDs, explicitly not submitted; official portal link |
 | Highway essential stops finder | Not started | Includes mosques/prayer times/Qibla |
 | Women & family travel mode | Not started | No absolute safety claims |
 | Admin web dashboard | Not started | In-app admin screens exist and are preferred for now |
@@ -93,7 +93,7 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | 16 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory + 2 content tests); broad coverage still required |
+| Automated tests | In progress | 20 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory + 2 content + 3 phase-9 tests); broad coverage still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
