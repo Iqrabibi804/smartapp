@@ -12,9 +12,10 @@
 | Offline filter tests | `flutter test` | 6/6 pass (category, city, rating threshold, rating sort, popularity sort, keyword) |
 | Offline cache tests | `flutter test` | 4/4 pass (fresh→cached, stale→expired, missing→unavailable, online/offline reporting) |
 | Road advisory provenance | `flutter test` | 3/3 pass (all advisories sourced and dated; none claims a live status; ids unique) |
+| Phase 8 content | `flutter test` | 2/2 pass (readiness sections/ids valid; culture tips and phrases populated) |
 | Backend syntax | `node --check` on all modified files | OK (Phase 3 scripts, routes, models) |
 
-Suite total: 14 tests, all passing.
+Suite total: 16 tests, all passing.
 
 ## 2. Runtime smoke test (web)
 

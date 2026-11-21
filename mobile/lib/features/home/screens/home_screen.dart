@@ -37,6 +37,8 @@ import '../../places/screens/offline_city_packs_screen.dart';
 import '../../places/screens/offline_payment_guide_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
 import '../../places/screens/facility_finder_screen.dart';
+import '../../places/screens/culture_companion_screen.dart';
+import '../../trips/screens/journey_readiness_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -804,6 +806,38 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const OfflinePaymentGuideScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _build3DAssistantCard(
+                    title: 'Journey Readiness',
+                    urduTitle: 'سفر کی تیاری',
+                    subtitle: 'Checklist before you leave',
+                    badge: '✅ Checklist',
+                    icon: Icons.checklist_rtl_rounded,
+                    colors: [const Color(0xFF0F766E), const Color(0xFF0D9488)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const JourneyReadinessScreen()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _build3DAssistantCard(
+                    title: 'Local Culture',
+                    urduTitle: 'مقامی ثقافت',
+                    subtitle: 'Etiquette & useful phrases',
+                    badge: '🤝 General tips',
+                    icon: Icons.diversity_3_rounded,
+                    colors: [const Color(0xFF78350F), const Color(0xFFB45309)],
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CultureCompanionScreen()),
                       );
                     },
                   ),

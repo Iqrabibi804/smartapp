@@ -77,23 +77,23 @@
 
 | Feature | Status |
 |---|---|
-| Facility Freshness Score | Not started |
-| Tourist Truth Reports | Not started |
-| Journey Readiness Score | Not started |
-| Smart Stop Finder | Not started |
-| Crowd Intelligence | Not started |
-| Local Culture Companion | Not started |
-| Lost and Found | Not started |
-| Accessibility Explorer | Not started |
-| Smart Trip Optimizer | Not started |
-| Destination Change Alerts | Not started |
+| Facility Freshness Score | Implemented (dates) | Last-verification date shown; score needs a real verification feed |
+| Tourist Truth Reports | Not started | Needs moderated backend (Phase 9) |
+| Journey Readiness Score | Tested | Persisted 6-section checklist; honest score disclaimer |
+| Smart Stop Finder | Not started | Deferred: needs geospatial corridor data |
+| Crowd Intelligence | Not started | Deferred: no reliable crowd data source |
+| Local Culture Companion | Tested | General etiquette + phrases with variation disclaimer |
+| Lost and Found | Not started | Needs moderated backend (Phase 9) |
+| Accessibility Explorer | Not started | Deferred: dataset lacks accessibility attributes |
+| Smart Trip Optimizer | Not started | Deferred: depends on live route/facility data |
+| Destination Change Alerts | Not started | Deferred: needs verified change feed + notifications |
 
 ## 7. Engineering quality
 
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | 14 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory tests); broad coverage still required |
+| Automated tests | In progress | 16 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory + 2 content tests); broad coverage still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |

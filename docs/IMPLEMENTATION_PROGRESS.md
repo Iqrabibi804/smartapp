@@ -14,7 +14,7 @@
 | 5 | Critical functional bug fixes | Tested | Offline search/sort/fallback bugs fixed; `docs/TESTING_REPORT.md`; 7 tests green; device journeys pending |
 | 6 | Offline and reliability foundation | Tested | TTL cache + honest freshness states wired into categories/search/nearby/details; offline banner; 11 tests green |
 | 7 | Core tourist features | Tested | Facility finder; honest road advisories with sources; travel reality check; price fairness + DC-rate unavailability; 14 tests green |
-| 8 | Differentiating features | Not started | — |
+| 8 | Differentiating features | Tested | Journey Readiness checklist (persisted, honest score), Local Culture Companion, facility freshness dates; 16 tests green |
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Not started | — |
 | 10 | Backend, admin, security hardening | Not started | — |
 | 11 | Performance, compatibility, regression | Not started | — |
@@ -148,7 +148,7 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 8: differentiating features (approved priorities from Section 5.O).
+1. Phase 9: permits (guidance), foreigner toolkit, digital pass, complaints.
 
 ---
 
@@ -180,3 +180,18 @@ Honesty-first implementation of the core tourist features:
 Verification: `flutter test` 14/14 pass (added road-advisory provenance tests). `flutter analyze`: 0 errors / 0 warnings.
 
 Open items: no authorised live feeds yet (road status, DC rates, facility availability); report forms are device-local until a verified submission backend exists; map-based distance filtering for facilities pending location wiring.
+
+---
+
+## Phase 8 log — 2026-11-21
+
+Prioritised two differentiators with real, verifiable behaviour and deferred the rest:
+
+- **Journey Readiness Score** (`features/trips/screens/journey_readiness_screen.dart`): six-section preparation checklist (documents, vehicle, health, connectivity, route/weather, money) persisted through `OfflineCache`. The score is computed only from the user's own ticks and the screen says SmartMap does not verify weather, road, vehicle or document conditions. Reset control included.
+- **Local Culture Companion** (`features/places/screens/culture_companion_screen.dart`): general etiquette guidance and useful Urdu phrases, with a plain statement that customs vary and the content is compiled from widely published traveller guidance.
+- **Facility freshness**: facility cards now show the recorded last-verification date, or state "verification date not recorded" instead of implying freshness.
+- Home gains two honest entries ("Journey Readiness / Checklist", "Local Culture / General tips").
+
+Deferred with reasons: **Facility Freshness Score** (needs a verified facility-verification feed, not just labels), **Tourist Truth Reports** and **Lost and Found** (need a moderated backend — planned with complaints in Phase 9), **Smart Stop Finder / Smart Trip Optimizer / Crowd Intelligence / Destination Change Alerts** (need live or geospatial data and notification infrastructure that does not exist yet), **Accessibility Explorer** (dataset lacks reliable accessibility attributes).
+
+Verification: `flutter test` 16/16 pass; `flutter analyze` 0 errors / 0 warnings.

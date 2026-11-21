@@ -201,6 +201,7 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 'Verification: ${facilityVerificationLabel(place)}'
+                                '${place.lastVerifiedAt != null ? ' · last verified ${_dateOnly(place.lastVerifiedAt!)}' : ' · verification date not recorded'}'
                                 '${place.phone != null ? ' · ${place.phone}' : ''}',
                                 style: const TextStyle(
                                   fontSize: 11,
@@ -230,6 +231,14 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
       ),
     );
   }
+}
+
+String _dateOnly(String value) {
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) return value;
+  final d = parsed.day.toString().padLeft(2, '0');
+  final m = parsed.month.toString().padLeft(2, '0');
+  return '$d/$m/${parsed.year}';
 }
 
 class _EmptyState extends StatelessWidget {
