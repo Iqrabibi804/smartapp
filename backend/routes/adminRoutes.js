@@ -4,7 +4,9 @@ const Place = require('../models/Place');
 const Review = require('../models/Review');
 const Business = require('../models/Business');
 const Event = require('../models/Event');
+const AuditLog = require('../models/AuditLog');
 const asyncHandler = require('../utils/asyncHandler');
+const { recordAudit } = require('../utils/audit');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 
@@ -52,6 +54,18 @@ router.get(
 );
 
 router.get(
+  '/audit-logs',
+  asyncHandler(async (req, res) => {
+    const logs = await AuditLog.find()
+      .populate('actor', 'name email role')
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+    res.json({ success: true, count: logs.length, logs });
+  })
+);
+
+router.get(
   '/users',
   asyncHandler(async (req, res) => {
     const users = await User.find().sort({ createdAt: -1 }).limit(200).lean();
@@ -77,6 +91,13 @@ router.put(
       { new: true }
     );
     if (!user) throw new ApiError(404, 'User not found.');
+
+    await recordAudit(req, {
+      action: 'user.status.update',
+      targetType: 'User',
+      targetId: user._id,
+      metadata: { accountStatus },
+    });
 
     res.json({ success: true, user });
   })
@@ -113,6 +134,13 @@ router.put(
       { new: true }
     );
     if (!review) throw new ApiError(404, 'Review not found.');
+
+    await recordAudit(req, {
+      action: 'review.status.update',
+      targetType: 'Review',
+      targetId: review._id,
+      metadata: { status },
+    });
 
     res.json({ success: true, review });
   })
@@ -152,6 +180,14 @@ router.put(
       runValidators: true,
     });
     if (!place) throw new ApiError(404, 'Place not found.');
+
+    await recordAudit(req, {
+      action: 'place.update',
+      targetType: 'Place',
+      targetId: place._id,
+      metadata: { fields: Object.keys(req.body || {}) },
+    });
+
     res.json({ success: true, place });
   })
 );
@@ -161,6 +197,14 @@ router.delete(
   asyncHandler(async (req, res) => {
     const place = await Place.findByIdAndDelete(req.params.id);
     if (!place) throw new ApiError(404, 'Place not found.');
+
+    await recordAudit(req, {
+      action: 'place.delete',
+      targetType: 'Place',
+      targetId: place._id,
+      metadata: { name: place.name },
+    });
+
     res.json({ success: true, message: 'Place deleted successfully.' });
   })
 );

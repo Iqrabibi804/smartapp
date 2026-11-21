@@ -16,7 +16,7 @@
 | 7 | Core tourist features | Tested | Facility finder; honest road advisories with sources; travel reality check; price fairness + DC-rate unavailability; 14 tests green |
 | 8 | Differentiating features | Tested | Journey Readiness checklist (persisted, honest score), Local Culture Companion, facility freshness dates; 16 tests green |
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Tested | Guidance-only permits; on-device pass; PTA/currency/embassy toolkit; local complaint records; 20 tests green |
-| 10 | Backend, admin, security hardening | Not started | — |
+| 10 | Backend, admin, security hardening | Tested | Secrets removed/fail-fast guards; RBAC retained; audit log + TTL; upload/CORS hardening; `docs/SECURITY_REVIEW.md` |
 | 11 | Performance, compatibility, regression | Not started | — |
 | 12 | Release signing and APK | Not started | — |
 
@@ -148,7 +148,7 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 10: backend, admin, security hardening (including removing MONGO_URI from mobile/.env).
+1. Phase 11: performance, compatibility, full regression.
 
 ---
 
@@ -210,3 +210,20 @@ All four workflows are guidance-first and clearly non-official:
 Verification: `flutter test` 20/20 pass (added permit/toolkit/complaint content tests, including checks that no unverified 120-day PTA limit is hardcoded). `flutter analyze`: 0 errors / 0 warnings.
 
 Open items: no official submission, tracking or QR integration exists; documents/attachments need secure storage before they can be accepted; SOS SMS fallback remains Phase 10+ (requires platform permission testing).
+
+---
+
+## Phase 10 log — 2026-11-21
+
+Full findings in `docs/SECURITY_REVIEW.md`.
+
+- **Secrets:** cleared server credentials from `mobile/.env`; replaced the live Atlas URI in `backend/.env.example` with a local placeholder. The exposed Atlas credential remains in Git history and must be rotated. JWT secret now required to be at least 32 characters at startup.
+- **Startup guards:** server refuses to start without `MONGO_URI`, without a strong `JWT_SECRET`, or in production without `CLIENT_ORIGIN`.
+- **Audit trail:** new `AuditLog` model (365-day TTL) and `recordAudit` helper; user status changes, review moderation, place update/delete and business verification now write audit entries. Admins can read the latest 200 entries at `GET /api/admin/audit-logs`.
+- **Transport/upload hardening:** `x-powered-by` disabled; static uploads deny dotfiles and directory indexes; upload endpoint remains authenticated with MIME/extension allow-list and a 5 MB limit.
+- **RBAC:** unchanged and verified — admin router applies `protect, authorize('admin')`; business status changes require admin; registration cannot assign roles.
+- **Privacy:** local-only features continue to stay on-device; no identity document upload exists (safe default until encryption/retention is implemented).
+
+Verification: `node --check` passes on every changed backend file; `flutter analyze` 0 errors / 0 warnings; `flutter test` 20/20.
+
+Open items: rotate the exposed Atlas credential; restrict/rotate the Maps API key; email verification and admin MFA; upload scanning/quota; CNIC privacy audit.

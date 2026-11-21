@@ -99,6 +99,6 @@
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
 | Offline cache honesty (live/cached/expired labels) | Tested | Hive TTL cache + freshness states + offline banner; unit-tested; connectivity auto-refresh pending |
 | Release signing / production applicationId | Not started | Currently debug signing + `com.example.smartmap_ai` |
-| Security review (secrets, identity data) | In progress | `MONGO_URI` found in `mobile/.env` — must be removed |
+| Security review (secrets, identity data) | Tested | `docs/SECURITY_REVIEW.md`: client secret removed, example URI sanitised, fail-fast guards, audit log, upload/CORS hardening; credential rotation still required |
 | Accessibility audit | Not started | Phase 11 |
 | Signed release APK | Not started | Phase 12 |

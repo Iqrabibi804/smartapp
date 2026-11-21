@@ -14,7 +14,7 @@
 | Road advisory provenance | `flutter test` | 3/3 pass (all advisories sourced and dated; none claims a live status; ids unique) |
 | Phase 8 content | `flutter test` | 2/2 pass (readiness sections/ids valid; culture tips and phrases populated) |
 | Phase 9 content | `flutter test` | 3/3 pass (permit steps/destinations; PTA/currency content without fixed durations; complaint categories) |
-| Backend syntax | `node --check` on all modified files | OK (Phase 3 scripts, routes, models) |
+| Backend syntax | `node --check` on all modified files | OK (Phase 3 scripts, routes, models; Phase 10 server, admin/business routes, audit model/util) |
 
 Suite total: 20 tests, all passing.
 

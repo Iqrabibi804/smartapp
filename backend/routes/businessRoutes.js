@@ -4,6 +4,7 @@ const Place = require('../models/Place');
 const Review = require('../models/Review');
 const SavedPlace = require('../models/SavedPlace');
 const asyncHandler = require('../utils/asyncHandler');
+const { recordAudit } = require('../utils/audit');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 
@@ -229,6 +230,13 @@ router.put(
     }
 
     await business.save();
+
+    await recordAudit(req, {
+      action: 'business.status.update',
+      targetType: 'Business',
+      targetId: business._id,
+      metadata: { status, placeId: business.placeId ? String(business.placeId) : null },
+    });
 
     res.json({ success: true, business });
   })
