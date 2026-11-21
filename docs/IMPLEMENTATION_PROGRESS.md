@@ -17,7 +17,7 @@
 | 8 | Differentiating features | Tested | Journey Readiness checklist (persisted, honest score), Local Culture Companion, facility freshness dates; 16 tests green |
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Tested | Guidance-only permits; on-device pass; PTA/currency/embassy toolkit; local complaint records; 20 tests green |
 | 10 | Backend, admin, security hardening | Tested | Secrets removed/fail-fast guards; RBAC retained; audit log + TTL; upload/CORS hardening; `docs/SECURITY_REVIEW.md` |
-| 11 | Performance, compatibility, regression | Not started | — |
+| 11 | Performance, compatibility, regression | Tested | Bounded image decoding; branding fixed on all platforms; analyze/tests/web release build green; device checks pending |
 | 12 | Release signing and APK | Not started | — |
 
 ---
@@ -148,7 +148,7 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 11: performance, compatibility, full regression.
+1. Phase 12: release signing, APK, final documentation.
 
 ---
 
@@ -227,3 +227,14 @@ Full findings in `docs/SECURITY_REVIEW.md`.
 Verification: `node --check` passes on every changed backend file; `flutter analyze` 0 errors / 0 warnings; `flutter test` 20/20.
 
 Open items: rotate the exposed Atlas credential; restrict/rotate the Maps API key; email verification and admin MFA; upload scanning/quota; CNIC privacy audit.
+
+---
+
+## Phase 11 log — 2026-11-21
+
+- **Performance:** bounded `cacheWidth` on the three home image surfaces and the place-details hero, avoiding full-resolution decodes of remote photos. Existing list virtualization and TTL cache retained.
+- **Branding compatibility:** Android `android:label`, iOS `CFBundleDisplayName`/`CFBundleName`, the web `<title>`/meta title and `manifest.json` now say **SmartMap Punjab** (all previously `smartmap_ai`).
+- **Regression:** `flutter analyze` 0 errors / 0 warnings; `flutter test` 20/20; `flutter build web --release` completed successfully; `node --check` clean on changed backend files.
+- **Environment:** Flutter 3.47.0, Android SDK 36.1.0 present but licences not accepted; no Android device attached, so on-device journey verification is still outstanding.
+
+Full results are recorded in `docs/TESTING_REPORT.md` section 5.

@@ -476,6 +476,7 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                       Image.network(
                         b.$3,
                         fit: BoxFit.cover,
+                        cacheWidth: 900,
                         errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade400),
                       ),
                       Container(
@@ -1555,6 +1556,7 @@ class _CityQuickCard extends StatelessWidget {
             Image.network(
               city.coverImage,
               fit: BoxFit.cover,
+              cacheWidth: 600,
               errorBuilder: (_, __, ___) => Container(color: Colors.blueGrey),
             ),
             Container(
@@ -1719,6 +1721,7 @@ class _DestinationCard extends StatelessWidget {
                     Image.network(
                       place.images.first,
                       fit: BoxFit.cover,
+                      cacheWidth: 500,
                       errorBuilder: (_, __, ___) => _fallbackImage(),
                     )
                   else

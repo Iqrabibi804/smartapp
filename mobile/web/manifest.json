@@ -1,6 +1,6 @@
 {
-    "name": "smartmap_ai",
-    "short_name": "smartmap_ai",
+    "name": "SmartMap Punjab",
+    "short_name": "SmartMap",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

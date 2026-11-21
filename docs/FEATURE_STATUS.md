@@ -93,12 +93,12 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | 20 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory + 2 content + 3 phase-9 tests); broad coverage still required |
+| Automated tests | In progress | 20 tests pass; broad coverage and on-device journeys still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
 | Offline cache honesty (live/cached/expired labels) | Tested | Hive TTL cache + freshness states + offline banner; unit-tested; connectivity auto-refresh pending |
 | Release signing / production applicationId | Not started | Currently debug signing + `com.example.smartmap_ai` |
 | Security review (secrets, identity data) | Tested | `docs/SECURITY_REVIEW.md`: client secret removed, example URI sanitised, fail-fast guards, audit log, upload/CORS hardening; credential rotation still required |
-| Accessibility audit | Not started | Phase 11 |
+| Accessibility audit | Not started | Deferred: RTL/language switching audit still open |
 | Signed release APK | Not started | Phase 12 |

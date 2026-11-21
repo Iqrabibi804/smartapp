@@ -64,3 +64,27 @@ flutter analyze
 flutter test
 flutter run -d chrome --web-port=8123
 ```
+
+## 5. Phase 11 — performance, compatibility and regression
+
+### Performance changes
+
+- Home banner/carousel images now decode at bounded widths (`cacheWidth` 900 / 600 / 500) and the place-details hero at 1080 px, reducing memory for large remote photos while keeping text and gradients sharp.
+- Lists continue to use builder-based views; offline cache avoids repeat network fetches for 6–24 hours.
+
+### Compatibility
+
+| Target | Result |
+|---|---|
+| Flutter | 3.47.0 stable (doctor clean except Android licences) |
+| Web release | `flutter build web --release` succeeded (build/web produced) |
+| Android SDK | 36.1.0 installed; compileSdk 36; licences not accepted in this environment |
+| Android device | No emulator or physical device attached — runtime verification pending |
+| Windows/Chrome | Available; Chrome runtime smoke already recorded above |
+
+### Regression
+
+- `flutter analyze`: 0 errors / 0 warnings (info-level style hints remain).
+- `flutter test`: 20/20 pass.
+- `node --check`: all changed backend files pass.
+- App display name corrected to **SmartMap Punjab** on Android, iOS, web title and web manifest (previously `smartmap_ai`).

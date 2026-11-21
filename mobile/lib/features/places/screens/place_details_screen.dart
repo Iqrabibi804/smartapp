@@ -93,6 +93,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
                   Image.network(
                     place.images.first,
                     fit: BoxFit.cover,
+                    cacheWidth: 1080,
                     errorBuilder: (_, __, ___) => Container(
                       color: AppColors.primary.withValues(alpha: 0.15),
                       child: const Center(
