@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../core/data/punjab_offline_data.dart';
 import '../../../core/services/api_client.dart';
 import '../models/place_model.dart';
@@ -22,10 +24,26 @@ class PlacesService {
           .toList();
       if (places.isNotEmpty) return places;
     } catch (_) {
-      // Offline fallback
+      // Offline fallback below.
     }
 
-    return PunjabOfflineData.places.take(8).toList();
+    // Honest offline fallback: only places actually within the radius,
+    // computed from the bundled coordinates. Never label arbitrary places "nearby".
+    return PunjabOfflineData.places
+        .where((p) => _distanceKm(lat, lng, p.latitude, p.longitude) <= radiusKm)
+        .toList();
+  }
+
+  static double _distanceKm(double lat1, double lon1, double lat2, double lon2) {
+    const earthRadiusKm = 6371.0;
+    const toRad = math.pi / 180;
+    final dLat = (lat2 - lat1) * toRad;
+    final dLon = (lon2 - lon1) * toRad;
+    final sinLat = math.sin(dLat / 2);
+    final sinLon = math.sin(dLon / 2);
+    final h = sinLat * sinLat +
+        math.cos(lat1 * toRad) * math.cos(lat2 * toRad) * sinLon * sinLon;
+    return 2 * earthRadiusKm * math.asin(math.min(1, math.sqrt(h)));
   }
 
   Future<List<PlaceModel>> search({
@@ -92,11 +110,15 @@ class PlacesService {
           .toList();
       return PlaceDetailsResult(place: place, related: related);
     } catch (_) {
-      // Offline fallback
-      final place = PunjabOfflineData.places.firstWhere(
+      // Offline fallback: return the matching bundled record, or fail honestly
+      // instead of silently showing a different place.
+      final matches = PunjabOfflineData.places.where(
         (p) => p.id == id || p.name.toLowerCase() == id.toLowerCase(),
-        orElse: () => PunjabOfflineData.places.first,
       );
+      if (matches.isEmpty) {
+        throw StateError('This place is not available offline.');
+      }
+      final place = matches.first;
       final related = PunjabOfflineData.places
           .where((p) => p.id != place.id && (p.categoryName == place.categoryName || p.address.contains(place.address.split(',').first)))
           .take(4)

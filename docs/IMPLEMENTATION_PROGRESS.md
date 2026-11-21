@@ -11,7 +11,7 @@
 | 2 | Competitor + Pakistan problem research | Implemented | `docs/COMPETITOR_RESEARCH.md` (12 products, 18 sources); `docs/PAKISTAN_TOURIST_PROBLEMS.md` (20 problems, 22 sources) |
 | 3 | Data audit and cleanup | Tested | `docs/DATA_AUDIT.md`; honest verification labels in seeds/offline data; `publishedPlaceFilter`; canonical category taxonomy; analyze/test green |
 | 4 | Design system, branding, splash, home | Implemented | `docs/DESIGN_SYSTEM.md`; tokens + theme + bundled fonts + logo + splash + home header; analyze/test green |
-| 5 | Critical functional bug fixes | Not started | — |
+| 5 | Critical functional bug fixes | Tested | Offline search/sort/fallback bugs fixed; `docs/TESTING_REPORT.md`; 7 tests green; device journeys pending |
 | 6 | Offline and reliability foundation | Not started | — |
 | 7 | Core tourist features | Not started | — |
 | 8 | Differentiating features | Not started | — |
@@ -131,8 +131,23 @@ Verification: `flutter analyze` 0 errors / 0 warnings (17 infos); `flutter test`
 
 Open items: section-level polish for home (banners/grids) and remaining screens, full RTL layout mirroring, interface-wide language switching.
 
+---
+
+## Phase 5 log — 2026-11-21
+
+Evidence in `docs/TESTING_REPORT.md`. Fixes:
+
+- Place details offline fallback no longer substitutes an unrelated place for an unknown id (throws; screen shows error state).
+- Map "nearby" offline fallback now uses real distance filtering instead of returning the first eight places.
+- Offline search honors `sort` (`rating`, `popular`), which was previously ignored.
+- Removed remaining unverifiable claims in city guide ("Explore Verified Places", "real-time verified spots") and emergency-number copy; softened admin/profile labels.
+
+Added 6 offline filter unit tests. Full suite: 7 tests passing. `flutter analyze`: 0 errors / 0 warnings.
+
+Runtime: app loads in Chrome with correct title and zero console errors/warnings. Screenshot-level and tap-through verification blocked by the unavailable visible browser surface and the absence of an Android device.
+
 ### Next actions
 
-1. Phase 5: critical functional bug fixes across city/category flows, search/filters, detail pages.
+1. Phase 6: offline and reliability foundation (cache TTL, sync, indicators).
 
 

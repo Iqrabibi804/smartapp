@@ -515,12 +515,12 @@ class _CityGuideScreenState extends State<CityGuideScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Explore Verified Places in ${city.name}',
+                'Explore places in ${city.name}',
                 style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               const Text(
-                'Discover real-time verified spots, directions on map, reviews, and hospital & food spots.',
+                'Find spots with directions, reviews, hospitals and food options.',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               const SizedBox(height: 14),
@@ -781,7 +781,7 @@ class _CityGuideScreenState extends State<CityGuideScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Immediate 24/7 emergency response numbers active across ${city.name} and Punjab:',
+                'Commonly published emergency numbers. Confirm locally before relying on them:',
                 style: const TextStyle(color: Colors.black87, fontSize: 13),
               ),
               const SizedBox(height: 16),

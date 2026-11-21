@@ -621,7 +621,7 @@ class PunjabOfflineData {
     double? minRating,
     String? sort,
   }) {
-    return places.where((place) {
+    final results = places.where((place) {
       if (city != null && city.isNotEmpty && city.toLowerCase() != 'all cities') {
         final matchesCity = place.address.toLowerCase().contains(city.toLowerCase()) ||
             place.name.toLowerCase().contains(city.toLowerCase()) ||
@@ -657,5 +657,12 @@ class PunjabOfflineData {
 
       return true;
     }).toList();
+
+    if (sort == 'rating') {
+      results.sort((a, b) => b.rating.compareTo(a.rating));
+    } else if (sort == 'popular') {
+      results.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
+    }
+    return results;
   }
 }

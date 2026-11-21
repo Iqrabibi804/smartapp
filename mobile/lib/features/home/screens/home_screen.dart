@@ -2136,7 +2136,7 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Specialized administrative tools for Punjab Tourism Department officers to moderate listings, approve businesses, and manage verified spots.',
+            'Administrative tools to moderate listings, approve businesses, and manage places.',
             style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
           const SizedBox(height: 10),

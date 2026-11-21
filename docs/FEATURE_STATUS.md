@@ -25,9 +25,9 @@
 |---|---|---|---|
 | 81-city Punjab dataset | `core/data/punjab_81_cities_data.dart` | Verified | Structural audit passed: 81 cities, 0 duplicates, all fields complete, HTTPS images (see `docs/DATA_AUDIT.md`) |
 | All Cities screen | `features/places/screens/city_explorer_screen.dart` | Implemented | Journey test pending |
-| City guide / city-specific attractions | `features/places/screens/city_guide_screen.dart` | Implemented | Now compiles cleanly; journey/category test pending |
-| Place details | `features/places/screens/place_details_screen.dart` | Implemented | Journey test pending |
-| Search and filters | `features/search/` | Implemented | Journey test pending |
+| City guide / city-specific attractions | `features/places/screens/city_guide_screen.dart` | Implemented | Compiles cleanly; dishonest verification copy removed; device journey pending |
+| Place details | `features/places/screens/place_details_screen.dart` | Implemented | No silent wrong-place fallback; device journey pending |
+| Search and filters | `features/search/` | Tested (offline path) | Offline filter/sort unit-tested; live API journey pending |
 | Saved places / favorites | `features/favorites/` | Implemented | Test pending |
 | Reviews and media submissions | `features/reviews/` | Implemented | Moderation/back-end path to review |
 | Events | `features/events/` | Implemented | Test pending |
@@ -93,7 +93,7 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | Splash smoke test passes hermetically; expansion is a roadmap requirement |
+| Automated tests | In progress | 7 tests pass (splash smoke + 6 offline filter tests); broad coverage still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
