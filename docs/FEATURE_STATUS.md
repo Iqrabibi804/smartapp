@@ -46,7 +46,7 @@
 | Taxi fare estimator | place/trips screens (verify exact location) | Implemented | Must be labeled "estimate" |
 | Local vs tourist price (anti-scam) | `features/places/screens/local_vs_tourist_price_screen.dart` | Implemented | Must carry source/verification status |
 | Offline payment guide | `features/places/screens/offline_payment_guide_screen.dart` | Implemented | Content audit pending |
-| Offline city packs | `features/places/screens/offline_city_packs_screen.dart` | Implemented | Cache expiry rules pending (Phase 6) |
+| Offline city packs | `features/places/screens/offline_city_packs_screen.dart` | Implemented | Data cache has TTL rules; dedicated city-pack download UI still pending |
 
 ## 4. Trust, safety, and honesty
 
@@ -93,11 +93,11 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | 7 tests pass (splash smoke + 6 offline filter tests); broad coverage still required |
+| Automated tests | In progress | 11 tests pass (splash smoke + 6 offline filter + 4 cache tests); broad coverage still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
-| Offline cache honesty (live/cached/expired labels) | Not started | Phase 6 |
+| Offline cache honesty (live/cached/expired labels) | Tested | Hive TTL cache + freshness states + offline banner; unit-tested; connectivity auto-refresh pending |
 | Release signing / production applicationId | Not started | Currently debug signing + `com.example.smartmap_ai` |
 | Security review (secrets, identity data) | In progress | `MONGO_URI` found in `mobile/.env` — must be removed |
 | Accessibility audit | Not started | Phase 11 |

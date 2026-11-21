@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../../../core/data/punjab_offline_data.dart';
+import '../../../core/offline/offline_cache.dart';
 import '../../../core/services/api_client.dart';
 import '../models/place_model.dart';
 
@@ -13,22 +14,33 @@ class PlacesService {
     required double lng,
     double radiusKm = 5,
   }) async {
+    final cache = OfflineCache.instance;
+    final key = 'nearby:${lat.toStringAsFixed(2)}:${lng.toStringAsFixed(2)}:${radiusKm.toStringAsFixed(1)}';
     try {
       final response = await _apiClient.dio.get(
         '/places/nearby',
         queryParameters: {'lat': lat, 'lng': lng, 'radiusKm': radiusKm},
       );
 
-      final places = (response.data['places'] as List<dynamic>)
+      final raw = response.data['places'] as List<dynamic>;
+      final places = raw
           .map((json) => PlaceModel.fromJson(json as Map<String, dynamic>))
           .toList();
-      if (places.isNotEmpty) return places;
+      if (places.isNotEmpty) {
+        cache.reportOnline();
+        await cache.put(key, raw, ttl: const Duration(hours: 6));
+        return places;
+      }
     } catch (_) {
-      // Offline fallback below.
+      // Offline fallbacks below.
     }
 
-    // Honest offline fallback: only places actually within the radius,
-    // computed from the bundled coordinates. Never label arbitrary places "nearby".
+    cache.reportOffline();
+    final cached = _parsePlaces(cache.read(key));
+    if (cached.isNotEmpty) return cached;
+
+    // Bundled fallback: only places actually within the radius, computed from
+    // the bundled coordinates. Never label arbitrary places "nearby".
     return PunjabOfflineData.places
         .where((p) => _distanceKm(lat, lng, p.latitude, p.longitude) <= radiusKm)
         .toList();
@@ -58,6 +70,17 @@ class PlacesService {
     double radiusKm = 25,
     String? sort,
   }) async {
+    final cache = OfflineCache.instance;
+    final key = _searchKey(
+      query: query,
+      categoryId: categoryId,
+      categoryName: categoryName,
+      city: city,
+      minRating: minRating,
+      priceRange: priceRange,
+      sort: sort,
+    );
+
     try {
       final response = await _apiClient.dio.get(
         '/places/search',
@@ -75,15 +98,24 @@ class PlacesService {
         },
       );
 
-      final places = (response.data['places'] as List<dynamic>)
+      final raw = response.data['places'] as List<dynamic>;
+      final places = raw
           .map((json) => PlaceModel.fromJson(json as Map<String, dynamic>))
           .toList();
-      if (places.isNotEmpty) return places;
+      if (places.isNotEmpty) {
+        cache.reportOnline();
+        await cache.put(key, raw);
+        return places;
+      }
     } catch (_) {
-      // Offline fallback
+      // Offline fallbacks below.
     }
 
-    // Seamless offline search
+    cache.reportOffline();
+    final cached = _parsePlaces(cache.read(key));
+    if (cached.isNotEmpty) return cached;
+
+    // Seamless offline search over the bundled dataset.
     final results = PunjabOfflineData.filterPlaces(
       query: query,
       categoryId: categoryId,
@@ -101,30 +133,76 @@ class PlacesService {
     return results.isNotEmpty ? results : PunjabOfflineData.places;
   }
 
+  static String _searchKey({
+    String? query,
+    String? categoryId,
+    String? categoryName,
+    String? city,
+    double? minRating,
+    String? priceRange,
+    String? sort,
+  }) {
+    return 'search:${query ?? ''}|${categoryId ?? ''}|${categoryName ?? ''}|'
+        '${city ?? ''}|${minRating ?? ''}|${priceRange ?? ''}|${sort ?? ''}';
+  }
+
+  static List<PlaceModel> _parsePlaces(Object? raw) {
+    if (raw is! List) return const [];
+    try {
+      return raw
+          .map((e) => PlaceModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<PlaceDetailsResult> getById(String id) async {
+    final cache = OfflineCache.instance;
+    final key = 'place:$id';
     try {
       final response = await _apiClient.dio.get('/places/$id');
-      final place = PlaceModel.fromJson(response.data['place'] as Map<String, dynamic>);
-      final related = (response.data['related'] as List<dynamic>? ?? [])
+      final placeJson = response.data['place'] as Map<String, dynamic>;
+      final relatedJson = response.data['related'] as List<dynamic>? ?? [];
+      final place = PlaceModel.fromJson(placeJson);
+      final related = relatedJson
           .map((json) => PlaceModel.fromJson(json as Map<String, dynamic>))
           .toList();
+      cache.reportOnline();
+      await cache.put(key, {'place': placeJson, 'related': relatedJson});
       return PlaceDetailsResult(place: place, related: related);
     } catch (_) {
-      // Offline fallback: return the matching bundled record, or fail honestly
-      // instead of silently showing a different place.
-      final matches = PunjabOfflineData.places.where(
-        (p) => p.id == id || p.name.toLowerCase() == id.toLowerCase(),
-      );
-      if (matches.isEmpty) {
-        throw StateError('This place is not available offline.');
-      }
-      final place = matches.first;
-      final related = PunjabOfflineData.places
-          .where((p) => p.id != place.id && (p.categoryName == place.categoryName || p.address.contains(place.address.split(',').first)))
-          .take(4)
-          .toList();
-      return PlaceDetailsResult(place: place, related: related);
+      // Offline fallback.
     }
+
+    cache.reportOffline();
+    final cached = cache.read(key);
+    if (cached is Map && cached['place'] is Map) {
+      try {
+        final place = PlaceModel.fromJson(Map<String, dynamic>.from(cached['place'] as Map));
+        final related = cached['related'] is List
+            ? (cached['related'] as List)
+                .map((e) => PlaceModel.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList()
+            : <PlaceModel>[];
+        return PlaceDetailsResult(place: place, related: related);
+      } catch (_) {}
+    }
+
+    // Bundled fallback: return the matching record, or fail honestly instead
+    // of silently showing a different place.
+    final matches = PunjabOfflineData.places.where(
+      (p) => p.id == id || p.name.toLowerCase() == id.toLowerCase(),
+    );
+    if (matches.isEmpty) {
+      throw StateError('This place is not available offline.');
+    }
+    final place = matches.first;
+    final related = PunjabOfflineData.places
+        .where((p) => p.id != place.id && (p.categoryName == place.categoryName || p.address.contains(place.address.split(',').first)))
+        .take(4)
+        .toList();
+    return PlaceDetailsResult(place: place, related: related);
   }
 }
 

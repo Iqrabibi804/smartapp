@@ -12,7 +12,7 @@
 | 3 | Data audit and cleanup | Tested | `docs/DATA_AUDIT.md`; honest verification labels in seeds/offline data; `publishedPlaceFilter`; canonical category taxonomy; analyze/test green |
 | 4 | Design system, branding, splash, home | Implemented | `docs/DESIGN_SYSTEM.md`; tokens + theme + bundled fonts + logo + splash + home header; analyze/test green |
 | 5 | Critical functional bug fixes | Tested | Offline search/sort/fallback bugs fixed; `docs/TESTING_REPORT.md`; 7 tests green; device journeys pending |
-| 6 | Offline and reliability foundation | Not started | — |
+| 6 | Offline and reliability foundation | Tested | TTL cache + honest freshness states wired into categories/search/nearby/details; offline banner; 11 tests green |
 | 7 | Core tourist features | Not started | — |
 | 8 | Differentiating features | Not started | — |
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Not started | — |
@@ -148,6 +148,18 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 6: offline and reliability foundation (cache TTL, sync, indicators).
+1. Phase 7: core tourist features (facilities, road alerts, travel reality check, trust/pricing, DC official rates).
 
+---
 
+## Phase 6 log — 2026-11-21
+
+- Added `core/offline/offline_cache.dart`: Hive-backed singleton cache (`offline_cache_v1`) with per-entry TTL, saved timestamps, online/offline reporting, and a `CacheFreshness` state model (live/cached/expired/bundled/unavailable). Expired entries are still readable but reported as expired.
+- Added `offline_cache_provider.dart` and `offline_status_banner.dart`: the home screen now shows a gold strip only when the app falls offline or saved data is stale, with the saved date/time. No banner when data is live.
+- Wired the cache into `PlacesService` (nearby `6h` keyed by rounded coordinates, search `24h` keyed by full filters, details `24h` per id) and `CategoriesService` (`categories`). Offline fallbacks still use real bundled data; details still fail honestly for unknown places.
+- `main()` now initialises the cache before `runApp`; Hive failures degrade to bundled-data mode instead of crashing.
+- Added `test/offline_cache_test.dart` (fresh→cached, stale→expired, missing→unavailable, offline/online reporting) using a temp Hive directory.
+
+Verification: `flutter test` 11/11 pass (1 widget smoke, 6 offline filter, 4 cache). `flutter analyze`: 0 errors / 0 warnings.
+
+Open items: connectivity-change auto-refresh / pull-to-refresh wiring, bundle-level expiry for the shipped dataset, background sync, and on-device offline verification.

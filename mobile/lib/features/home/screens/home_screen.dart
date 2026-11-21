@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/punjab_81_cities_data.dart';
 import '../../../core/localization/app_language.dart';
+import '../../../core/offline/offline_status_banner.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -217,6 +218,7 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
+        const OfflineStatusBanner(),
         // ── Brand header ────────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),

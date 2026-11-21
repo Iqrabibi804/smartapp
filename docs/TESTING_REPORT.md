@@ -10,9 +10,10 @@
 | Static analysis | `flutter analyze` | 0 errors, 0 warnings, 18 info-level hints (`use_build_context_synchronously`, `prefer_const`, deprecated `DropdownButtonFormField.value`) |
 | Widget smoke test | `flutter test` | Passes: splash renders, leaves cleanly, no pending timers |
 | Offline filter tests | `flutter test` | 6/6 pass (category, city, rating threshold, rating sort, popularity sort, keyword) |
+| Offline cache tests | `flutter test` | 4/4 pass (fresh→cached, stale→expired, missing→unavailable, online/offline reporting) |
 | Backend syntax | `node --check` on all modified files | OK (Phase 3 scripts, routes, models) |
 
-Suite total: 7 tests, all passing.
+Suite total: 11 tests, all passing.
 
 ## 2. Runtime smoke test (web)
 
@@ -27,6 +28,7 @@ Suite total: 7 tests, all passing.
 - Category filter returns only records in that category.
 - Minimum rating and both sort orders behave as specified; sort was previously ignored in the offline path and is now applied.
 - Keyword matching covers name, address, description, category, and facilities.
+- Cache entries expose age/TTL honesty: a fresh write reads back as `cached`, an expired entry as `expired`, and a missing key as `unavailable`; online/offline reports flip the banner state.
 
 ## 4. Bug fixes landed in Phase 5
 
