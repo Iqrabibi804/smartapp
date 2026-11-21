@@ -1,7 +1,7 @@
 name: smartmap_ai
 description: "SmartMap Punjab — Explore Punjab. Travel with Confidence."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -28,7 +28,6 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   socket_io_client: ^2.0.2
-  telephony: ^0.2.0
   url_launcher: ^6.3.0
   image_picker: ^1.1.2
 

@@ -1,4 +1,4 @@
-package com.example.smartmap_ai
+package com.smartmappunjab.app
 
 import io.flutter.embedding.android.FlutterActivity
 

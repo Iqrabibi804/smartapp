@@ -1738,16 +1738,26 @@ class _DestinationCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star, size: 12, color: Colors.amber),
-                          const SizedBox(width: 3),
-                          Text(
-                            place.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                          if (place.hasReviews) ...[
+                            const Icon(Icons.star, size: 12, color: Colors.amber),
+                            const SizedBox(width: 3),
+                            Text(
+                              place.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
+                          ] else
+                            const Text(
+                              'New',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -1953,13 +1963,6 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
     final uri = Uri.parse('tel:$number');
     try {
       await launchUrl(uri);
-    } catch (_) {}
-  }
-
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {}
   }
 

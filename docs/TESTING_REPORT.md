@@ -52,8 +52,8 @@ Suite total: 20 tests, all passing.
 | Search against live API | Backend/MongoDB not running in this environment; offline fallback covered by tests. |
 | Auth flows | No backend; hermetic widget test only. |
 | RTL layout | Urdu strings render with Nastaliq; full mirroring not yet audited. |
-| Offline cache expiry | Implemented in Phase 6, not yet built. |
-| Signed release APK | Phase 12. |
+| Offline cache expiry | TTL/freshness unit tests pass; on-device clock behaviour unverified. |
+| Signed release APK | Built and signature-verified (Phase 12); no device available to install it. |
 
 ## 6. Repro commands
 
@@ -88,3 +88,20 @@ flutter run -d chrome --web-port=8123
 - `flutter test`: 20/20 pass.
 - `node --check`: all changed backend files pass.
 - App display name corrected to **SmartMap Punjab** on Android, iOS, web title and web manifest (previously `smartmap_ai`).
+
+### Phase 12 — release build
+
+| Check | Result |
+|---|---|
+| `flutter analyze` | No errors or warnings |
+| `flutter test` | 20/20 pass |
+| `flutter build apk --release` | Success — `app-release.apk`, 57.9 MB |
+| `apksigner verify` | Passes; APK Signature Scheme v2, one signer |
+| Certificate | `CN=SmartMap Punjab, OU=Mobile, O=SmartMap Punjab, L=Lahore, ST=Punjab, C=PK` |
+| `aapt dump badging` | `com.smartmappunjab.app`, versionName 1.0.0, versionCode 1, minSdk 24, targetSdk 36 |
+| APK SHA-256 | `82c54bf49424e656cc2eda94192d6a0b9807d7e32df680513dd581e2daa3ee85` |
+| Install/launch on device | Not performed — no Android device or emulator attached |
+
+Build environment notes: `C:` was full, so Gradle home and temp moved to `D:/gradle-home`
+and `D:/build-tmp`; the unused `telephony` plugin was removed; `storeFile` in
+`key.properties` must stay module-relative (`smartmap-release.jks`).

@@ -161,9 +161,13 @@ class _PlaceDetailsContent extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.star, size: 18, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text('${place.rating.toStringAsFixed(1)} (${place.reviewCount} reviews)'),
+                    if (place.hasReviews) ...[
+                      const Icon(Icons.star, size: 18, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text('${place.rating.toStringAsFixed(1)} (${place.reviewCount} reviews)'),
+                    ] else
+                      const Text('No reviews yet',
+                          style: TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(width: 12),
                     Text(_priceLabel(place.priceRange),
                         style: const TextStyle(color: AppColors.textSecondary)),
@@ -853,9 +857,14 @@ class _RelatedCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 12, color: Colors.amber),
-                      const SizedBox(width: 2),
-                      Text(place.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 11)),
+                      if (place.hasReviews) ...[
+                        const Icon(Icons.star, size: 12, color: Colors.amber),
+                        const SizedBox(width: 2),
+                        Text(place.rating.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 11)),
+                      ] else
+                        const Text('No reviews yet',
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                     ],
                   ),
                 ],

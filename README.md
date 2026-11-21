@@ -14,6 +14,26 @@ The implementation roadmap and working rules live in [docs/MASTER_PROMPT.md](doc
 Phase-by-phase status is tracked in [docs/IMPLEMENTATION_PROGRESS.md](docs/IMPLEMENTATION_PROGRESS.md)
 and the feature matrix in [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md).
 
+Release and reference documents: [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md),
+[docs/PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md),
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
+[docs/DATA_SOURCES.md](docs/DATA_SOURCES.md),
+[docs/API_DEPENDENCIES.md](docs/API_DEPENDENCIES.md),
+[docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
+
+## Release build
+
+Release signing reads `mobile/android/key.properties` (gitignored) and
+`mobile/android/app/smartmap-release.jks` (gitignored). Back both files up; losing the
+keystore blocks future updates. Build with a reachable API:
+
+```bash
+cd mobile
+flutter build apk --release --dart-define=API_BASE_URL=https://your-api.example.com/api
+```
+
+The default `API_BASE_URL` is `http://10.0.2.2:5000/api` (Android emulator).
+
 ---
 
 ## Repository layout

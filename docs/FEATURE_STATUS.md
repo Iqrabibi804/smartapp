@@ -58,8 +58,8 @@
 | SOS with SMS fallback | — | Not started | Phase 9 |
 | Facility finder | `features/places/screens/facility_finder_screen.dart` | Implemented | Directory filters with verification labels and honest empty states |
 | Travel reality check | place details card | Implemented | Explicit "not live" disclosure with authority guidance |
-| DC official rate lists | — | Not started | Phase 7 (verified documents only) |
-| Overcharging / misleading listing reports | partial (local-vs-tourist screen) | In progress | Structured reporting flow pending |
+| DC official rate lists | price fairness screen | Implemented | No official list is bundled; screen states rates are unavailable and gives overcharging guidance |
+| Overcharging / misleading listing reports | price fairness + complaints screens | Tested | Structured on-device reports with reference IDs; explicitly not transmitted to any authority |
 
 ## 5. Planned service modules
 
@@ -96,9 +96,10 @@
 | Automated tests | In progress | 20 tests pass; broad coverage and on-device journeys still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
+| Bundled rating honesty | Implemented | Seeded star ratings/review counts removed; place surfaces show "No reviews yet" until real reviews exist |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |
 | Offline cache honesty (live/cached/expired labels) | Tested | Hive TTL cache + freshness states + offline banner; unit-tested; connectivity auto-refresh pending |
-| Release signing / production applicationId | Not started | Currently debug signing + `com.example.smartmap_ai` |
+| Release signing / production applicationId | Implemented | `com.smartmappunjab.app`; release build uses keystore signing and fails if `android/key.properties` is missing |
 | Security review (secrets, identity data) | Tested | `docs/SECURITY_REVIEW.md`: client secret removed, example URI sanitised, fail-fast guards, audit log, upload/CORS hardening; credential rotation still required |
 | Accessibility audit | Not started | Deferred: RTL/language switching audit still open |
-| Signed release APK | Not started | Phase 12 |
+| Signed release APK | Tested | `app-release.apk` 57.9 MB, `com.smartmappunjab.app` 1.0.0 (1), v2-signed, SHA-256 recorded; device install pending |

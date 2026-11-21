@@ -27,6 +27,8 @@ class PlaceModel {
   final int? touristPrice; // Rate tourists are often scammed with
   final String? audioGuideUrdu; // Urdu self-guided voice tour script
 
+  bool get hasReviews => reviewCount > 0;
+
   PlaceModel({
     required this.id,
     required this.name,

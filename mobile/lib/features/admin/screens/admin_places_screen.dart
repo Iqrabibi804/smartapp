@@ -265,7 +265,7 @@ class _AdminPlacesScreenState extends ConsumerState<AdminPlacesScreen> {
                           ],
                         ),
                         subtitle: Text(
-                          '${p.address}\nRating: ${p.rating}★ (${p.reviewCount} reviews)',
+                          '${p.address}\n${p.reviewCount > 0 ? 'Rating: ${p.rating}★ (${p.reviewCount} reviews)' : 'No reviews yet'}',
                           style: const TextStyle(fontSize: 13),
                         ),
                         trailing: Row(

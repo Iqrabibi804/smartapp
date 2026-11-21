@@ -261,9 +261,12 @@ class _PlacePreviewSheet extends StatelessWidget {
           ),
           Row(
             children: [
-              const Icon(Icons.star, size: 16, color: Colors.amber),
-              const SizedBox(width: 4),
-              Text('${place.rating.toStringAsFixed(1)} (${place.reviewCount})'),
+              if (place.hasReviews) ...[
+                const Icon(Icons.star, size: 16, color: Colors.amber),
+                const SizedBox(width: 4),
+                Text('${place.rating.toStringAsFixed(1)} (${place.reviewCount})'),
+              ] else
+                const Text('No reviews yet'),
               const SizedBox(width: 12),
               if (place.verified)
                 const Icon(Icons.verified, size: 16, color: AppColors.primary),

@@ -124,9 +124,14 @@ class _SavedPlaceCard extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 13, color: Colors.amber),
-                      const SizedBox(width: 3),
-                      Text(place.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12)),
+                      if (place.hasReviews) ...[
+                        const Icon(Icons.star, size: 13, color: Colors.amber),
+                        const SizedBox(width: 3),
+                        Text(place.rating.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 12)),
+                      ] else
+                        const Text('No reviews yet',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ],

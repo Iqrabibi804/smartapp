@@ -697,12 +697,18 @@ class _PlaceCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(Icons.star, size: 14, color: Colors.amber),
-                              const SizedBox(width: 3),
-                              Text(
-                                '${place.rating.toStringAsFixed(1)} (${place.reviewCount})',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryTextColor),
-                              ),
+                              if (place.hasReviews) ...[
+                                const Icon(Icons.star, size: 14, color: Colors.amber),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${place.rating.toStringAsFixed(1)} (${place.reviewCount})',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryTextColor),
+                                ),
+                              ] else
+                                Text(
+                                  'No reviews yet',
+                                  style: TextStyle(fontSize: 12, color: primaryTextColor.withValues(alpha: 0.7)),
+                                ),
                               const SizedBox(width: 10),
                               if (_isHospital)
                                 Container(

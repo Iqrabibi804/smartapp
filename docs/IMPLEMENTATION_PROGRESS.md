@@ -18,7 +18,7 @@
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Tested | Guidance-only permits; on-device pass; PTA/currency/embassy toolkit; local complaint records; 20 tests green |
 | 10 | Backend, admin, security hardening | Tested | Secrets removed/fail-fast guards; RBAC retained; audit log + TTL; upload/CORS hardening; `docs/SECURITY_REVIEW.md` |
 | 11 | Performance, compatibility, regression | Tested | Bounded image decoding; branding fixed on all platforms; analyze/tests/web release build green; device checks pending |
-| 12 | Release signing and APK | Not started | — |
+| 12 | Release signing and APK | Tested | `com.smartmappunjab.app` 1.0.0+1; v2-signed APK 57.9 MB; SHA-256 recorded; `docs/RELEASE_NOTES.md`; device install pending |
 
 ---
 
@@ -44,7 +44,7 @@
 ### Findings from repository inspection
 
 1. **Secret exposure risk:** `mobile/.env` contains a `MONGO_URI` entry. A database URI must never ship in a client app. Remove it from mobile and rely on the backend-only `.env`. (Phase 10)
-2. **Release configuration:** `applicationId` is `com.example.smartmap_ai` and release build uses the debug signing config. Both must be fixed before any release. (Phase 12)
+2. **Release configuration:** `applicationId` is `com.example.smartmap_ai` and release build uses the debug signing config. Both must be fixed before any release. (Phase 12 — resolved: `com.smartmappunjab.app`, keystore-backed release signing enforced at build time.)
 3. **Test coverage:** `mobile/test/` contains a single smoke test (`widget_test.dart`). No unit/widget/integration coverage of real flows. (Phase 11)
 4. **Theme:** `core/theme/app_theme.dart` defines three colorful palettes (including truck-art magenta). Replace with the canonical national identity; keep light/dark mode. (Phase 4)
 5. **Typography:** Poppins / Roboto / Noto Nastaliq Urdu are not declared or bundled in `pubspec.yaml`. Urdu RTL behavior unverified. (Phase 4)
@@ -238,3 +238,18 @@ Open items: rotate the exposed Atlas credential; restrict/rotate the Maps API ke
 - **Environment:** Flutter 3.47.0, Android SDK 36.1.0 present but licences not accepted; no Android device attached, so on-device journey verification is still outstanding.
 
 Full results are recorded in `docs/TESTING_REPORT.md` section 5.
+
+---
+
+## Phase 12 log — 2026-11-22
+
+- **Application identity:** Kotlin `MainActivity` moved to `com/smartmappunjab/app`, package `com.smartmappunjab.app`; `namespace` and `applicationId` updated; version `1.0.0+1`.
+- **Signing:** keystore generated (`android/app/smartmap-release.jks`, alias `smartmap`), `android/key.properties` wired into Kotlin DSL signing config. Release builds fail with a clear Gradle error when `key.properties` is missing. Both files are gitignored — they must be backed up by the owner.
+- **Build blockers resolved:** removed the unused `telephony` plugin (AGP 9 namespace failure); fixed the keystore `storeFile` path (module-relative `smartmap-release.jks`); moved Gradle home/temp to `D:\gradle-home` and `D:\build-tmp` because `C:` was full.
+- **APK:** `app-release.apk` 57.9 MB, package `com.smartmappunjab.app`, version `1.0.0 (1)`, minSdk 24 / targetSdk 36, verified by `apksigner` with APK Signature Scheme v2. Certificate `CN=SmartMap Punjab ...`; APK SHA-256 `82c54bf49424e656cc2eda94192d6a0b9807d7e32df680513dd581e2daa3ee85`.
+- **Honesty hardening:** all seeded ratings/review counts zeroed (UI shows "No reviews yet"); `/api/emergency/sos` now returns 503 instead of pretending an SOS was received.
+- **Docs:** `docs/RELEASE_NOTES.md`, `docs/PRODUCT_REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DATA_SOURCES.md`, `docs/API_DEPENDENCIES.md`.
+
+Verification: `flutter analyze` — no errors or warnings; `flutter test` 20/20; `apksigner verify` passes; `aapt dump badging` confirms package/version. No Android device was attached, so in-place APK installation is still pending.
+
+Open items for store release: rotate the exposed Atlas credential; restrict/rotate the Maps key in `AndroidManifest.xml`; on-device smoke test; privacy policy URL; Urdu/RTL completion.

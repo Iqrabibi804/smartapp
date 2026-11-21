@@ -14,22 +14,15 @@ exports.getEmergencyByCity = asyncHandler(async (req, res, next) => {
   res.json({ success: true, data: emergency });
 });
 
-// @desc    Trigger SOS SMS (fallback if no internet)
-// @route   POST /api/sos
+// @desc    SOS delivery endpoint
+// @route   POST /api/emergency/sos
 // @access  Protected
-exports.sendSOS = asyncHandler(async (req, res, next) => {
-  const { lat, lng, userId } = req.body;
-  if (lat == null || lng == null) {
-    return next(new ApiError(400, 'Latitude and longitude are required'));
-  }
-  // Find nearest emergency contact (simplified: nearest city by distance)
-  // For now, just pick the first city record (could be improved with geo queries)
-  const emergency = await Emergency.findOne();
-  if (!emergency) {
-    return next(new ApiError(500, 'Emergency contacts not configured'));
-  }
-  // TODO: integrate SMS provider (e.g., Twilio). For now, just return details.
-  const message = `SOS from user ${userId || 'unknown'} at (${lat},${lng})`;
-  // Placeholder: In production, call SMS gateway here.
-  res.json({ success: true, message: 'SOS request received', smsTo: emergency.touristHelpline.phone, smsBody: message });
+// No SMS gateway is connected in this release, so the endpoint refuses rather than
+// implying that help was dispatched.
+exports.sendSOS = asyncHandler(async (req, res) => {
+  res.status(503).json({
+    success: false,
+    message:
+      'SOS delivery is not connected. Call Rescue 1122, Police 15 or the Tourist Helpline directly.',
+  });
 });
