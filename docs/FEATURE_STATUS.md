@@ -43,8 +43,8 @@
 | Trip planner / my trips / details | `features/trips/` | Implemented | Test pending |
 | Budget calculator | `features/trips/screens/budget_calculator_screen.dart` | Implemented | Test pending |
 | Group bill splitter | `features/trips/screens/group_bill_splitter_screen.dart` | Implemented | Test pending |
-| Taxi fare estimator | place/trips screens (verify exact location) | Implemented | Must be labeled "estimate" |
-| Local vs tourist price (anti-scam) | `features/places/screens/local_vs_tourist_price_screen.dart` | Implemented | Must carry source/verification status |
+| Taxi fare estimator | place/trips screens (verify exact location) | Implemented | Must be labeled "estimate"; budget output now labelled planning estimates |
+| Price fairness guide / DC rates | `features/places/screens/local_vs_tourist_price_screen.dart` | Tested | All fabricated rupee figures removed; DC rate lists report "information unavailable"; on-device report form |
 | Offline payment guide | `features/places/screens/offline_payment_guide_screen.dart` | Implemented | Content audit pending |
 | Offline city packs | `features/places/screens/offline_city_packs_screen.dart` | Implemented | Data cache has TTL rules; dedicated city-pack download UI still pending |
 
@@ -52,12 +52,12 @@
 
 | Feature | Location | Status | Notes |
 |---|---|---|---|
-| Road infrastructure alerts | `features/places/screens/road_infrastructure_alerts_screen.dart` | Implemented | Confirm data source honesty; no fake live data |
+| Road advisories | `features/places/screens/road_infrastructure_alerts_screen.dart` | Tested | Sourced reference guidance; statuses report "information unavailable"; no fake live timestamps |
 | CNIC verification screen | `features/places/screens/cnic_verification_screen.dart` | In progress | Privacy audit required: data minimization, consent, secure storage |
 | Emergency contacts | backend `emergency` model/routes | Implemented | Numbers must be verified before display |
-| SOS with SMS fallback | — | Not started | Phase 7 |
-| Facility finder | — | Not started | Phase 7 |
-| Travel reality check | — | Not started | Phase 7 |
+| SOS with SMS fallback | — | Not started | Phase 9 |
+| Facility finder | `features/places/screens/facility_finder_screen.dart` | Implemented | Directory filters with verification labels and honest empty states |
+| Travel reality check | place details card | Implemented | Explicit "not live" disclosure with authority guidance |
 | DC official rate lists | — | Not started | Phase 7 (verified documents only) |
 | Overcharging / misleading listing reports | partial (local-vs-tourist screen) | In progress | Structured reporting flow pending |
 
@@ -93,7 +93,7 @@
 | Item | Status | Notes |
 |---|---|---|
 | Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
-| Automated tests | In progress | 11 tests pass (splash smoke + 6 offline filter + 4 cache tests); broad coverage still required |
+| Automated tests | In progress | 14 tests pass (splash smoke + 6 offline filter + 4 cache + 3 advisory tests); broad coverage still required |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |
 | Category taxonomy | Implemented | 11 canonical categories from `backend/config/categories.js`; content gaps for Fast Food / Adventure / Family Attractions |

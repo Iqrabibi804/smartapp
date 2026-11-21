@@ -420,6 +420,13 @@ ${calc['isOverBudget'] ? '⚠️ بجٹ تھوڑا کم ہے، ہوٹل یا د�
                   _buildCostRow('🚐 لوکل ٹرانسپورٹ و فیول شیئر:', 'Rs. ${calc['transport']}'),
                   _buildCostRow('🎟️ سیر و تفریح اور ٹکٹیں:', 'Rs. ${calc['activities']}'),
                   const Divider(height: 16),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Planning estimates only: typical costs entered or assumed by '
+                    'this calculator, not official rates. Confirm prices locally.',
+                    style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), height: 1.4),
+                  ),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

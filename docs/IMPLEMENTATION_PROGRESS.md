@@ -13,7 +13,7 @@
 | 4 | Design system, branding, splash, home | Implemented | `docs/DESIGN_SYSTEM.md`; tokens + theme + bundled fonts + logo + splash + home header; analyze/test green |
 | 5 | Critical functional bug fixes | Tested | Offline search/sort/fallback bugs fixed; `docs/TESTING_REPORT.md`; 7 tests green; device journeys pending |
 | 6 | Offline and reliability foundation | Tested | TTL cache + honest freshness states wired into categories/search/nearby/details; offline banner; 11 tests green |
-| 7 | Core tourist features | Not started | — |
+| 7 | Core tourist features | Tested | Facility finder; honest road advisories with sources; travel reality check; price fairness + DC-rate unavailability; 14 tests green |
 | 8 | Differentiating features | Not started | — |
 | 9 | Permits, foreigner toolkit, digital pass, complaints | Not started | — |
 | 10 | Backend, admin, security hardening | Not started | — |
@@ -148,7 +148,7 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 
 ### Next actions
 
-1. Phase 7: core tourist features (facilities, road alerts, travel reality check, trust/pricing, DC official rates).
+1. Phase 8: differentiating features (approved priorities from Section 5.O).
 
 ---
 
@@ -163,3 +163,20 @@ Runtime: app loads in Chrome with correct title and zero console errors/warnings
 Verification: `flutter test` 11/11 pass (1 widget smoke, 6 offline filter, 4 cache). `flutter analyze`: 0 errors / 0 warnings.
 
 Open items: connectivity-change auto-refresh / pull-to-refresh wiring, bundle-level expiry for the shipped dataset, background sync, and on-device offline verification.
+
+---
+
+## Phase 7 log — 2026-11-21
+
+Honesty-first implementation of the core tourist features:
+
+- **Facility finder** (`features/places/screens/facility_finder_screen.dart`): hospital, pharmacy, petrol, ATM, police, parking, restaurant, washroom and drinking-water filters over the saved directory. Empty results state "Information unavailable" rather than implying no facility exists; each listing shows its verification status and says a listing does not confirm the facility is open or stocked.
+- **Road advisories** (`core/data/road_advisories.dart`, rewritten screen): replaced fabricated live alerts, fake "18 mins ago" timestamps, "verified counts", connectivity heatmaps and unverified mechanic phone numbers with seven sourced corridor advisories (KKH, Babusar, Lowari, Khunjerab, Naran–Kaghan, Murree Expressway, Skardu Road). Every advisory reports `Information unavailable` because no NHA/NHMP/PDMA/NDMA feed is connected, and carries agency, URL and reference date. Local condition reports are stored on-device only and clearly labelled as not sent to any agency.
+- **Travel reality check**: added to place details — states that weather/road/seasonal/permit data is not live, tells the traveller which authorities to confirm with, and links to the facility finder.
+- **Price fairness guide** (rewritten `local_vs_tourist_price_screen.dart`): removed every hardcoded rupee figure and the fake "anti-scam rate card". District selector now explicitly reports "Official rate information currently unavailable" until an authorised DC source exists, plus general fair-pricing checks and an overcharging report form that saves on-device only.
+- **Data cleanup**: removed the two unsourced `localPrice`/`touristPrice` pairs from bundled data and deleted the place-details price card that displayed them. Budget calculator output is now labelled as planning estimates, not official rates.
+- Home entry labels updated: "Price Fairness" (no anti-scam claim) and "Road Advisories / Not live"; hospital card opens the facility finder.
+
+Verification: `flutter test` 14/14 pass (added road-advisory provenance tests). `flutter analyze`: 0 errors / 0 warnings.
+
+Open items: no authorised live feeds yet (road status, DC rates, facility availability); report forms are device-local until a verified submission backend exists; map-based distance filtering for facilities pending location wiring.

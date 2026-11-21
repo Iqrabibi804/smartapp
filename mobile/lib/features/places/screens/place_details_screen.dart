@@ -10,6 +10,7 @@ import '../../reviews/screens/write_review_screen.dart';
 import '../../reviews/services/reviews_service.dart';
 import '../models/place_model.dart';
 import '../services/places_providers.dart';
+import 'facility_finder_screen.dart';
 
 // ─── Top-level helpers (accessible from every class in this file) ────────────
 
@@ -145,7 +146,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
                       child: Text(place.name,
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
-                    if (place.verified)
+                    if (place.verificationStatus == 'verified')
                       const Padding(
                         padding: EdgeInsets.only(left: 6),
                         child: Icon(Icons.verified, color: AppColors.primary),
@@ -182,11 +183,8 @@ class _PlaceDetailsContent extends ConsumerWidget {
                   _AudioGuidePlayer(narration: place.audioGuideUrdu!, placeName: place.name),
                 ],
 
-                // ── ⚖️ Anti-Scam Fair Price vs Tourist Price ───────────────────
-                if (place.localPrice != null && place.touristPrice != null) ...[
-                  const SizedBox(height: 16),
-                  _LocalPriceCard(localPrice: place.localPrice!, touristPrice: place.touristPrice!),
-                ],
+                const SizedBox(height: 16),
+                _TravelRealityCard(place: place),
 
                 const SizedBox(height: 24),
                 const Text('Information',
@@ -1509,65 +1507,67 @@ class _AudioGuidePlayerState extends State<_AudioGuidePlayer> {
   }
 }
 
-// ─── Local Fair Price Card ───────────────────────────────────────────────────
+// ─── Travel Reality Check Card ───────────────────────────────────────────────
 
-class _LocalPriceCard extends StatelessWidget {
-  final int localPrice;
-  final int touristPrice;
-  const _LocalPriceCard({required this.localPrice, required this.touristPrice});
+class _TravelRealityCard extends StatelessWidget {
+  const _TravelRealityCard({required this.place});
+  final PlaceModel place;
 
   @override
   Widget build(BuildContext context) {
-    final saving = touristPrice - localPrice;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Color(0xFFD97706),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.price_check, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'شفاف ریٹ (Anti-Scam Rate Card):',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF92400E)),
+          const Row(
+            children: [
+              Icon(Icons.explore_outlined, size: 18, color: AppColors.primary),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Travel reality check',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text('لوکل ریٹ: Rs. $localPrice', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF166534))),
-                    const SizedBox(width: 8),
-                    Text('سیاحتی مانگ: Rs. $touristPrice', style: const TextStyle(decoration: TextDecoration.lineThrough, fontSize: 11, color: Color(0xFFDC2626))),
-                  ],
-                ),
-              ],
+              ),
+              Text(
+                'Not live',
+                style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Weather, road status and seasonal access are not connected to '
+            'official feeds. Confirm conditions with PMD, NHA and NHMP before '
+            'departure, and check permit requirements with the relevant district '
+            'or Gilgit-Baltistan authority.',
+            style: TextStyle(fontSize: 12.5, height: 1.45),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const FacilityFinderScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.local_hospital_outlined, size: 16),
+              label: const Text('Find nearby hospitals, ATMs and fuel'),
             ),
           ),
-          if (saving > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF059669),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'بچت: Rs. $saving',
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            ),
         ],
       ),
     );

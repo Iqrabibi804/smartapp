@@ -36,6 +36,7 @@ import '../../places/screens/local_vs_tourist_price_screen.dart';
 import '../../places/screens/offline_city_packs_screen.dart';
 import '../../places/screens/offline_payment_guide_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
+import '../../places/screens/facility_finder_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -639,8 +640,8 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const SearchResultsScreen(
-                            initialCategoryName: 'Hospitals & Medical',
+                          builder: (_) => FacilityFinderScreen(
+                            initialType: kFacilityTypes.first,
                           ),
                         ),
                       );
@@ -763,9 +764,9 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                 children: [
                   _build3DAssistantCard(
                     title: AppStrings.tr('anti_scam', lang),
-                    urduTitle: 'اصلی بمقابلہ سیاحتی ریٹ',
-                    subtitle: 'لوٹ مار سے بچاؤ',
-                    badge: '⚠️ Fair Rate',
+                    urduTitle: 'منصفانہ ریٹ گائیڈ',
+                    subtitle: 'Official DC rate lists not connected',
+                    badge: '⚖️ Price guide',
                     icon: Icons.price_check_rounded,
                     colors: [const Color(0xFF7F1D1D), const Color(0xFFDC2626)],
                     onTap: () {
@@ -808,10 +809,10 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                   ),
                   const SizedBox(width: 12),
                   _build3DAssistantCard(
-                    title: 'Road & Landslide',
-                    urduTitle: 'سڑک و لینڈ سلائیڈ الرٹس',
-                    subtitle: 'لائیو بابوسر و KKH چوک پوائنٹس',
-                    badge: '🚧 Live Waze',
+                    title: 'Road Advisories',
+                    urduTitle: 'سڑک و راستہ معلومات',
+                    subtitle: 'NHA / NHMP — verify before travel',
+                    badge: '🚧 Not live',
                     icon: Icons.warning_amber_rounded,
                     colors: [const Color(0xFF991B1B), const Color(0xFFE65F2B)],
                     onTap: () {

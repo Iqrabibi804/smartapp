@@ -156,11 +156,11 @@ class AppStrings {
         AppLanguage.arabic: 'تقسيم الفاتورة',
       },
       'anti_scam': {
-        AppLanguage.english: 'Anti-Scam Prices',
-        AppLanguage.urdu: 'اصلی بمقابلہ سیاحتی ریٹ',
-        AppLanguage.punjabi: 'اصلی ریٹ',
-        AppLanguage.chinese: '防欺诈真实价格',
-        AppLanguage.arabic: 'الأسعار الحقيقية',
+        AppLanguage.english: 'Price Fairness',
+        AppLanguage.urdu: 'منصفانہ ریٹ گائیڈ',
+        AppLanguage.punjabi: 'منصفانہ ریٹ',
+        AppLanguage.chinese: '价格公平指南',
+        AppLanguage.arabic: 'دليل السعر العادل',
       },
       'offline_packs': {
         AppLanguage.english: 'Offline City Packs',

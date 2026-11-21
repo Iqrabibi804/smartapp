@@ -495,8 +495,6 @@ class PunjabOfflineData {
       paymentMethods: const ['Free Entry', 'Cash (Donations)'],
       isFemaleSafe: false,
       isFamilyFriendly: false,
-      localPrice: 0,
-      touristPrice: 0,
       audioGuideUrdu: 'یہ مزار عظیم صوفی بزرگ شاعر سید وارث شاہ رحمتہ اللہ علیہ کا ہے جنہوں نے ہیر رانجھا لکھی۔',
     ),
     PlaceModel(
@@ -519,8 +517,6 @@ class PunjabOfflineData {
       paymentMethods: const ['Cash', 'Easypaisa'],
       isFemaleSafe: false,
       isFamilyFriendly: false,
-      localPrice: 50,
-      touristPrice: 200,
     ),
     PlaceModel(
       id: 'pl-sheikhupura-fort',
