@@ -1,0 +1,29 @@
+# Secrets and environment files (never commit)
+.env
+*.env
+!.env.example
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/*.iml
+mobile/.idea/
+
+# Node
+backend/node_modules/
+backend/uploads/
+npm-debug.log*
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Temporary audit artifacts
+docs/.flutter_*.txt
+mobile/flutter_log.txt

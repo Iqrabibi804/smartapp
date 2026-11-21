@@ -1,0 +1,266 @@
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Category = require('../models/Category');
+const Place = require('../models/Place');
+
+const MORE_PLACES = [
+  // ==========================================
+  // HISTORICAL & RELIGIOUS
+  // ==========================================
+  {
+    name: 'Wazir Khan Mosque Lahore',
+    description: '17th-century Mughal masterpiece renowned for its intricate fresco tiles, calligraphy, and towering minarets in the Walled City.',
+    region: 'Punjab',
+    categoryName: 'Historical & Religious',
+    location: { type: 'Point', coordinates: [74.3214, 31.5833] },
+    address: 'Shahi Guzargah, Walled City, Lahore, Punjab',
+    priceRange: 'free',
+    rating: 4.9,
+    reviewCount: 3200,
+    verified: true,
+    featured: true,
+    facilities: ['Kashikari Tile Work', 'Historic Guided Walk', 'Photography', 'Prayer Hall'],
+    phone: '+92 42 99204000',
+    images: ['https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Tomb of Shah Rukn-e-Alam Multan',
+    description: 'Magnificent 14th-century Tughluq-style octagonal mausoleum with the second largest dome in the world, covered in iconic Multani glazed blue tiles.',
+    region: 'South Punjab',
+    categoryName: 'Historical & Religious',
+    location: { type: 'Point', coordinates: [71.4715, 30.1991] },
+    address: 'Qasim Fort, Multan, Punjab',
+    priceRange: 'free',
+    rating: 4.9,
+    reviewCount: 4100,
+    verified: true,
+    featured: true,
+    facilities: ['Panoramic City View', 'Blue Tile Murals', 'Sufi Heritage', 'Courtyard'],
+    phone: '+92 61 9200231',
+    images: ['https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Noor Mahal Bahawalpur',
+    description: '1875 Italian neoclassical palace built by Nawab Sir Muhammad Sadiq with Venetian chandeliers, armory museum, and royal courtyards.',
+    region: 'South Punjab',
+    categoryName: 'Historical & Religious',
+    location: { type: 'Point', coordinates: [71.6742, 29.3989] },
+    address: 'Bahawalpur Cantt, Punjab',
+    priceRange: 'low',
+    rating: 4.8,
+    reviewCount: 3800,
+    verified: true,
+    featured: true,
+    facilities: ['Palace Light Show', 'Royal Museum', 'Coffee Shop', 'Lush Lawns'],
+    phone: '+92 62 2881234',
+    images: ['https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Rohtas Fort (UNESCO) Jhelum',
+    description: 'Immense 16th-century fortress built by Sher Shah Suri with colossal defensive gates, step wells, and breathtaking Potohar hill vistas.',
+    region: 'Potohar / North',
+    categoryName: 'Historical & Religious',
+    location: { type: 'Point', coordinates: [73.5786, 32.9642] },
+    address: 'Dina, Rohtas, Jhelum, Punjab',
+    priceRange: 'low',
+    rating: 4.8,
+    reviewCount: 2900,
+    verified: true,
+    featured: true,
+    facilities: ['UNESCO Heritage Trail', 'Sohail Gate', 'Step Wells', 'Trekking'],
+    phone: '+92 544 9270012',
+    images: ['https://images.unsplash.com/photo-1589802829985-817e51171b92?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Hiran Minar Sheikhupura',
+    description: 'Mughal emperor Jahangir’s grand hunting pavilion and water tank built in memory of his beloved pet antelope Mansraj in 1606.',
+    region: 'Central Punjab',
+    categoryName: 'Historical & Religious',
+    location: { type: 'Point', coordinates: [73.9538, 31.7482] },
+    address: 'Hiran Minar Road, Sheikhupura, Punjab',
+    priceRange: 'low',
+    rating: 4.7,
+    reviewCount: 3100,
+    verified: true,
+    featured: true,
+    facilities: ['Boating Lake', 'Grand Pavillion', 'Historical Minaret', 'Family Picnic Lawns'],
+    phone: '+92 56 9200111',
+    images: ['https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=1000&q=80'],
+  },
+
+  // ==========================================
+  // PARKS & NATURE
+  // ==========================================
+  {
+    name: 'Greater Iqbal Park Lahore',
+    description: '125-acre park surrounding Minar-e-Pakistan, featuring artificial lake, musical dancing fountains, historic walkways, and buggy rides.',
+    region: 'Punjab',
+    categoryName: 'Parks & Nature',
+    location: { type: 'Point', coordinates: [74.3094, 31.5925] },
+    address: 'Circular Road, Near Badshahi Mosque, Lahore, Punjab',
+    priceRange: 'low',
+    rating: 4.7,
+    reviewCount: 5200,
+    verified: true,
+    featured: true,
+    facilities: ['Dancing Fountains', 'Buggy Rides', 'Lake Walk', 'Food Courts', 'Minar-e-Pakistan'],
+    phone: '+92 42 99204000',
+    images: ['https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Daman-e-Koh Margalla Hills Islamabad',
+    description: 'Scenic hilltop garden overlooking Islamabad city and Rawal Lake at 2,400 feet, featuring wild monkeys, telescopes, and walking trails.',
+    region: 'Islamabad Capital Territory',
+    categoryName: 'Parks & Nature',
+    location: { type: 'Point', coordinates: [73.0562, 33.7481] },
+    address: 'Margalla Hills, Daman-e-Koh Road, Islamabad',
+    priceRange: 'free',
+    rating: 4.8,
+    reviewCount: 6400,
+    verified: true,
+    featured: true,
+    facilities: ['Panoramic Viewpoints', 'Walking Trails', 'Telescope View', 'Refreshment Kiosks'],
+    phone: '+92 51 9205111',
+    images: ['https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Ayub National Park Rawalpindi',
+    description: 'Massive 313-acre historic public park featuring boating lakes, military vehicle museum, Jungle World amusement park, and rose gardens.',
+    region: 'Punjab',
+    categoryName: 'Parks & Nature',
+    location: { type: 'Point', coordinates: [73.0821, 33.5684] },
+    address: 'Jhelum Road, Rawalpindi Cantt, Punjab',
+    priceRange: 'low',
+    rating: 4.6,
+    reviewCount: 4500,
+    verified: true,
+    featured: true,
+    facilities: ['Boating Lakes', 'Jungle World Zoo', 'Amusement Rides', 'Open Lawns', 'Food Stalls'],
+    phone: '+92 51 5567890',
+    images: ['https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Patriata Chairlift & New Murree',
+    description: 'Highest peak in Murree hills (8,000 ft) featuring world-class cable car & chairlift system soaring above dense Himalayan pine forests.',
+    region: 'Punjab',
+    categoryName: 'Parks & Nature',
+    location: { type: 'Point', coordinates: [73.4712, 33.8824] },
+    address: 'Patriata, New Murree, Punjab',
+    priceRange: 'medium',
+    rating: 4.7,
+    reviewCount: 5100,
+    verified: true,
+    featured: true,
+    facilities: ['Cable Car', 'Chair Lift', 'Pine Forest Hikes', 'Horse Riding', 'Snow Views'],
+    phone: '+92 51 3410111',
+    images: ['https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1000&q=80'],
+  },
+
+  // ==========================================
+  // SHOPPING & MALLS
+  // ==========================================
+  {
+    name: 'Packages Mall Lahore',
+    description: 'One of the largest international shopping malls in Pakistan featuring 200+ brands, Carrefour hypermarket, cinema multiplex, and massive food court.',
+    region: 'Punjab',
+    categoryName: 'Shopping & Malls',
+    location: { type: 'Point', coordinates: [74.3541, 31.4725] },
+    address: 'Walton Road, Gulshan-e-Yaseen, Lahore, Punjab',
+    priceRange: 'high',
+    rating: 4.8,
+    reviewCount: 7900,
+    verified: true,
+    featured: true,
+    facilities: ['200+ Brands', 'Multiplex Cinema', 'Food Court', 'Kids Play Area', 'Ample Parking'],
+    phone: '+92 42 111696255',
+    images: ['https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'The Centaurus Mall Islamabad',
+    description: 'Iconic 3-tower luxury shopping and entertainment complex in the heart of Islamabad with top global fashion brands, fun city, and dining.',
+    region: 'Islamabad Capital Territory',
+    categoryName: 'Shopping & Malls',
+    location: { type: 'Point', coordinates: [73.0551, 33.7078] },
+    address: 'Jinnah Avenue, Sector F-8/4, Islamabad',
+    priceRange: 'high',
+    rating: 4.8,
+    reviewCount: 8900,
+    verified: true,
+    featured: true,
+    facilities: ['Luxury Shopping', 'Multiplex Cinema', 'International Food Court', 'Kids Fun City'],
+    phone: '+92 51 111244244',
+    images: ['https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Giga Mall World Trade Center Rawalpindi',
+    description: 'Twin cities largest shopping destination on GT Road featuring 5 floors of national & international brands, hypermarket, and culinary dining.',
+    region: 'Punjab',
+    categoryName: 'Shopping & Malls',
+    location: { type: 'Point', coordinates: [73.1542, 33.5289] },
+    address: 'Main GT Road, DHA Phase II, Rawalpindi / Islamabad',
+    priceRange: 'high',
+    rating: 4.7,
+    reviewCount: 6500,
+    verified: true,
+    featured: true,
+    facilities: ['Food Court', 'Cinema', 'Carrefour', 'Family Entertainment', 'Valet Parking'],
+    phone: '+92 51 111444222',
+    images: ['https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80'],
+  },
+  {
+    name: 'Anarkali Bazaar Lahore',
+    description: 'One of South Asia’s oldest surviving historic bazaars dating back to the Mughal era, renowned for traditional Pakistani embroidery, silk, jewelry, and street foods.',
+    region: 'Punjab',
+    categoryName: 'Shopping & Malls',
+    location: { type: 'Point', coordinates: [74.3142, 31.5684] },
+    address: 'Anarkali, Old Lahore, Punjab',
+    priceRange: 'low',
+    rating: 4.6,
+    reviewCount: 6800,
+    verified: true,
+    featured: true,
+    facilities: ['Traditional Clothes', 'Bridal Wear', 'Bano Bazaar', 'Street Food', 'Souvenirs'],
+    phone: '+92 42 99211100',
+    images: ['https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80'],
+  },
+];
+
+async function seedMore() {
+  await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/smartmap_ai');
+  const categories = await Category.find();
+  const catMap = {};
+  categories.forEach(c => catMap[c.name] = c._id);
+
+  for (const p of MORE_PLACES) {
+    const catId = catMap[p.categoryName];
+    if (!catId) continue;
+    const existing = await Place.findOne({ name: p.name });
+    if (!existing) {
+      await Place.create({
+        name: p.name,
+        description: p.description,
+        region: p.region,
+        categoryId: catId,
+        location: p.location,
+        address: p.address,
+        priceRange: p.priceRange,
+        rating: p.rating,
+        reviewCount: p.reviewCount,
+        verified: p.verified,
+        featured: p.featured,
+        facilities: p.facilities,
+        phone: p.phone,
+        images: p.images,
+      });
+      console.log(`+ Added: [${p.categoryName}] ${p.name}`);
+    }
+  }
+
+  console.log('Done!');
+  process.exit(0);
+}
+
+seedMore().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
