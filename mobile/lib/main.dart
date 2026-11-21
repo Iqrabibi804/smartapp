@@ -14,13 +14,12 @@ class SmartMapApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final palette = ref.watch(pakistanPaletteProvider);
 
     return MaterialApp(
-      title: 'SmartMap AI',
+      title: 'SmartMap Punjab',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(palette),
-      darkTheme: AppTheme.darkTheme(palette),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       home: const SplashScreen(),
     );

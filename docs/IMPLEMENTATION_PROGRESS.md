@@ -10,7 +10,7 @@
 | 1 | Project audit and baseline | Verified | Baseline commit `d06b3c3`/`74532e7`; analyze 0 errors/0 warnings; widget smoke test passes |
 | 2 | Competitor + Pakistan problem research | Implemented | `docs/COMPETITOR_RESEARCH.md` (12 products, 18 sources); `docs/PAKISTAN_TOURIST_PROBLEMS.md` (20 problems, 22 sources) |
 | 3 | Data audit and cleanup | Tested | `docs/DATA_AUDIT.md`; honest verification labels in seeds/offline data; `publishedPlaceFilter`; canonical category taxonomy; analyze/test green |
-| 4 | Design system, branding, splash, home | Not started | — |
+| 4 | Design system, branding, splash, home | Implemented | `docs/DESIGN_SYSTEM.md`; tokens + theme + bundled fonts + logo + splash + home header; analyze/test green |
 | 5 | Critical functional bug fixes | Not started | — |
 | 6 | Offline and reliability foundation | Not started | — |
 | 7 | Core tourist features | Not started | — |
@@ -110,4 +110,29 @@ Full findings and evidence in `docs/DATA_AUDIT.md`. Summary of changes:
 ### Next actions
 
 1. Phase 4: design system, branding, splash, home per `docs/MASTER_PROMPT.md` §4.
+
+---
+
+## Phase 4 log — 2026-11-21
+
+Full specification in `docs/DESIGN_SYSTEM.md`. Summary:
+
+- Added `core/theme/design_tokens.dart` (colors, spacing, radius, shadows, gradients).
+- Rewrote `AppColors` to the canonical national identity; legacy palette names remain as aliases so existing screens compile.
+- Rewrote `AppTheme` as a single light/dark theme driven by tokens (navigation bar, buttons, inputs, cards, chips, sheets, snackbars, progress).
+- Removed the multi-palette theme selector and `pakistanPaletteProvider`.
+- Bundled Poppins (400/600/700), Roboto variable, and Noto Nastaliq Urdu with OFL license texts; declared in `pubspec.yaml`.
+- Added original logo artwork `AppLogoMark` / `AppLogo` (pin + crescent + star) drawn as vectors.
+- Redesigned splash: flag-inspired green gradient, gold rule, logo, English/Urdu branding, honest footer.
+- Redesigned home header: logo, tagline, location chip, "Independent guide" chip, real language selector, theme toggle, cities shortcut; unified bottom navigation and AI button colors.
+- Removed remaining fake claims from home: "TDCP Verified", "24.7 Verified Emergency", "Free Help", "Verified Tourist Traveler", "Punjab Tourism Administrator".
+
+Verification: `flutter analyze` 0 errors / 0 warnings (17 infos); `flutter test` passes.
+
+Open items: section-level polish for home (banners/grids) and remaining screens, full RTL layout mirroring, interface-wide language switching.
+
+### Next actions
+
+1. Phase 5: critical functional bug fixes across city/category flows, search/filters, detail pages.
+
 

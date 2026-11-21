@@ -12,10 +12,10 @@
 | Feature | Location | Status | Notes |
 |---|---|---|---|
 | Flutter app shell (Riverpod, theme modes) | `mobile/lib/main.dart` | Implemented | Single smoke test only |
-| Splash screen | `features/splash/` | Implemented | Honesty fixes applied (no fake verification claims); brand redesign pending Phase 4 |
+| Splash screen | `features/splash/` | Implemented | Brand redesign done: national identity, logo, EN/UR, honest footer |
 | Onboarding | `features/onboarding/` | Implemented | Not yet reviewed for brand/accessibility |
 | Auth (register/login, JWT, RBAC) | `features/auth/`, `backend/` | Implemented | No automated auth tests |
-| English/Urdu localization | `core/localization/app_language.dart` | In progress | Interface-wide switching incomplete; RTL unverified |
+| English/Urdu localization | `core/localization/app_language.dart` | In progress | Nastaliq font bundled; interface-wide switching and RTL mirroring still incomplete |
 | Bottom navigation | `features/home/screens/home_screen.dart` | Implemented | Home/Explore/Helpline/Pass structure to be consolidated |
 | Dark mode | `core/theme/` | Implemented | Being folded into new design system |
 
@@ -92,7 +92,7 @@
 
 | Item | Status | Notes |
 |---|---|---|
-| Design system (national identity, fonts) | In progress | Canonical tokens defined; implementation pending |
+| Design system (national identity, fonts) | Implemented | Tokens, single light/dark theme, bundled Poppins/Roboto/Nastaliq, original logo — see `docs/DESIGN_SYSTEM.md` |
 | Automated tests | In progress | Splash smoke test passes hermetically; expansion is a roadmap requirement |
 | Static analysis | Verified | 0 errors, 0 warnings (18 pre-existing info hints) |
 | Data verification model | Implemented | `verificationStatus`/`source`/`lastVerifiedAt` in schema, API filter, seeds, and Flutter model |

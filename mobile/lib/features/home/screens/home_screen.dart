@@ -6,7 +6,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/punjab_81_cities_data.dart';
 import '../../../core/localization/app_language.dart';
+import '../../../core/theme/design_tokens.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/widgets/app_logo.dart';
 import '../../auth/services/auth_providers.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../map/screens/map_screen.dart';
@@ -64,7 +66,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(child: _bodyForTab(_tabIndex)),
@@ -74,8 +75,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             MaterialPageRoute(builder: (_) => const MapAiScreen()),
           );
         },
-        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A),
-        icon: const Icon(Icons.auto_awesome, color: Color(0xFF10B981)),
+        backgroundColor: AppTokens.pakistanGreen,
+        icon: const Icon(Icons.auto_awesome, color: AppTokens.heritageGold),
         label: Text(
           AppStrings.tr('ai_guide', lang),
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -87,27 +88,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A)),
+            selectedIcon: const Icon(Icons.home, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_home', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A)),
+            selectedIcon: const Icon(Icons.map, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_map', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.location_city_outlined),
-            selectedIcon: Icon(Icons.location_city, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A)),
+            selectedIcon: const Icon(Icons.location_city, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_cities', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.bookmark_border),
-            selectedIcon: Icon(Icons.bookmark, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A)),
+            selectedIcon: const Icon(Icons.bookmark, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_saved', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A)),
+            selectedIcon: const Icon(Icons.person, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_profile', lang),
           ),
         ],
@@ -216,323 +217,152 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 80),
       children: [
-        // ── Top Header & Location ───────────────────────────────────────────
+        // ── Brand header ────────────────────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 360;
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: isWide
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const AppLogoMark(size: 42),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings.tr('app_title', lang),
+                          style: TextStyle(
+                            fontFamily: AppTokens.fontHeading,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.4,
+                            color: primaryTextColor,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Explore Punjab. Travel with Confidence.',
+                          style: TextStyle(fontSize: 11.5, color: secondaryTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+                    onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(),
+                    icon: Icon(
+                      isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                      size: 20,
+                      color: secondaryTextColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppTokens.pakistanGreen.withValues(alpha: isDark ? 0.25 : 0.07),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTokens.pakistanGreen.withValues(alpha: 0.18)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.location_on, size: 14, color: AppTokens.pakistanGreen),
+                        SizedBox(width: 4),
+                        Text(
+                          'Punjab, Pakistan',
+                          style: TextStyle(
+                            color: AppTokens.pakistanGreen,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppTokens.heritageGold.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.info_outline, size: 13, color: Color(0xFF8A6E3B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Independent guide',
+                          style: TextStyle(
+                            color: isDark ? AppTokens.heritageGold : const Color(0xFF8A6E3B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<AppLanguage>(
+                    tooltip: 'Language',
+                    icon: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTokens.surfaceDark : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: cardBorderColor),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? Colors.white12 : const Color(0xFF0F172A).withValues(alpha: 0.08),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: const [
-                                          Icon(Icons.location_on, size: 14, color: Color(0xFF059669)),
-                                          SizedBox(width: 4),
-                                          Text('Punjab, Pakistan 🇵🇰',
-                                              style: TextStyle(
-                                                color: Color(0xFF059669),
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              )),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF059669).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: const Text('TDCP Verified 🛡️',
-                                          style: TextStyle(
-                                            color: Color(0xFF059669),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                          )),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  AppStrings.tr('app_title', lang),
-                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: primaryTextColor),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              // Language Selector Pill
-                              PopupMenuButton<AppLanguage>(
-                                icon: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.language, size: 16, color: primaryTextColor),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        lang == AppLanguage.english
-                                            ? 'EN'
-                                            : lang == AppLanguage.urdu
-                                                ? 'اردو'
-                                                : lang == AppLanguage.punjabi
-                                                    ? 'پنجابی'
-                                                    : lang == AppLanguage.chinese
-                                                        ? '中文'
-                                                        : 'عربي',
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryTextColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                onSelected: (selectedLang) => ref.read(languageProvider.notifier).setLanguage(selectedLang),
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(value: AppLanguage.english, child: Text('🇬🇧 English (Global)')),
-                                  PopupMenuItem(value: AppLanguage.urdu, child: Text('🇵🇰 اردو (Pakistan)')),
-                                  PopupMenuItem(value: AppLanguage.punjabi, child: Text('🇵🇰 پنجابی (Punjab)')),
-                                  PopupMenuItem(value: AppLanguage.chinese, child: Text('🇨🇳 中文 (Chinese)')),
-                                  PopupMenuItem(value: AppLanguage.arabic, child: Text('🇸🇦 العربية (Arabic)')),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              // Pakistan Cultural Theme Palette Selector
-                              PopupMenuButton<PakistanPalette>(
-                                tooltip: 'Pakistan Theme Palette',
-                                icon: Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black12),
-                                  ),
-                                  child: const Icon(Icons.palette_outlined, size: 16, color: Color(0xFF006644)),
-                                ),
-                                onSelected: (p) {
-                                  ref.read(pakistanPaletteProvider.notifier).setPalette(p);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        p == PakistanPalette.heritageAndNature
-                                            ? '🎨 Theme: Heritage & Nature (قومی پرچم و دیسی اینٹ)'
-                                            : p == PakistanPalette.northernPeaksAndGlaciers
-                                                ? '🏔️ Theme: Northern Peaks & Glaciers (سیف الملوک و عطاء آباد)'
-                                                : '🛺 Theme: Vibrant Truck Art (ٹرک آرٹ و چمبیلی)',
-                                      ),
-                                      backgroundColor: const Color(0xFF006644),
-                                    ),
-                                  );
-                                },
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(value: PakistanPalette.heritageAndNature, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF006644)),
-                                    SizedBox(width: 8),
-                                    Text('🌲 Heritage & Nature (#006644)')
-                                  ])),
-                                  PopupMenuItem(value: PakistanPalette.northernPeaksAndGlaciers, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF1D4ED8)),
-                                    SizedBox(width: 8),
-                                    Text('🏔️ Northern Peaks (#1D4ED8)')
-                                  ])),
-                                  PopupMenuItem(value: PakistanPalette.vibrantTruckArt, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF0D9488)),
-                                    SizedBox(width: 8),
-                                    Text('🛺 Truck Art Palette (#0D9488)')
-                                  ])),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                child: IconButton(
-                                  icon: const Icon(Icons.tune, color: Color(0xFF0F172A), size: 18),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const CityExplorerScreen()),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // The same content as above but stacked vertically for narrow screens
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white12 : const Color(0xFF0F172A).withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.location_on, size: 14, color: Color(0xFF059669)),
-                                    SizedBox(width: 4),
-                                    Text('Punjab, Pakistan 🇵🇰',
-                                        style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 12)),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF059669).withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text('TDCP Verified 🛡️',
-                                    style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 10)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
+                          Icon(Icons.language, size: 15, color: primaryTextColor),
+                          const SizedBox(width: 4),
                           Text(
-                            AppStrings.tr('app_title', lang),
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5, color: primaryTextColor),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              // Language Selector Pill
-                              PopupMenuButton<AppLanguage>(
-                                icon: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.language, size: 16, color: primaryTextColor),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        lang == AppLanguage.english
-                                            ? 'EN'
-                                            : lang == AppLanguage.urdu
-                                                ? 'اردو'
-                                                : lang == AppLanguage.punjabi
-                                                    ? 'پنجابی'
-                                                    : lang == AppLanguage.chinese
-                                                        ? '中文'
-                                                        : 'عربي',
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryTextColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                onSelected: (selectedLang) => ref.read(languageProvider.notifier).setLanguage(selectedLang),
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(value: AppLanguage.english, child: Text('🇬🇧 English (Global)')),
-                                  PopupMenuItem(value: AppLanguage.urdu, child: Text('🇵🇰 اردو (Pakistan)')),
-                                  PopupMenuItem(value: AppLanguage.punjabi, child: Text('🇵🇰 پنجابی (Punjab)')),
-                                  PopupMenuItem(value: AppLanguage.chinese, child: Text('🇨🇳 中文 (Chinese)')),
-                                  PopupMenuItem(value: AppLanguage.arabic, child: Text('🇸🇦 العربية (Arabic)')),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              // Palette Selector
-                              PopupMenuButton<PakistanPalette>(
-                                tooltip: 'Pakistan Theme Palette',
-                                icon: Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black12),
-                                  ),
-                                  child: const Icon(Icons.palette_outlined, size: 16, color: Color(0xFF006644)),
-                                ),
-                                onSelected: (p) {
-                                  ref.read(pakistanPaletteProvider.notifier).setPalette(p);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        p == PakistanPalette.heritageAndNature
-                                            ? '🎨 Theme: Heritage & Nature (قومی پرچم و دیسی اینٹ)'
-                                            : p == PakistanPalette.northernPeaksAndGlaciers
-                                                ? '🏔️ Theme: Northern Peaks & Glaciers (سیف الملوک و عطاء آباد)'
-                                                : '🛺 Theme: Vibrant Truck Art (ٹرک آرٹ و چمبیلی)',
-                                      ),
-                                      backgroundColor: const Color(0xFF006644),
-                                    ),
-                                  );
-                                },
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(value: PakistanPalette.heritageAndNature, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF006644)),
-                                    SizedBox(width: 8),
-                                    Text('🌲 Heritage & Nature (#006644)')
-                                  ])),
-                                  PopupMenuItem(value: PakistanPalette.northernPeaksAndGlaciers, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF1D4ED8)),
-                                    SizedBox(width: 8),
-                                    Text('🏔️ Northern Peaks (#1D4ED8)')
-                                  ])),
-                                  PopupMenuItem(value: PakistanPalette.vibrantTruckArt, child: Row(children: [
-                                    CircleAvatar(radius: 6, backgroundColor: Color(0xFF0D9488)),
-                                    SizedBox(width: 8),
-                                    Text('🛺 Truck Art Palette (#0D9488)')
-                                  ])),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: const Color(0xFF0F172A).withValues(alpha: 0.06),
-                                child: IconButton(
-                                  icon: const Icon(Icons.tune, color: Color(0xFF0F172A), size: 18),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const CityExplorerScreen()),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
+                            lang == AppLanguage.english
+                                ? 'EN'
+                                : lang == AppLanguage.urdu
+                                    ? 'اردو'
+                                    : lang == AppLanguage.punjabi
+                                        ? 'پنجابی'
+                                        : lang == AppLanguage.chinese
+                                            ? '中文'
+                                            : 'عربي',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryTextColor),
                           ),
                         ],
                       ),
-              );
-            },
-          )
+                    ),
+                    onSelected: (selectedLang) => ref.read(languageProvider.notifier).setLanguage(selectedLang),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: AppLanguage.english, child: Text('English')),
+                      PopupMenuItem(value: AppLanguage.urdu, child: Text('اردو')),
+                      PopupMenuItem(value: AppLanguage.punjabi, child: Text('پنجابی')),
+                      PopupMenuItem(value: AppLanguage.chinese, child: Text('中文')),
+                      PopupMenuItem(value: AppLanguage.arabic, child: Text('العربية')),
+                    ],
+                  ),
+                  IconButton(
+                    tooltip: 'Explore cities',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CityExplorerScreen()),
+                      );
+                    },
+                    icon: Icon(Icons.tune, size: 18, color: primaryTextColor),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
 
         // ── Search Bar ──────────────────────────────────────────────────────
@@ -800,8 +630,8 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
                   _build3DAssistantCard(
                     title: AppStrings.tr('hospitals', lang),
                     urduTitle: 'ہاسپٹلز و کلینک',
-                    subtitle: '24/7 Verified Emergency',
-                    badge: '🚑 Free Help',
+                    subtitle: 'Emergency & medical help',
+                    badge: '🚑 Emergency',
                     icon: Icons.local_hospital_rounded,
                     colors: [const Color(0xFF065F46), const Color(0xFF047857)],
                     onTap: () {
@@ -2161,7 +1991,7 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isAdmin ? 'Punjab Tourism Administrator' : 'Verified Tourist Traveler',
+                      isAdmin ? 'App Administrator' : 'Tourist Traveler',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

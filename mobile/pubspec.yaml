@@ -1,5 +1,5 @@
 name: smartmap_ai
-description: "SmartMap AI — Intelligent Location Discovery, Navigation & Recommendation Platform"
+description: "SmartMap Punjab — Explore Punjab. Travel with Confidence."
 publish_to: 'none'
 version: 0.1.0
 
@@ -39,3 +39,19 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Variable.ttf
+    - family: NotoNastaliqUrdu
+      fonts:
+        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf

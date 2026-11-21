@@ -1,159 +1,193 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'design_tokens.dart';
 
-/// Supports light and dark mode cleanly with unified high-contrast colors.
+/// Single SmartMap Punjab theme (light + dark) built from [AppTokens].
 class AppTheme {
   AppTheme._();
 
-  static Color primaryFor(PakistanPalette palette) {
-    switch (palette) {
-      case PakistanPalette.heritageAndNature:
-        return const Color(0xFF006644); // Deep flag green
-      case PakistanPalette.northernPeaksAndGlaciers:
-        return const Color(0xFF1D4ED8); // Glacial alpine blue
-      case PakistanPalette.vibrantTruckArt:
-        return const Color(0xFF0D9488); // Truck art teal
-    }
-  }
+  static ThemeData get lightTheme => _build(Brightness.light);
+  static ThemeData get darkTheme => _build(Brightness.dark);
 
-  static Color accentFor(PakistanPalette palette) {
-    switch (palette) {
-      case PakistanPalette.heritageAndNature:
-        return const Color(0xFFE65F2B); // Terracotta
-      case PakistanPalette.northernPeaksAndGlaciers:
-        return const Color(0xFF0284C7); // Glacial cyan
-      case PakistanPalette.vibrantTruckArt:
-        return const Color(0xFFDB2777); // Truck art magenta
-    }
-  }
+  static ThemeData get light => lightTheme;
+  static ThemeData get dark => darkTheme;
 
-  static ThemeData lightTheme([PakistanPalette palette = PakistanPalette.heritageAndNature]) {
-    final primary = primaryFor(palette);
-    final accent = accentFor(palette);
+  static ThemeData _build(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    const primary = AppTokens.pakistanGreen;
+    const onPrimary = Colors.white;
+    final scaffold = isDark ? AppTokens.scaffoldDark : AppTokens.scaffold;
+    final surface = isDark ? AppTokens.surfaceDark : AppTokens.surface;
+    final border = isDark ? AppTokens.borderDark : AppTokens.border;
+    final textPrimary = isDark ? AppTokens.textPrimaryDark : AppTokens.textPrimary;
+    final textSecondary = isDark ? AppTokens.textSecondaryDark : AppTokens.textSecondary;
 
-    return ThemeData(
+    final scheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      brightness: brightness,
+    ).copyWith(
+      primary: primary,
+      onPrimary: onPrimary,
+      secondary: AppTokens.heritageGold,
+      onSecondary: const Color(0xFF2A2113),
+      surface: surface,
+      onSurface: textPrimary,
+      outline: border,
+      error: AppTokens.alertRed,
+    );
+
+    final base = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
-      primaryColor: primary,
-      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-      cardColor: Colors.white,
-      dividerColor: const Color(0xFFE2E8F0),
-      colorScheme: ColorScheme.light(
-        primary: primary,
-        secondary: accent,
-        surface: Colors.white,
-        error: AppColors.error,
-      ),
-      textTheme: _textTheme(const Color(0xFF0F172A), const Color(0xFF64748B)),
+      brightness: brightness,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scaffold,
+      cardColor: surface,
+      dividerColor: border,
+      fontFamily: AppTokens.fontBody,
+      visualDensity: VisualDensity.standard,
+    );
+
+    return base.copyWith(
+      textTheme: _textTheme(base.textTheme, textPrimary, textSecondary),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFFF8FAFC),
-        foregroundColor: const Color(0xFF0F172A),
+        backgroundColor: scaffold,
+        foregroundColor: textPrimary,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        scrolledUnderElevation: 0.5,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: textPrimary),
+        titleTextStyle: TextStyle(
+          fontFamily: AppTokens.fontHeading,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: Colors.white,
-        indicatorColor: primary.withValues(alpha: 0.15),
+        backgroundColor: surface,
+        elevation: 3,
+        height: 68,
+        indicatorColor: primary.withValues(alpha: isDark ? 0.35 : 0.12),
         iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: primary);
-          }
-          return const IconThemeData(color: Color(0xFF64748B));
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(color: selected ? primary : textSecondary);
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 12);
-          }
-          return const TextStyle(color: Color(0xFF64748B), fontSize: 12);
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected ? primary : textSecondary,
+          );
         }),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          foregroundColor: onPrimary,
+          disabledBackgroundColor: primary.withValues(alpha: 0.4),
+          minimumSize: const Size.fromHeight(50),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+          textStyle: const TextStyle(
+            fontFamily: AppTokens.fontHeading,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
         ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          side: BorderSide(color: border),
+          minimumSize: const Size.fromHeight(50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: primary),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: TextStyle(color: textSecondary, fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
       ),
-    );
-  }
-
-  static ThemeData darkTheme([PakistanPalette palette = PakistanPalette.heritageAndNature]) {
-    final primary = primaryFor(palette);
-    final accent = accentFor(palette);
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      primaryColor: primary,
-      scaffoldBackgroundColor: AppColors.backgroundDark,
-      cardColor: AppColors.surfaceDark,
-      dividerColor: const Color(0xFF334155),
-      colorScheme: ColorScheme.dark(
-        primary: primary,
-        secondary: accent,
-        surface: AppColors.surfaceDark,
-        error: AppColors.error,
-      ),
-      textTheme: _textTheme(AppColors.textPrimaryDark, AppColors.textSecondaryDark),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.backgroundDark,
-        foregroundColor: AppColors.textPrimaryDark,
+      cardTheme: CardThemeData(
+        color: surface,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surfaceDark,
-        indicatorColor: primary.withValues(alpha: 0.25),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: primary);
-          }
-          return const IconThemeData(color: Color(0xFF94A3B8));
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 12);
-          }
-          return const TextStyle(color: Color(0xFF94A3B8), fontSize: 12);
-        }),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(color: border),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.surfaceDark,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF334155)),
+      chipTheme: base.chipTheme.copyWith(
+        backgroundColor: surface,
+        side: BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
       ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isDark ? AppTokens.surfaceDark : AppTokens.textPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: primary),
     );
   }
 
-  static ThemeData get light => lightTheme();
-  static ThemeData get dark => darkTheme();
+  static TextTheme _textTheme(
+    TextTheme base,
+    Color primaryColor,
+    Color secondaryColor,
+  ) {
+    TextStyle heading(TextStyle? style, double size, FontWeight weight) =>
+        (style ?? const TextStyle()).copyWith(
+          fontFamily: AppTokens.fontHeading,
+          fontSize: size,
+          fontWeight: weight,
+          color: primaryColor,
+          height: 1.25,
+        );
 
-  static TextTheme _textTheme(Color primaryColor, Color secondaryColor) {
-    return TextTheme(
-      headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 26),
-      titleLarge: TextStyle(fontWeight: FontWeight.w600, color: primaryColor, fontSize: 20),
-      bodyLarge: TextStyle(color: primaryColor, fontSize: 16),
-      bodyMedium: TextStyle(color: secondaryColor, fontSize: 14),
+    TextStyle body(TextStyle? style, double size, Color color) =>
+        (style ?? const TextStyle()).copyWith(
+          fontFamily: AppTokens.fontBody,
+          fontSize: size,
+          color: color,
+          height: 1.45,
+        );
+
+    return base.copyWith(
+      displaySmall: heading(base.displaySmall, 32, FontWeight.w700),
+      headlineMedium: heading(base.headlineMedium, 26, FontWeight.w700),
+      headlineSmall: heading(base.headlineSmall, 22, FontWeight.w600),
+      titleLarge: heading(base.titleLarge, 20, FontWeight.w600),
+      titleMedium: heading(base.titleMedium, 16, FontWeight.w600),
+      titleSmall: heading(base.titleSmall, 14, FontWeight.w600),
+      bodyLarge: body(base.bodyLarge, 16, primaryColor),
+      bodyMedium: body(base.bodyMedium, 14, primaryColor),
+      bodySmall: body(base.bodySmall, 12, secondaryColor),
+      labelLarge: body(base.labelLarge, 14, primaryColor).copyWith(fontWeight: FontWeight.w500),
+      labelMedium: body(base.labelMedium, 12, secondaryColor),
     );
   }
 }

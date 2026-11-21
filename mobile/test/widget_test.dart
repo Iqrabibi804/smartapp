@@ -23,11 +23,14 @@ void main() {
 
     expect(find.text('SmartMap Punjab'), findsOneWidget);
 
-    // Advance past splash timers (session restore timeout + brand delay).
+    // Advance in steps: the splash schedules its minimum brand delay after
+    // session restore resolves, so one large pump can leave it pending.
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(seconds: 3));
-    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
 
     // Dispose the tree so no timers remain pending at test teardown.
     await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 }

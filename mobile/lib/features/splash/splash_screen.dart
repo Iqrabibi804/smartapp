@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/design_tokens.dart';
+import '../../core/widgets/app_logo.dart';
 import '../auth/services/auth_providers.dart';
 import '../home/screens/home_screen.dart';
 
@@ -18,116 +20,136 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _bootstrap() async {
+    final started = DateTime.now();
     try {
-      // Restore session with a strict 2-second timeout so the user never gets stuck on splash
+      // Strict timeout so the user never gets stuck on splash.
       await ref
           .read(authControllerProvider.notifier)
           .restoreSession()
           .timeout(const Duration(milliseconds: 2000), onTimeout: () {});
     } catch (_) {}
 
-    // Ensure brief brand moment (1.2s minimum)
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Brief brand moment, at least 1.2s even if session restore is instant.
+    const minimum = Duration(milliseconds: 1200);
+    final elapsed = DateTime.now().difference(started);
+    if (elapsed < minimum) {
+      await Future.delayed(minimum - elapsed);
+    }
 
     if (!mounted) return;
 
-    // Navigate to HomeScreen directly so tourists can start exploring immediately
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Deep Slate Navy
+      backgroundColor: AppTokens.pakistanGreenDark,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Gradient Glow
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.0,
-                colors: [
-                  Color(0xFF1E293B),
-                  Color(0xFF0F172A),
-                ],
+          const DecoratedBox(
+            decoration: BoxDecoration(gradient: AppGradients.splash),
+          ),
+          // Soft light source near the top, suggesting depth without motion.
+          Positioned(
+            top: -media.size.height * 0.18,
+            right: -media.size.width * 0.25,
+            child: Container(
+              width: media.size.width * 0.9,
+              height: media.size.width * 0.9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
-          Center(
+          SafeArea(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3), width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                        blurRadius: 30,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.explore_rounded, size: 76, color: Color(0xFF10B981)),
-                ),
+                const Spacer(flex: 3),
+                const AppLogoMark(size: 108),
                 const SizedBox(height: 24),
                 const Text(
                   'SmartMap Punjab',
                   style: TextStyle(
+                    fontFamily: AppTokens.fontHeading,
                     color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'سمارٹ ٹریول و ٹورسٹ گائیڈ 🇵🇰',
-                  style: TextStyle(
-                    color: Color(0xFF34D399),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Discover 81 Cities • Offline Ready • Trusted Guidance',
-                  style: TextStyle(color: Colors.white60, fontSize: 13),
+                  'سمارٹ میپ پنجاب',
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    fontFamily: AppTokens.fontUrdu,
+                    color: AppTokens.heritageGold,
+                    fontSize: 20,
+                  ),
                 ),
-                const SizedBox(height: 36),
-                const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    color: Color(0xFF10B981),
-                    strokeWidth: 3,
+                const SizedBox(height: 20),
+                Container(
+                  width: 64,
+                  height: 2,
+                  decoration: const BoxDecoration(gradient: AppGradients.goldRule),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Explore Punjab. Travel with Confidence.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppTokens.fontBody,
+                    color: Colors.white70,
+                    fontSize: 15,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '81 cities · Offline-ready guidance · Honest information',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 12,
+                  ),
+                ),
+                const Spacer(flex: 2),
+                SizedBox(
+                  width: 120,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: const LinearProgressIndicator(
+                      minHeight: 3,
+                      backgroundColor: Color(0x33FFFFFF),
+                      valueColor: AlwaysStoppedAnimation(AppTokens.heritageGold),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Independent guide — not affiliated with any government body.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            bottom: 30,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                'Explore Punjab. Travel with Confidence.',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ),
           ),
         ],
