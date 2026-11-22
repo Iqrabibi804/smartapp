@@ -283,3 +283,15 @@ Port of the "Airbnb + Google Maps + Rome2Rio" master brief into the Flutter app 
 - **Directory touch-ups:** facility finder accents moved to the emerald token; the directory already used a light surface and keeps its "no live availability" warning.
 
 Verification: `dart format` clean; `flutter analyze` 0 errors / 0 warnings (44 infos, all pre-existing style/deprecation notes); headless screenshots at 512 px and 1258 px checked for header, sidebar, quick tools, destination grid, route planner, budget planner, essentials, SOS dialog, AI sheet and Urdu RTL (font boxes appeared once during a cold load and disappeared on reload, confirming a transient asset-load delay rather than missing glyphs).
+
+---
+
+## Stays and dining guides — 2026-11-22
+
+- **Stays & Hotels screen:** ten Booking.com listings (Lahore, Rawalpindi, Faisalabad, Multan, Jhelum, Chakwal, Sialkot) as white 16 px cards with an emerald score pill (amber below 8.0), review count, facility chips, city filter pills and a "Find on Booking.com" button that opens a live Booking.com search in the external browser. A "New listing" badge replaces the score for KMA Guest House. The bottom banner opens a Punjab-wide Booking.com search; the footer says the guide is independent and takes no commission.
+- **Restaurants & Food screen:** dining-only guide (no monument or hospital entries — the existing Restaurants category was double-checked and contained none). Amber rating pill with public-listing footnote, specialty line, "Reserve / Order" for venues with an official site and "Find online" (Google Maps) otherwise; phone buttons appear only where the app already had a number. Map icon on every card.
+- **Honesty decisions:** Booking.com and restaurant figures are labelled with the November 2026 snapshot date and described as third-party/listed data, not app reviews; generic `booking.com` homepage links were replaced with real search URLs, and no phone numbers, menus or result counts were invented.
+- **Navigation:** Essentials gains a "Hotels & Stays" tile (Restaurants now opens the new screen) and the desktop sidebar gains a Stays & Hotels link.
+- **Tests:** `test/stays_restaurants_data_test.dart` asserts every Booking URI is a real search URL, ratings are backed by review counts, city filters cover the data, the restaurant list has no non-dining entries, and website/tel URIs are well formed.
+
+Verification: `dart format` clean; `flutter analyze` 0 errors / 0 warnings (44 pre-existing infos); `flutter test` 27/27; static web build checked in headless Chrome at 512 px and 1258 px, in English and Urdu (score pills, chips, CTAs, banner, sidebar link, no overflow).

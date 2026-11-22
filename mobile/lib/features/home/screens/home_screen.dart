@@ -26,6 +26,8 @@ import '../../places/screens/city_guide_screen.dart';
 import '../../places/screens/offline_city_packs_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
 import '../../places/screens/facility_finder_screen.dart';
+import '../../places/screens/restaurants_screen.dart';
+import '../../places/screens/stays_screen.dart';
 import '../../places/screens/complaints_screen.dart';
 import '../../trips/screens/journey_readiness_screen.dart';
 
@@ -504,6 +506,12 @@ class _Sidebar extends StatelessWidget {
                   icon: Icons.local_hospital_outlined,
                   selected: false,
                   onTap: () => push(const FacilityFinderScreen()),
+                ),
+                link(
+                  label: isUrdu ? 'سٹے اور ہوٹل' : 'Stays & Hotels',
+                  icon: Icons.hotel_outlined,
+                  selected: false,
+                  onTap: () => push(const StaysScreen()),
                 ),
                 link(
                   label: isUrdu
@@ -1330,9 +1338,8 @@ class _DestinationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Align(
-                      alignment: isUrdu
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
+                      alignment:
+                          isUrdu ? Alignment.centerRight : Alignment.centerLeft,
                       child: Text(
                         destination.distance,
                         textDirection: TextDirection.ltr,
@@ -1445,8 +1452,14 @@ class _EssentialsTab extends ConsumerWidget {
         icon: Icons.restaurant_rounded,
         tint: AppTokens.pastelRose,
         color: const Color(0xFFB91C1C),
-        onTap: () =>
-            push(const SearchResultsScreen(initialCategoryName: 'Restaurants')),
+        onTap: () => push(const RestaurantsScreen()),
+      ),
+      (
+        label: t('Hotels & Stays', 'ہوٹل اور سٹے'),
+        icon: Icons.hotel_rounded,
+        tint: AppTokens.pastelBlue,
+        color: AppTokens.multaniBlue,
+        onTap: () => push(const StaysScreen()),
       ),
       (
         label: t('Road alerts', 'سڑک الرٹس'),

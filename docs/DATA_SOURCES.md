@@ -107,3 +107,12 @@ not ship.
 - **Deliberately omitted:** fuel cost, toll amounts and public-transport fares. The screen shows "information unavailable" and directs users to current NHA rates and local adda/station counters.
 - **Live status:** marked "No live feed"; users are pointed to nha.gov.pk and nhmp.gov.pk, with reference date 2026-11-22.
 - **Maintenance:** if these figures or the rest-stop list are updated, record the source and date here first; otherwise the screen must keep the unavailable wording.
+
+## 13. Stays and restaurants listings
+
+- **Stays (10 properties):** names, cities, Booking.com scores, review counts and facility tags come from a Booking.com search snapshot supplied on 2026-11-22. The screen labels them "as listed on Booking.com in November 2026". No prices, availability or photos are stored.
+- **Booking links:** every "Find on Booking.com" button opens a live Booking.com search (`searchresults.html?ss=<property, area, city>`). The bare homepage and invented property permalinks are never used; the bottom banner opens a Punjab-wide search (`ss=Punjab, Pakistan`). No result count is printed.
+- **Restaurants (6 venues):** ratings and review counts are public listing figures from the same 2026-11-22 snapshot and are labelled in-app as not being reviews collected by this app. Official websites are linked only where supplied: `haveli.com.pk`, `themonal.com` and `bundukhan.pk` answered HTTP 200 on 2026-11-22; `cafeaylanto.com` answers 403 to non-browser requests but is the restaurant's published domain and is kept.
+- **No invented contact data:** Butt Karahi Tikka and Baba Tikka Shop have no verified ordering page in this build, so their primary action opens a Google Maps search. Phones are shown only where the app already carried the number (Butt Karahi, The Monal); no menu, price or phone number was fabricated.
+- **Maps:** every card has a Google Maps search built from the name, area and city.
+- **Maintenance:** re-check scores and links before each release. If a venue's site goes dark, remove the website action and fall back to the map search; keep the "listed figures" label until a live source exists.

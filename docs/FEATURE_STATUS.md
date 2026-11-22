@@ -34,6 +34,8 @@
 | City guide / city-specific attractions | `features/places/screens/city_guide_screen.dart` | Implemented | Compiles cleanly; dishonest verification copy removed; device journey pending |
 | Place details | `features/places/screens/place_details_screen.dart` | Implemented | No silent wrong-place fallback; device journey pending |
 | Search and filters | `features/search/` | Tested (offline path) | Offline filter/sort unit-tested; live API journey pending |
+| Stays & Hotels guide | `features/places/screens/stays_screen.dart` | Tested (browser) | 10 Booking.com listings with score badges, city filter, external search links; data-provenance tests; booking happens on Booking.com |
+| Restaurants & Food guide | `features/places/screens/restaurants_screen.dart` | Tested (browser) | Dining-only list; website, phone and map actions; ratings labelled as public listing figures, not app reviews |
 | Saved places / favorites | `features/favorites/` | Implemented | Test pending |
 | Reviews and media submissions | `features/reviews/` | Implemented | Moderation/back-end path to review |
 | Events | `features/events/` | Implemented | Test pending |
