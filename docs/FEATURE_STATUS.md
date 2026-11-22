@@ -16,9 +16,14 @@
 | Onboarding | `features/onboarding/` | Implemented | Not yet reviewed for brand/accessibility |
 | Auth (register/login, JWT, RBAC) | `features/auth/`, `backend/` | Implemented | No automated auth tests |
 | English/Urdu localization | `core/localization/app_language.dart` | In progress | Nastaliq font bundled; interface-wide switching and RTL mirroring still incomplete |
-| Bottom navigation | `features/home/screens/home_screen.dart` | Implemented | Home/Explore/Helpline/Pass structure to be consolidated |
+| Bottom navigation | `features/home/screens/home_screen.dart` | Tested (browser) | Replaced with 4-tab shell (Explore, Routes, Budget, Essentials) + 250 px sidebar ≥1024 px; older tab destinations now live in Essentials |
+| Unified design system (tokens, Plus Jakarta Sans, cards, shadows) | `core/theme/` | Tested (browser) | Emerald `#0E5A36`, amber `#D97706`, canvas `#F8F9FA`; dark mode still compiles but new shell is light-first |
+| Responsive navigation shell (sticky header, sidebar, bottom bar, AI FAB) | `features/home/screens/home_screen.dart` | Tested (browser) | 512 px and 1258 px screenshots; EN/اردو toggle flips home content RTL; device journey pending |
+| SOS dialog and AI concierge sheet | `features/home/screens/home_screen.dart` | Tested (browser) | Five helplines, dialer-only disclaimer, 85 % max height; AI sheet opens `MapAiScreen` and warns answers can be wrong |
+| Smart route planner (embedded) | `features/trips/screens/smart_route_planner_screen.dart` | Tested (browser) | Corridor presets only; fuel/toll/fares marked unavailable; road status "No live feed" with NHA/NHMP links and reference date |
+| Budget planner (embedded) | `features/trips/screens/smart_budget_planner_screen.dart` | Tested (browser) | Transparent assumptions, within/over-budget bar, day highlights, WhatsApp share labelled planning estimate |
 | Dark mode | `core/theme/` | Implemented | Being folded into new design system |
-| Dashboard redesign (3D logo, EN/اردو toggle, SOS modal, hero carousel, Traveler Essentials grid, bundled landmark photos) | `features/home/screens/home_screen.dart`, `core/widgets/app_logo.dart` | Tested (desktop-width browser check) | 430 px headless screenshots verified; photo provenance in `DATA_SOURCES.md` §9; SOS opens dialer only; device journey pending |
+| Explore dashboard (search pill, 3 quick tools, destination filters, 4:3 photo cards with bookmarks) | `features/home/screens/home_screen.dart` | Tested (browser) | 512 px + 1258 px screenshots; distances/season labels are approximate; no star ratings shown; photo provenance in `DATA_SOURCES.md` §9 |
 
 ## 2. Directory and discovery
 

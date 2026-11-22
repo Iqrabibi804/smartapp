@@ -9,25 +9,34 @@ class AppTokens {
   static const Color pakistanGreen = Color(0xFF01411C);
   static const Color pakistanGreenDark = Color(0xFF012E13);
   static const Color heritageGold = Color(0xFFC5A66A);
-  static const Color alertRed = Color(0xFFB91C1C);
-  static const Color scaffold = Color(0xFFF4F6F2);
+  static const Color alertRed = Color(0xFFDC2626);
+  static const Color scaffold = Color(0xFFF8F9FA);
 
-  // Dashboard identity: warm ivory paper, royal emerald, mustard gold
-  // and Multani blue used only in small icon badges.
-  static const Color dashboardBg = Color(0xFFFAF8F5);
+  // Unified light theme: alabaster canvas, royal emerald, warm amber
+  // and slate typography. Pastels are restricted to small icon tiles.
+  static const Color dashboardBg = Color(0xFFF8F9FA);
   static const Color emerald = Color(0xFF0E5A36);
+  static const Color emeraldHover = Color(0xFF0A4328);
+  static const Color emeraldTint = Color(0xFFECFDF5);
+  static const Color emeraldBorder = Color(0xFFA7F3D0);
   static const Color emeraldDeep = Color(0xFF0A3E24);
   static const Color gold = Color(0xFFD97706);
+  static const Color goldHover = Color(0xFFB45309);
+  static const Color goldTint = Color(0xFFFFFBEB);
+  static const Color goldBorder = Color(0xFFFDE68A);
   static const Color multaniBlue = Color(0xFF1D4ED8);
-  static const Color cardBorderWarm = Color(0xFFECE5D8);
-  static const Color pastelMint = Color(0xFFE4F2EA);
-  static const Color pastelGold = Color(0xFFFBF0DA);
-  static const Color pastelBlue = Color(0xFFE7EEFC);
-  static const Color pastelRose = Color(0xFFFBE8E2);
-  static const Color pastelLilac = Color(0xFFF0EAF9);
+  static const Color cardBorderWarm = Color(0xFFE2E8F0);
+  static const Color pastelMint = Color(0xFFECFDF5);
+  static const Color pastelGold = Color(0xFFFFFBEB);
+  static const Color pastelBlue = Color(0xFFEFF6FF);
+  static const Color pastelRose = Color(0xFFFEF2F2);
+  static const Color pastelLilac = Color(0xFFF5F3FF);
+  static const Color pastelTeal = Color(0xFFF0FDFA);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF1F2937);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color inputFill = Color(0xFFF1F5F9);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF475569);
+  static const Color textMuted = Color(0xFF94A3B8);
   static const Color border = Color(0xFFE2E8F0);
   static const Color success = Color(0xFF15803D);
   static const Color warning = Color(0xFFB45309);
@@ -38,8 +47,8 @@ class AppTokens {
   static const Color textPrimaryDark = Color(0xFFF8FAFC);
   static const Color textSecondaryDark = Color(0xFF94A3B8);
 
-  static const String fontHeading = 'Poppins';
-  static const String fontBody = 'Roboto';
+  static const String fontHeading = 'PlusJakartaSans';
+  static const String fontBody = 'PlusJakartaSans';
   static const String fontUrdu = 'NotoNastaliqUrdu';
 }
 
@@ -65,7 +74,7 @@ class AppRadius {
   static const double lg = 16;
   static const double xl = 24;
 
-  static BorderRadius get card => BorderRadius.circular(md);
+  static BorderRadius get card => BorderRadius.circular(lg);
   static BorderRadius get sheet => BorderRadius.circular(xl);
 }
 
@@ -74,17 +83,25 @@ class AppShadows {
 
   static List<BoxShadow> get card => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
+          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ];
+
+  static List<BoxShadow> get hover => [
+        BoxShadow(
+          color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
         ),
       ];
 
   static List<BoxShadow> get floating => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.12),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
+          color: const Color(0xFF0F172A).withValues(alpha: 0.14),
+          blurRadius: 32,
+          offset: const Offset(0, 12),
         ),
       ];
 }

@@ -99,3 +99,11 @@ live unless a live source is connected — and at v1.0.0 none are.
 Any new dataset must record here: publisher, URL, retrieval date, and whether the app
 shows it as live, cached, or unavailable. If provenance cannot be stated, the data does
 not ship.
+
+## 12. Route planner corridor figures
+
+- **What ships:** three rounded corridor references — Lahore → Islamabad ≈ 375 km / ≈ 4 h 15 m (M-2), Lahore → Multan ≈ 340 km / ≈ 3 h 50 m (M-3), Rawalpindi → Jhelum (Rohtas Fort) ≈ 110 km / ≈ 1 h 45 m (N-5). Rest stops on M-2 (Sukheke KM 85, Bhera KM 220, Kallar Kahar KM 290) are listed with amenity badges.
+- **Status:** approximate planning values, not a live routing API and not verified against an NHA feed in this build. The UI labels them "≈" and says facilities must be verified on arrival.
+- **Deliberately omitted:** fuel cost, toll amounts and public-transport fares. The screen shows "information unavailable" and directs users to current NHA rates and local adda/station counters.
+- **Live status:** marked "No live feed"; users are pointed to nha.gov.pk and nhmp.gov.pk, with reference date 2026-11-22.
+- **Maintenance:** if these figures or the rest-stop list are updated, record the source and date here first; otherwise the screen must keep the unavailable wording.

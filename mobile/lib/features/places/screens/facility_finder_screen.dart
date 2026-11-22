@@ -116,14 +116,14 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
                   avatar: Icon(
                     type.icon,
                     size: 16,
-                    color: active ? Colors.white : AppTokens.pakistanGreen,
+                    color: active ? Colors.white : AppTokens.emerald,
                   ),
                   label: Text(type.label),
                   labelStyle: TextStyle(
                     fontSize: 12,
                     color: active ? Colors.white : null,
                   ),
-                  selectedColor: AppTokens.pakistanGreen,
+                  selectedColor: AppTokens.emerald,
                 );
               },
             ),
@@ -178,9 +178,9 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
                             const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         leading: CircleAvatar(
                           backgroundColor:
-                              AppTokens.pakistanGreen.withValues(alpha: 0.1),
+                              AppTokens.emerald.withValues(alpha: 0.1),
                           child: Icon(_selected.icon,
-                              color: AppTokens.pakistanGreen, size: 20),
+                              color: AppTokens.emerald, size: 20),
                         ),
                         title: Text(
                           place.name,

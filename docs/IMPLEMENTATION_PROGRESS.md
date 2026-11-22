@@ -267,3 +267,19 @@ Open items for store release: rotate the exposed Atlas credential; restrict/rota
 - **Honesty:** SOS modal states calls open the dialer and the app does not dispatch help; Road & Landslide Alerts remain sourced advisories, not a live feed; footer keeps "Independent guide · Not affiliated with any government body."
 
 Verification: `dart format` clean; `flutter analyze` 0 errors / 0 warnings (18 pre-existing infos); `flutter test` 20/20; headless-browser screenshots at 430 px width checked for header, hero, grid, photo cards and FAB (no overflow stripes).
+
+---
+
+## Master prompt port — 2026-11-22
+
+Port of the "Airbnb + Google Maps + Rome2Rio" master brief into the Flutter app (not a new web build).
+
+- **Tokens and type:** unified light canvas `#F8F9FA`, white cards, `#F1F5F9` input fill, `#E2E8F0` borders; Royal Emerald `#0E5A36` primary, amber `#D97706` secondary, crimson `#DC2626` limited to SOS/emergency; slate text ramp. Plus Jakarta Sans bundled (Regular/SemiBold/Bold) and set as heading + body; Noto Nastaliq Urdu retained.
+- **Responsive shell:** one `HomeScreen` now owns a 64 px sticky header (offline dot, EN / اردو toggle, red SOS pill), a 250 px white sidebar at ≥1024 px (Explore, Routes, Budget, Hospitals, Bakeries, Saved/Offline, offline packs card) and a 4-tab bottom bar below that (Explore, Routes, Budget, Essentials). A 52 px emerald AI FAB opens a slide-over concierge sheet with suggested questions.
+- **Home dashboard:** hero search pill, three compact Quick Travel Tools cards (route / budget / medical), destination filter pills (All, Historical, Hills, Spiritual, Family) and a 4:3 photo grid with heart bookmark, place line, LTR-isolated distance and season chip. No ratings or visitor counts are shown because none are verified.
+- **Route planner:** rebuilt inside the shell. Three corridor presets carry approximate distance/drive time/highway; fuel, toll and public-fare rows say information unavailable with local-verification guidance; live road status is explicitly "No live feed" with NHA/NHMP references and the 2026-11-22 reference date. Only M-2 rest stops are listed and marked "verify on arrival".
+- **Budget planner:** rebuilt inside the shell with destination, PKR slider, days/travellers steppers, travel-style tabs, transparent per-room/per-person-per-day assumptions, remaining-buffer bar, day-by-day highlights, softened money tips and a WhatsApp share text that labels everything as an estimate.
+- **SOS + AI:** SOS dialog is centred, capped at 85 % viewport height, scroll-safe, with five helpline rows (1122, 1421, 15, 130, 1787) and an explicit dialer-only disclaimer. The AI sheet never claims live answers and tells users to verify official sources.
+- **Directory touch-ups:** facility finder accents moved to the emerald token; the directory already used a light surface and keeps its "no live availability" warning.
+
+Verification: `dart format` clean; `flutter analyze` 0 errors / 0 warnings (44 infos, all pre-existing style/deprecation notes); headless screenshots at 512 px and 1258 px checked for header, sidebar, quick tools, destination grid, route planner, budget planner, essentials, SOS dialog, AI sheet and Urdu RTL (font boxes appeared once during a cold load and disappeared on reload, confirming a transient asset-load delay rather than missing glyphs).

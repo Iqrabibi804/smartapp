@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/punjab_81_cities_data.dart';
 import '../../../core/localization/app_language.dart';
-import '../../../core/offline/offline_status_banner.dart';
 import '../../../core/theme/design_tokens.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -16,7 +14,8 @@ import '../../map/screens/map_screen.dart';
 import '../../search/screens/search_results_screen.dart';
 import '../../favorites/screens/saved_places_screen.dart';
 import '../../ai/screens/map_ai_screen.dart';
-import '../../trips/screens/trip_planner_screen.dart';
+import '../../trips/screens/smart_route_planner_screen.dart';
+import '../../trips/screens/smart_budget_planner_screen.dart';
 import '../../trips/screens/my_trips_screen.dart';
 import '../../events/services/events_service.dart';
 import '../../events/screens/events_list_screen.dart';
@@ -24,18 +23,9 @@ import '../../events/screens/event_details_screen.dart';
 import '../../business/screens/business_registration_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../places/screens/city_guide_screen.dart';
-import '../../places/screens/city_explorer_screen.dart';
-import '../../trips/screens/budget_calculator_screen.dart';
-import '../../trips/screens/group_bill_splitter_screen.dart';
-import '../../places/screens/local_vs_tourist_price_screen.dart';
 import '../../places/screens/offline_city_packs_screen.dart';
-import '../../places/screens/offline_payment_guide_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
 import '../../places/screens/facility_finder_screen.dart';
-import '../../places/screens/culture_companion_screen.dart';
-import '../../places/screens/permits_screen.dart';
-import '../../places/screens/foreigner_toolkit_screen.dart';
-import '../../places/screens/digital_tourist_pass_screen.dart';
 import '../../places/screens/complaints_screen.dart';
 import '../../trips/screens/journey_readiness_screen.dart';
 
@@ -49,456 +39,293 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tabIndex = 0;
 
-  Widget _bodyForTab(int index) {
-    switch (index) {
-      case 0:
-        return const _HomeTabContent();
+  static const List<({String en, String ur, IconData icon, IconData active})>
+      _tabs = [
+    (
+      en: 'Explore',
+      ur: 'دریافت',
+      icon: Icons.explore_outlined,
+      active: Icons.explore
+    ),
+    (
+      en: 'Routes',
+      ur: 'روٹس',
+      icon: Icons.alt_route_outlined,
+      active: Icons.alt_route
+    ),
+    (
+      en: 'Budget',
+      ur: 'بجٹ',
+      icon: Icons.account_balance_wallet_outlined,
+      active: Icons.account_balance_wallet
+    ),
+    (
+      en: 'Essentials',
+      ur: 'ضروریات',
+      icon: Icons.grid_view_outlined,
+      active: Icons.grid_view_rounded
+    ),
+  ];
+
+  String _titleFor(AppLanguage lang) => switch (_tabIndex) {
+        0 => lang == AppLanguage.urdu ? 'پنجاب دریافت کریں' : 'Explore Punjab',
+        1 =>
+          lang == AppLanguage.urdu ? 'سمارٹ روٹ پلانر' : 'Smart Route Planner',
+        2 => lang == AppLanguage.urdu ? 'بجٹ پلانر' : 'Budget Planner',
+        _ => lang == AppLanguage.urdu ? 'ضروریات' : 'Essentials',
+      };
+
+  Widget _bodyForTab(AppLanguage lang) {
+    switch (_tabIndex) {
       case 1:
-        return const MapScreen();
+        return const SmartRoutePlannerScreen();
       case 2:
-        return const CityExplorerScreen();
+        return const SmartBudgetPlannerScreen();
       case 3:
-        return const SavedPlacesScreen();
-      case 4:
-        return const _ProfileTabPlaceholder();
+        return const _EssentialsTab();
       default:
-        return const SizedBox.shrink();
+        return _ExploreTab(
+          onOpenTab: (index) => setState(() => _tabIndex = index),
+        );
     }
+  }
+
+  void _openAiConcierge() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _AiConciergeSheet(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isUrdu = lang == AppLanguage.urdu;
+    final wide = MediaQuery.sizeOf(context).width >= 1024;
+
+    Widget shell = Column(
+      children: [
+        _TopBar(
+          wide: wide,
+          title: _titleFor(lang),
+          isUrdu: isUrdu,
+        ),
+        Expanded(child: _bodyForTab(lang)),
+      ],
+    );
+
+    if (wide) {
+      shell = Row(
+        children: [
+          _Sidebar(
+            selectedTab: _tabIndex,
+            isUrdu: isUrdu,
+            onSelectTab: (index) => setState(() => _tabIndex = index),
+          ),
+          Expanded(child: shell),
+        ],
+      );
+    }
 
     return Scaffold(
-      backgroundColor: isDark ? AppTokens.scaffoldDark : AppTokens.dashboardBg,
-      body: SafeArea(child: _bodyForTab(_tabIndex)),
-      floatingActionButton: _tabIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const MapAiScreen()),
-                );
-              },
-              backgroundColor: AppTokens.emerald,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              extendedPadding: const EdgeInsets.symmetric(horizontal: 16),
-              extendedIconLabelSpacing: 6,
-              icon: const Icon(Icons.auto_awesome,
-                  size: 17, color: AppTokens.gold),
-              label: Text(
-                AppStrings.tr('ai_guide', lang),
-                style: const TextStyle(
-                  fontFamily: AppTokens.fontBody,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            )
-          : null,
+      backgroundColor: AppTokens.dashboardBg,
+      body: SafeArea(child: shell),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabIndex,
-        onDestinationSelected: (i) => setState(() => _tabIndex = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon:
-                const Icon(Icons.home, color: AppTokens.pakistanGreen),
-            label: AppStrings.tr('tab_home', lang),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.map_outlined),
-            selectedIcon: const Icon(Icons.map, color: AppTokens.pakistanGreen),
-            label: AppStrings.tr('tab_map', lang),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.location_city_outlined),
-            selectedIcon:
-                const Icon(Icons.location_city, color: AppTokens.pakistanGreen),
-            label: AppStrings.tr('tab_cities', lang),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bookmark_border),
-            selectedIcon:
-                const Icon(Icons.bookmark, color: AppTokens.pakistanGreen),
-            label: AppStrings.tr('tab_saved', lang),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon:
-                const Icon(Icons.person, color: AppTokens.pakistanGreen),
-            label: AppStrings.tr('tab_profile', lang),
-          ),
-        ],
+      floatingActionButton: SizedBox(
+        width: 52,
+        height: 52,
+        child: FloatingActionButton(
+          onPressed: _openAiConcierge,
+          backgroundColor: AppTokens.emerald,
+          foregroundColor: Colors.white,
+          elevation: 6,
+          shape: const CircleBorder(),
+          tooltip: isUrdu ? 'اے آئی گائیڈ' : 'AI Travel Concierge',
+          child: const Icon(Icons.auto_awesome, size: 22),
+        ),
       ),
-    );
-  }
-}
-
-class _HomeTabContent extends ConsumerStatefulWidget {
-  const _HomeTabContent();
-
-  @override
-  ConsumerState<_HomeTabContent> createState() => _HomeTabContentState();
-}
-
-class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
-  final PageController _bannerController = PageController();
-  Timer? _bannerTimer;
-
-  static const List<
-      ({
-        String asset,
-        String tag,
-        String title,
-        String subtitle,
-        String cityId,
-        String urdu
-      })> _heroSlides = [
-    (
-      asset: 'assets/images/landmarks/taxila_dharmarajika.jpg',
-      tag: 'UNESCO HERITAGE',
-      title: 'Taxila: Gandhara UNESCO Site',
-      subtitle: 'Dharmarajika Stupa, Sirkap & ancient Buddhist relics',
-      cityId: 'taxila',
-      urdu: 'ٹیکسلا',
-    ),
-    (
-      asset: 'assets/images/landmarks/badshahi_mosque.jpg',
-      tag: 'ROYAL HERITAGE',
-      title: 'Lahore: Royal Heritage',
-      subtitle: 'Badshahi Mosque, Lahore Fort & Walled City lanes',
-      cityId: 'lahore',
-      urdu: 'لاہور',
-    ),
-  ];
-
-  static const List<({String id, String asset, String caption})>
-      _popularCities = [
-    (
-      id: 'lahore',
-      asset: 'assets/images/landmarks/lahore_fort.jpg',
-      caption: 'Lahore Fort'
-    ),
-    (
-      id: 'multan',
-      asset: 'assets/images/landmarks/multan_shrine.jpg',
-      caption: 'Shah Rukn-e-Alam'
-    ),
-    (
-      id: 'rawalpindi',
-      asset: 'assets/images/landmarks/rawalpindi_bazaar.jpg',
-      caption: 'Raja Bazaar'
-    ),
-    (
-      id: 'bahawalpur',
-      asset: 'assets/images/landmarks/noor_mahal.jpg',
-      caption: 'Noor Mahal'
-    ),
-  ];
-
-  static const List<
-      ({
-        String asset,
-        String title,
-        String city,
-        String cityId,
-        String label,
-        String tag
-      })> _landmarks = [
-    (
-      asset: 'assets/images/landmarks/badshahi_mosque.jpg',
-      title: 'Badshahi Mosque',
-      city: 'Lahore',
-      cityId: 'lahore',
-      label: 'Mughal mosque, 1673',
-      tag: 'HERITAGE',
-    ),
-    (
-      asset: 'assets/images/landmarks/derawar_fort.jpg',
-      title: 'Derawar Fort',
-      city: 'Bahawalpur',
-      cityId: 'bahawalpur',
-      label: 'Cholistan desert fort',
-      tag: 'DESERT',
-    ),
-    (
-      asset: 'assets/images/landmarks/shalimar_gardens.jpg',
-      title: 'Shalimar Gardens',
-      city: 'Lahore',
-      cityId: 'lahore',
-      label: 'UNESCO Mughal garden',
-      tag: 'UNESCO',
-    ),
-    (
-      asset: 'assets/images/landmarks/taxila_dharmarajika.jpg',
-      title: 'Dharmarajika Stupa',
-      city: 'Taxila',
-      cityId: 'taxila',
-      label: 'UNESCO Gandhara site',
-      tag: 'UNESCO',
-    ),
-    (
-      asset: 'assets/images/landmarks/murree.jpg',
-      title: 'Murree Hills',
-      city: 'Murree',
-      cityId: 'murree',
-      label: 'Hill station, 2,291 m',
-      tag: 'HILLS',
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_bannerController.hasClients) {
-        final page = _bannerController.page?.round() ?? 0;
-        final next = (page + 1) % _heroSlides.length;
-        _bannerController.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 650),
-          curve: Curves.easeInOutCubic,
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _bannerTimer?.cancel();
-    _bannerController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _makeCall(String number) async {
-    final uri = Uri.parse('tel:$number');
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      }
-    } catch (_) {}
-  }
-
-  PunjabCity? _cityById(String id) {
-    for (final city in Punjab81CitiesData.allCities) {
-      if (city.id.toLowerCase() == id.toLowerCase()) return city;
-    }
-    return null;
-  }
-
-  void _push(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-  }
-
-  void _openCity(String id) {
-    final city = _cityById(id);
-    if (city != null) _push(CityGuideScreen(city: city));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = ref.watch(languageProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final background = isDark ? AppTokens.scaffoldDark : AppTokens.dashboardBg;
-    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
-    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
-    final border = isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm;
-
-    return ColoredBox(
-      color: background,
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: 120),
-        children: [
-          const OfflineStatusBanner(),
-          _buildHeader(lang, isDark, ink, muted, surface, border),
-          const SizedBox(height: 6),
-          _buildSearch(lang, isDark, muted, surface, border),
-          const SizedBox(height: 18),
-          _buildCategories(isDark, ink),
-          const SizedBox(height: 20),
-          _buildHero(isDark),
-          const SizedBox(height: 8),
-          Center(
-            child: SmoothPageIndicator(
-              controller: _bannerController,
-              count: _heroSlides.length,
-              effect: ExpandingDotsEffect(
-                dotHeight: 5,
-                dotWidth: 6,
-                activeDotColor: AppTokens.gold,
-                dotColor:
-                    isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildTravelerEssentials(lang, isDark, ink, muted, surface, border),
-          const SizedBox(height: 26),
-          _buildPopularCities(ink, muted),
-          const SizedBox(height: 26),
-          _buildMustVisit(ink, muted),
-          const SizedBox(height: 26),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 18),
-            child: _EventsSection(),
-          ),
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 13, color: muted),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Independent guide · Not affiliated with any government body.',
-                    style: TextStyle(fontSize: 10.5, color: muted),
+      bottomNavigationBar: wide
+          ? null
+          : NavigationBar(
+              height: 68,
+              selectedIndex: _tabIndex,
+              onDestinationSelected: (i) => setState(() => _tabIndex = i),
+              destinations: [
+                for (var i = 0; i < _tabs.length; i++)
+                  NavigationDestination(
+                    icon: Icon(_tabs[i].icon),
+                    selectedIcon:
+                        Icon(_tabs[i].active, color: AppTokens.emerald),
+                    label: isUrdu ? _tabs[i].ur : _tabs[i].en,
                   ),
-                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
+}
 
-  // ── Header ────────────────────────────────────────────────────────────────
+// ── Top header bar ──────────────────────────────────────────────────────────
 
-  Widget _buildHeader(
-    AppLanguage lang,
-    bool isDark,
-    Color ink,
-    Color muted,
-    Color surface,
-    Color border,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
+class _TopBar extends ConsumerWidget {
+  const _TopBar({
+    required this.wide,
+    required this.title,
+    required this.isUrdu,
+  });
+
+  final bool wide;
+  final String title;
+  final bool isUrdu;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final muted = AppTokens.textMuted;
+
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: AppTokens.border)),
+      ),
       child: Row(
         children: [
-          const AppLogoMark3D(size: 42),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
+          if (!wide) ...[
+            const AppLogoMark3D(size: 32),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'SmartMap Punjab',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppTokens.fontHeading,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTokens.emerald,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ),
+          ] else ...[
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'SmartMap Punjab',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  title,
+                  style: const TextStyle(
                     fontFamily: AppTokens.fontHeading,
-                    fontSize: 16.5,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
-                    color: isDark ? Colors.white : AppTokens.emerald,
+                    color: AppTokens.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 1),
                 Text(
-                  'Punjab, Pakistan · Independent guide',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 9.5, color: muted),
+                  isUrdu
+                      ? 'سمارٹ میپ پنجاب · آزاد گائیڈ'
+                      : 'SmartMap Punjab · Independent guide',
+                  style: TextStyle(fontSize: 10.5, color: muted),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          _buildLanguageToggle(lang, isDark, muted, surface, border),
+            const Spacer(),
+          ],
           const SizedBox(width: 6),
-          _buildSosButton(),
+          Tooltip(
+            message:
+                isUrdu ? 'آف لائن ڈیٹا لوڈ ہے' : 'Offline city data is bundled',
+            child: IconButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const OfflineCityPacksScreen()),
+              ),
+              icon: const Icon(Icons.cloud_done_outlined,
+                  size: 20, color: AppTokens.success),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            ),
+          ),
+          const SizedBox(width: 4),
+          _LanguageToggle(isUrdu: isUrdu),
+          const SizedBox(width: 6),
+          _SosButton(isUrdu: isUrdu),
         ],
       ),
     );
   }
+}
 
-  Widget _buildLanguageToggle(
-    AppLanguage lang,
-    bool isDark,
-    Color muted,
-    Color surface,
-    Color border,
-  ) {
-    final isUrdu = lang == AppLanguage.urdu;
+class _LanguageToggle extends ConsumerWidget {
+  const _LanguageToggle({required this.isUrdu});
+
+  final bool isUrdu;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Widget option(
+        String label, bool selected, bool urduLabel, AppLanguage language) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => ref.read(languageProvider.notifier).setLanguage(language),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: selected ? AppTokens.emerald : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: urduLabel ? AppTokens.fontUrdu : AppTokens.fontBody,
+              fontSize: urduLabel ? 14 : 10.5,
+              height: urduLabel ? 1.5 : 1.2,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : AppTokens.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
-      height: 34,
+      height: 36,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: AppTokens.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _languageOption(
-              'EN',
-              !isUrdu,
-              isDark,
-              muted,
-              () => ref
-                  .read(languageProvider.notifier)
-                  .setLanguage(AppLanguage.english)),
-          _languageOption(
-              'اردو',
-              isUrdu,
-              isDark,
-              muted,
-              () => ref
-                  .read(languageProvider.notifier)
-                  .setLanguage(AppLanguage.urdu)),
+          option('EN', !isUrdu, false, AppLanguage.english),
+          option('اردو', isUrdu, true, AppLanguage.urdu),
         ],
       ),
     );
   }
+}
 
-  Widget _languageOption(
-    String label,
-    bool selected,
-    bool isDark,
-    Color muted,
-    VoidCallback onTap,
-  ) {
-    final isUrduLabel = label == 'اردو';
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
-        decoration: BoxDecoration(
-          color: selected ? AppTokens.emerald : Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: isUrduLabel ? AppTokens.fontUrdu : AppTokens.fontBody,
-            fontSize: isUrduLabel ? 12 : 10.5,
-            height: isUrduLabel ? 1.7 : 1.2,
-            fontWeight: FontWeight.w700,
-            color: selected ? Colors.white : muted,
-          ),
-        ),
-      ),
-    );
-  }
+class _SosButton extends StatelessWidget {
+  const _SosButton({required this.isUrdu});
 
-  Widget _buildSosButton() {
+  final bool isUrdu;
+
+  @override
+  Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(17),
-        onTap: () => _showEmergencyModal(context),
+        onTap: () => showDialog<void>(
+          context: context,
+          builder: (_) => const _SosDialog(),
+        ),
         child: Container(
           height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -513,12 +340,21 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.emergency_rounded, size: 14, color: Colors.white),
-              SizedBox(width: 4),
-              Text(
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              const Icon(Icons.call_rounded, size: 13, color: Colors.white),
+              const SizedBox(width: 3),
+              const Text(
                 'SOS',
                 style: TextStyle(
                   fontSize: 10.5,
@@ -533,891 +369,227 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
       ),
     );
   }
+}
 
-  // ── Search ────────────────────────────────────────────────────────────────
+// ── Desktop sidebar ─────────────────────────────────────────────────────────
 
-  Widget _buildSearch(
-    AppLanguage lang,
-    bool isDark,
-    Color muted,
-    Color surface,
-    Color border,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: Material(
-        color: surface,
-        borderRadius: BorderRadius.circular(26),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(26),
-          onTap: () => _push(const SearchResultsScreen()),
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.only(left: 8, right: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: AppTokens.pastelMint,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.search_rounded,
-                      size: 19, color: AppTokens.emerald),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Search Lahore, Taxila, food, hotels...',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: muted),
-                  ),
-                ),
-                Icon(Icons.tune_rounded, size: 17, color: muted),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class _Sidebar extends StatelessWidget {
+  const _Sidebar({
+    required this.selectedTab,
+    required this.isUrdu,
+    required this.onSelectTab,
+  });
 
-  // ── Categories ────────────────────────────────────────────────────────────
+  final int selectedTab;
+  final bool isUrdu;
+  final ValueChanged<int> onSelectTab;
 
-  Widget _buildCategories(bool isDark, Color ink) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: _QuickCategory(
-              label: 'Cities',
-              icon: Icons.location_city_rounded,
-              background: AppTokens.pastelMint,
-              foreground: AppTokens.emerald,
-              labelColor: ink,
-              onTap: () => _push(const CityExplorerScreen()),
-            ),
-          ),
-          Expanded(
-            child: _QuickCategory(
-              label: 'Heritage',
-              icon: Icons.account_balance_rounded,
-              background: AppTokens.pastelGold,
-              foreground: const Color(0xFFA16207),
-              labelColor: ink,
-              onTap: () => _push(
-                const SearchResultsScreen(
-                    initialCategoryName: 'Historical & Religious'),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _QuickCategory(
-              label: 'Food',
-              icon: Icons.restaurant_rounded,
-              background: AppTokens.pastelRose,
-              foreground: const Color(0xFFC2410C),
-              labelColor: ink,
-              onTap: () => _push(
-                const SearchResultsScreen(initialCategoryName: 'Restaurants'),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _QuickCategory(
-              label: 'Stays',
-              icon: Icons.hotel_rounded,
-              background: AppTokens.pastelBlue,
-              foreground: AppTokens.multaniBlue,
-              labelColor: ink,
-              onTap: () => _push(
-                const SearchResultsScreen(initialCategoryName: 'Hotels'),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _QuickCategory(
-              label: 'Medical',
-              icon: Icons.local_hospital_rounded,
-              background: AppTokens.pastelLilac,
-              foreground: const Color(0xFF6D28D9),
-              labelColor: ink,
-              onTap: () => _push(
-                FacilityFinderScreen(initialType: kFacilityTypes.first),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Hero ──────────────────────────────────────────────────────────────────
-
-  Widget _buildHero(bool isDark) {
-    return SizedBox(
-      height: 198,
-      child: PageView.builder(
-        controller: _bannerController,
-        itemCount: _heroSlides.length,
-        itemBuilder: (context, i) {
-          final slide = _heroSlides[i];
-          return GestureDetector(
-            onTap: () => _openCity(slide.cityId),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    slide.asset,
-                    fit: BoxFit.cover,
-                    cacheWidth: 1100,
-                    errorBuilder: (_, __, ___) => const ColoredBox(
-                      color: AppTokens.emeraldDeep,
-                      child: Center(
-                        child: Icon(Icons.landscape_rounded,
-                            color: Colors.white38, size: 40),
-                      ),
-                    ),
-                  ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x22000000),
-                          Color(0x55000000),
-                          Color(0xE6062618),
-                        ],
-                        stops: [0.0, 0.45, 1.0],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 14,
-                    left: 14,
-                    right: 14,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppTokens.gold,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            slide.tag,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.7,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white24),
-                          ),
-                          child: Text(
-                            slide.urdu,
-                            textDirection: TextDirection.rtl,
-                            style: const TextStyle(
-                              fontFamily: AppTokens.fontUrdu,
-                              color: Colors.white,
-                              fontSize: 11,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 15,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                slide.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: AppTokens.fontHeading,
-                                  color: Colors.white,
-                                  fontSize: 19,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                slide.subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.78),
-                                  fontSize: 10.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 13, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppTokens.gold,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Explore',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward_rounded,
-                                  color: Colors.white, size: 13),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ── Traveler Essentials ───────────────────────────────────────────────────
-
-  Widget _buildTravelerEssentials(
-    AppLanguage lang,
-    bool isDark,
-    Color ink,
-    Color muted,
-    Color surface,
-    Color border,
-  ) {
-    final showUrdu = lang == AppLanguage.urdu;
-    final tools = <({
-      String title,
-      String subtitle,
-      String urdu,
-      IconData icon,
-      Color accent,
-      Color accentBg,
-      VoidCallback onTap
-    })>[
+  @override
+  Widget build(BuildContext context) {
+    final items = [
       (
-        title: 'Route Planner',
-        subtitle: 'Plan a route with fuel stops',
-        urdu: 'روٹ اور ایندھن کی منصوبہ بندی',
-        icon: Icons.alt_route_rounded,
-        accent: AppTokens.emerald,
-        accentBg: AppTokens.pastelMint,
-        onTap: () => _push(const TripPlannerScreen()),
+        en: 'Explore Dashboard',
+        ur: 'دریافت ڈیش بورڈ',
+        icon: Icons.explore_outlined,
+        tab: 0
       ),
       (
-        title: 'Anti-Scam Rates',
-        subtitle: 'Know fair prices before you bargain',
-        urdu: 'منصفانہ ریٹ کی رہنمائی',
-        icon: Icons.price_check_rounded,
-        accent: AppTokens.gold,
-        accentBg: AppTokens.pastelGold,
-        onTap: () => _push(const LocalVsTouristPriceScreen()),
+        en: 'Smart Route & Trip Planner',
+        ur: 'سمارٹ روٹ پلانر',
+        icon: Icons.alt_route_outlined,
+        tab: 1
       ),
       (
-        title: 'Offline City Packs',
-        subtitle: 'City guides without a signal',
-        urdu: 'بغیر نیٹ شہر کی گائیڈ',
-        icon: Icons.cloud_download_rounded,
-        accent: AppTokens.multaniBlue,
-        accentBg: AppTokens.pastelBlue,
-        onTap: () => _push(const OfflineCityPacksScreen()),
-      ),
-      (
-        title: 'Budget Calculator',
-        subtitle: 'Estimate your trip in rupees',
-        urdu: 'روپوں میں سفر کا بجٹ',
-        icon: Icons.calculate_rounded,
-        accent: AppTokens.emerald,
-        accentBg: AppTokens.pastelMint,
-        onTap: () => _push(const BudgetCalculatorScreen()),
-      ),
-      (
-        title: 'Bill Splitter',
-        subtitle: 'Split group expenses fairly',
-        urdu: 'گروپ کا بل برابر تقسیم کریں',
-        icon: Icons.groups_rounded,
-        accent: const Color(0xFFB45309),
-        accentBg: AppTokens.pastelGold,
-        onTap: () => _push(const GroupBillSplitterScreen()),
-      ),
-      (
-        title: 'Road & Landslide Alerts',
-        subtitle: 'Advisories to verify before travel',
-        urdu: 'سڑک اور لینڈ سلائیڈ معلومات',
-        icon: Icons.warning_amber_rounded,
-        accent: AppTokens.alertRed,
-        accentBg: AppTokens.pastelRose,
-        onTap: () => _push(const RoadInfrastructureAlertsScreen()),
+        en: 'Budget Calculator',
+        ur: 'بجٹ کیلکولیٹر',
+        icon: Icons.account_balance_wallet_outlined,
+        tab: 2
       ),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+    Widget link({
+      required String label,
+      required IconData icon,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      return Material(
+        color: selected ? AppTokens.emeraldTint : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            child: Row(
+              children: [
+                Icon(icon,
+                    size: 19,
+                    color:
+                        selected ? AppTokens.emerald : AppTokens.textSecondary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected
+                          ? AppTokens.emerald
+                          : AppTokens.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    void push(Widget screen) =>
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+
+    return Container(
+      width: 250,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(right: BorderSide(color: AppTokens.border)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(
-            title: 'Traveler Essentials',
-            subtitle: 'Six everyday tools for a smoother Punjab trip',
-            actionLabel: 'More tools',
-            actionColor: AppTokens.emerald,
-            onAction: () => _showMoreTools(),
-            ink: ink,
-            muted: muted,
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: tools.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              mainAxisExtent: showUrdu ? 164 : 142,
-            ),
-            itemBuilder: (context, i) {
-              final tool = tools[i];
-              return _ToolCard(
-                title: tool.title,
-                subtitle: tool.subtitle,
-                urduSubtitle: tool.urdu,
-                icon: tool.icon,
-                accent: tool.accent,
-                accentBg: tool.accentBg,
-                showUrdu: showUrdu,
-                isDark: isDark,
-                surface: surface,
-                border: border,
-                ink: ink,
-                muted: muted,
-                onTap: tool.onTap,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Popular Cities ────────────────────────────────────────────────────────
-
-  Widget _buildPopularCities(Color ink, Color muted) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: _SectionHeader(
-            title: 'Popular Cities',
-            subtitle: 'Real places, photographed on location',
-            actionLabel: 'All 81 cities',
-            actionColor: AppTokens.emerald,
-            onAction: () => _push(const CityExplorerScreen()),
-            ink: ink,
-            muted: muted,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 164,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            scrollDirection: Axis.horizontal,
-            itemCount: _popularCities.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final entry = _popularCities[i];
-              final city = _cityById(entry.id);
-              if (city == null) return const SizedBox.shrink();
-              return _CityPhotoCard(
-                city: city,
-                asset: entry.asset,
-                caption: entry.caption,
-                onTap: () => _openCity(entry.id),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Must-Visit Destinations ───────────────────────────────────────────────
-
-  Widget _buildMustVisit(Color ink, Color muted) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: _SectionHeader(
-            title: 'Must-Visit Destinations',
-            subtitle: 'Photographs from Wikimedia Commons contributors',
-            actionLabel: 'View all',
-            actionColor: AppTokens.emerald,
-            onAction: () => _push(const SearchResultsScreen()),
-            ink: ink,
-            muted: muted,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 216,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            scrollDirection: Axis.horizontal,
-            itemCount: _landmarks.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final landmark = _landmarks[i];
-              return _LandmarkCard(
-                asset: landmark.asset,
-                title: landmark.title,
-                city: landmark.city,
-                label: landmark.label,
-                tag: landmark.tag,
-                onTap: () => _openCity(landmark.cityId),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── More tools sheet ──────────────────────────────────────────────────────
-
-  void _showMoreTools() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
-    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
-    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final items = <({
-          IconData icon,
-          Color color,
-          String title,
-          String subtitle,
-          VoidCallback onTap
-        })>[
-          (
-            icon: Icons.local_hospital_rounded,
-            color: AppTokens.emerald,
-            title: 'Hospitals & clinics',
-            subtitle: 'Find medical facilities by type',
-            onTap: () => _pushFromSheet(
-                ctx, FacilityFinderScreen(initialType: kFacilityTypes.first)),
-          ),
-          (
-            icon: Icons.cake_rounded,
-            color: const Color(0xFFC2410C),
-            title: 'Bakeries & cakes',
-            subtitle: 'Fresh bakes from listed shops',
-            onTap: () => _pushFromSheet(
-                  ctx,
-                  const SearchResultsScreen(
-                      initialCategoryName: 'Bakeries & Cakes'),
-                ),
-          ),
-          (
-            icon: Icons.account_balance_wallet_rounded,
-            color: AppTokens.multaniBlue,
-            title: 'Offline payment guide',
-            subtitle: 'USSD and over-the-counter options',
-            onTap: () => _pushFromSheet(ctx, const OfflinePaymentGuideScreen()),
-          ),
-          (
-            icon: Icons.checklist_rtl_rounded,
-            color: const Color(0xFF0F766E),
-            title: 'Journey readiness',
-            subtitle: 'A checklist before you leave',
-            onTap: () => _pushFromSheet(ctx, const JourneyReadinessScreen()),
-          ),
-          (
-            icon: Icons.diversity_3_rounded,
-            color: AppTokens.gold,
-            title: 'Local culture',
-            subtitle: 'Etiquette and useful phrases',
-            onTap: () => _pushFromSheet(ctx, const CultureCompanionScreen()),
-          ),
-          (
-            icon: Icons.assignment_rounded,
-            color: const Color(0xFF1E3A8A),
-            title: 'Permits & NOC',
-            subtitle: 'Guidance only — no online submission',
-            onTap: () => _pushFromSheet(ctx, const PermitsScreen()),
-          ),
-          (
-            icon: Icons.public_rounded,
-            color: const Color(0xFF134E4A),
-            title: 'Foreign visitor toolkit',
-            subtitle: 'PTA, currency and embassies',
-            onTap: () => _pushFromSheet(ctx, const ForeignerToolkitScreen()),
-          ),
-          (
-            icon: Icons.badge_rounded,
-            color: AppTokens.emeraldDeep,
-            title: 'Digital tourist pass',
-            subtitle: 'On-device ID — not a government pass',
-            onTap: () => _pushFromSheet(ctx, const DigitalTouristPassScreen()),
-          ),
-          (
-            icon: Icons.report_problem_rounded,
-            color: AppTokens.alertRed,
-            title: 'Report an issue',
-            subtitle: 'Saved on device — not submitted',
-            onTap: () => _pushFromSheet(ctx, const ComplaintsScreen()),
-          ),
-        ];
-
-        return Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-          ),
-          padding: EdgeInsets.only(
-            top: 10,
-            bottom: MediaQuery.of(ctx).padding.bottom + 12,
-          ),
-          child: SafeArea(
-            top: false,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(ctx).size.height * 0.72),
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 14),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppTokens.borderDark
-                            : AppTokens.cardBorderWarm,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'More traveler tools',
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+            child: Row(
+              children: [
+                const AppLogoMark3D(size: 36),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    'SmartMap Punjab',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: AppTokens.fontHeading,
-                      fontSize: 17,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w700,
-                      color: ink,
+                      color: AppTokens.emerald,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Supporting guides, kept out of the main grid.',
-                    style: TextStyle(fontSize: 11.5, color: muted),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppTokens.border),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
+            child: Column(
+              children: [
+                for (final item in items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: link(
+                      label: isUrdu ? item.ur : item.en,
+                      icon: item.icon,
+                      selected: selectedTab == item.tab,
+                      onTap: () => onSelectTab(item.tab),
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  for (final item in items)
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 2),
-                      leading: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: item.color.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(11),
+                link(
+                  label: isUrdu ? 'ہسپتال اور میڈیکل' : 'Hospitals & Medical',
+                  icon: Icons.local_hospital_outlined,
+                  selected: false,
+                  onTap: () => push(const FacilityFinderScreen()),
+                ),
+                link(
+                  label: isUrdu
+                      ? 'بیکری اور مقامی کھانا'
+                      : 'Bakeries & Local Food',
+                  icon: Icons.bakery_dining_outlined,
+                  selected: false,
+                  onTap: () => push(const SearchResultsScreen(
+                      initialCategoryName: 'Bakeries & Cakes')),
+                ),
+                link(
+                  label: isUrdu
+                      ? 'محفوظ ٹرپس اور آف لائن'
+                      : 'Saved Trips & Offline',
+                  icon: Icons.bookmarks_outlined,
+                  selected: false,
+                  onTap: () => push(const SavedPlacesScreen()),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTokens.dashboardBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTokens.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTokens.success,
+                          shape: BoxShape.circle,
                         ),
-                        child: Icon(item.icon, size: 20, color: item.color),
                       ),
-                      title: Text(
-                        item.title,
-                        style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: ink),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          isUrdu
+                              ? 'آف لائن ہائی وے ڈیٹا'
+                              : 'Offline highway data',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.textPrimary,
+                          ),
+                        ),
                       ),
-                      subtitle: Text(
-                        item.subtitle,
-                        style: TextStyle(fontSize: 11, color: muted),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    isUrdu
+                        ? 'ایڈوائزری ایپ کے ساتھ محفوظ ہے'
+                        : 'Advisories ship inside the app',
+                    style: const TextStyle(
+                        fontSize: 10.5, color: AppTokens.textMuted),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 30,
+                    child: OutlinedButton(
+                      onPressed: () => push(const OfflineCityPacksScreen()),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(30),
+                        padding: EdgeInsets.zero,
+                        side: const BorderSide(color: AppTokens.emeraldBorder),
+                        foregroundColor: AppTokens.emerald,
+                        textStyle: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w700),
                       ),
-                      trailing: Icon(Icons.arrow_forward_ios_rounded,
-                          size: 12, color: muted),
-                      onTap: item.onTap,
+                      child: Text(isUrdu ? 'پیک دیکھیں' : 'Manage packs'),
                     ),
+                  ),
                 ],
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _pushFromSheet(BuildContext sheetContext, Widget screen) {
-    Navigator.of(sheetContext).pop();
-    _push(screen);
-  }
-
-  // ── Emergency SOS ─────────────────────────────────────────────────────────
-
-  void _showEmergencyModal(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
-    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
-    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        ),
-        padding: EdgeInsets.fromLTRB(
-            20, 10, 20, MediaQuery.of(ctx).padding.bottom + 18),
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 14),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppTokens.borderDark
-                          : AppTokens.cardBorderWarm,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFBE8E5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.sos_rounded,
-                          color: AppTokens.alertRed, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Emergency helplines',
-                            style: TextStyle(
-                              fontFamily: AppTokens.fontHeading,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: ink,
-                            ),
-                          ),
-                          Text(
-                            'Calls open your phone dialer. This app does not dispatch help.',
-                            style: TextStyle(fontSize: 11, color: muted),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                _emergencyTile(
-                  title: 'Rescue 1122',
-                  subtitle: 'Ambulance, fire & rescue',
-                  number: '1122',
-                  color: AppTokens.alertRed,
-                  icon: Icons.medical_services_rounded,
-                  ink: ink,
-                  muted: muted,
-                ),
-                _emergencyTile(
-                  title: 'Police 15',
-                  subtitle: 'Police emergency',
-                  number: '15',
-                  color: AppTokens.multaniBlue,
-                  icon: Icons.local_police_rounded,
-                  ink: ink,
-                  muted: muted,
-                ),
-                _emergencyTile(
-                  title: 'Motorway 130',
-                  subtitle: 'Motorway & highway police',
-                  number: '130',
-                  color: AppTokens.gold,
-                  icon: Icons.directions_car_filled_rounded,
-                  ink: ink,
-                  muted: muted,
-                ),
-                _emergencyTile(
-                  title: 'Tourist Help 1421',
-                  subtitle: 'Punjab tourist police helpline',
-                  number: '1421',
-                  color: AppTokens.emerald,
-                  icon: Icons.support_agent_rounded,
-                  ink: ink,
-                  muted: muted,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Numbers are public helplines in Pakistan. Verify locally if a line does not answer.',
-                  style: TextStyle(fontSize: 10, color: muted, height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _emergencyTile({
-    required String title,
-    required String subtitle,
-    required String number,
-    required Color color,
-    required IconData icon,
-    required Color ink,
-    required Color muted,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.16)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 19),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700, color: ink),
-                ),
-                Text(subtitle, style: TextStyle(fontSize: 10.5, color: muted)),
-              ],
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => _makeCall(number),
-            icon: const Icon(Icons.call, size: 13),
-            label: Text(
-              number,
-              style:
-                  const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: color,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -1426,236 +598,1087 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
   }
 }
 
-// ── Section header ──────────────────────────────────────────────────────────
+// ── Explore tab ─────────────────────────────────────────────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    required this.subtitle,
-    required this.actionLabel,
-    required this.actionColor,
-    required this.onAction,
-    required this.ink,
-    required this.muted,
-  });
+class _ExploreTab extends ConsumerStatefulWidget {
+  const _ExploreTab({required this.onOpenTab});
 
-  final String title;
-  final String subtitle;
-  final String actionLabel;
-  final Color actionColor;
-  final VoidCallback onAction;
-  final Color ink;
-  final Color muted;
+  final ValueChanged<int> onOpenTab;
+
+  @override
+  ConsumerState<_ExploreTab> createState() => _ExploreTabState();
+}
+
+class _ExploreTabState extends ConsumerState<_ExploreTab> {
+  String _filter = 'all';
+  final Set<String> _bookmarks = <String>{};
+
+  static const List<
+      ({
+        String id,
+        String en,
+        String ur,
+        String placeEn,
+        String placeUr,
+        String? asset,
+        String? cityId,
+        List<String> tags,
+        String season,
+        String distance,
+      })> _destinations = [
+    (
+      id: 'walled-city',
+      en: 'Lahore (Walled City)',
+      ur: 'لاہور (اندھیروں والا شہر)',
+      placeEn: 'Lahore District',
+      placeUr: 'ضلع لاہور',
+      asset: 'assets/images/landmarks/lahore_fort.jpg',
+      cityId: 'lahore',
+      tags: ['history', 'family'],
+      season: 'Oct–Mar',
+      distance: 'Walled City',
+    ),
+    (
+      id: 'badshahi',
+      en: 'Badshahi Mosque',
+      ur: 'بادشاہی مسجد',
+      placeEn: 'Walled City, Lahore',
+      placeUr: 'اندھیروں والا شہر، لاہور',
+      asset: 'assets/images/landmarks/badshahi_mosque.jpg',
+      cityId: 'lahore',
+      tags: ['history', 'spiritual'],
+      season: 'Oct–Mar',
+      distance: '1 km from Fort',
+    ),
+    (
+      id: 'shalimar',
+      en: 'Shalimar Gardens',
+      ur: 'شالیمار باغ',
+      placeEn: 'Lahore',
+      placeUr: 'لاہور',
+      asset: 'assets/images/landmarks/shalimar_gardens.jpg',
+      cityId: 'lahore',
+      tags: ['history', 'family'],
+      season: 'Oct–Mar',
+      distance: '5 km from Lahore',
+    ),
+    (
+      id: 'taxila',
+      en: 'Taxila (Gandhara)',
+      ur: 'ٹیکسلا (گندھارا)',
+      placeEn: 'Taxila, Rawalpindi',
+      placeUr: 'ٹیکسلا، راولپنڈی',
+      asset: 'assets/images/landmarks/taxila_dharmarajika.jpg',
+      cityId: 'taxila',
+      tags: ['history'],
+      season: 'Oct–Mar',
+      distance: '≈ 35 km from Islamabad',
+    ),
+    (
+      id: 'multan',
+      en: 'Multan (Shrines)',
+      ur: 'ملتان (مزارات)',
+      placeEn: 'Multan',
+      placeUr: 'ملتان',
+      asset: 'assets/images/landmarks/multan_shrine.jpg',
+      cityId: 'multan',
+      tags: ['spiritual', 'family'],
+      season: 'Oct–Mar',
+      distance: '≈ 340 km from Lahore',
+    ),
+    (
+      id: 'murree',
+      en: 'Murree & Patriata',
+      ur: 'مری اور پٹریاٹا',
+      placeEn: 'Murree, Galyat',
+      placeUr: 'مری، گلیات',
+      asset: 'assets/images/landmarks/murree.jpg',
+      cityId: 'murree',
+      tags: ['hills', 'family'],
+      season: 'Apr–Oct',
+      distance: '≈ 370 km from Lahore',
+    ),
+    (
+      id: 'derawar',
+      en: 'Derawar Fort',
+      ur: 'قلعہ ڈیراور',
+      placeEn: 'Cholistan, Bahawalpur',
+      placeUr: 'چولستان، بہاولپور',
+      asset: 'assets/images/landmarks/derawar_fort.jpg',
+      cityId: 'bahawalpur',
+      tags: ['history'],
+      season: 'Oct–Mar',
+      distance: '≈ 420 km from Lahore',
+    ),
+    (
+      id: 'noor-mahal',
+      en: 'Noor Mahal',
+      ur: 'نور محل',
+      placeEn: 'Bahawalpur',
+      placeUr: 'بہاولپور',
+      asset: 'assets/images/landmarks/noor_mahal.jpg',
+      cityId: 'bahawalpur',
+      tags: ['history', 'family'],
+      season: 'Oct–Mar',
+      distance: '≈ 420 km from Lahore',
+    ),
+    (
+      id: 'raja-bazaar',
+      en: 'Raja Bazaar',
+      ur: 'راجہ بازار',
+      placeEn: 'Rawalpindi',
+      placeUr: 'راولپنڈی',
+      asset: 'assets/images/landmarks/rawalpindi_bazaar.jpg',
+      cityId: 'rawalpindi',
+      tags: ['family'],
+      season: 'Oct–Mar',
+      distance: '≈ 275 km from Lahore',
+    ),
+    (
+      id: 'rohtas',
+      en: 'Rohtas Fort',
+      ur: 'قلعہ روہتاس',
+      placeEn: 'Jhelum',
+      placeUr: 'جہلم',
+      asset: null,
+      cityId: 'jhelum',
+      tags: ['history'],
+      season: 'Oct–Mar',
+      distance: '≈ 220 km from Lahore',
+    ),
+    (
+      id: 'sahiwal',
+      en: 'Sahiwal & Harappa',
+      ur: 'ساہیوال اور ہڑپہ',
+      placeEn: 'Sahiwal',
+      placeUr: 'ساہیوال',
+      asset: null,
+      cityId: 'sahiwal',
+      tags: ['history', 'family'],
+      season: 'Oct–Mar',
+      distance: '≈ 180 km from Lahore',
+    ),
+  ];
+
+  static const List<({String id, String en, String ur})> _filters = [
+    (id: 'all', en: 'All Destinations', ur: 'تمام مقامات'),
+    (id: 'history', en: 'Historical & Mughal', ur: 'تاریخی اور مغل'),
+    (id: 'hills', en: 'Hill Stations', ur: 'پہاڑی مقامات'),
+    (id: 'spiritual', en: 'Spiritual & Shrines', ur: 'روحانی مقامات'),
+    (id: 'family', en: 'Family & Food', ur: 'خاندان اور کھانا'),
+  ];
+
+  void _push(Widget screen) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+
+  void _openDestination(String? cityId) {
+    final city = cityId == null ? null : _city(cityId);
+    if (city != null) {
+      _push(CityGuideScreen(city: city));
+    } else {
+      _push(const SearchResultsScreen());
+    }
+  }
+
+  PunjabCity? _city(String id) {
+    for (final city in Punjab81CitiesData.allCities) {
+      if (city.id.toLowerCase() == id.toLowerCase()) return city;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final lang = ref.watch(languageProvider);
+    final isUrdu = lang == AppLanguage.urdu;
+    String t(String en, String ur) => isUrdu ? ur : en;
+
+    final visible = _filter == 'all'
+        ? _destinations
+        : _destinations.where((d) => d.tags.contains(_filter)).toList();
+
+    return Directionality(
+      textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: AppTokens.fontHeading,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                  color: ink,
+              _buildSearch(isUrdu, t),
+              const SizedBox(height: 22),
+              _SectionTitle(
+                title: t('Quick Travel Tools', 'فوری سفری ٹولز'),
+                subtitle: t('Plan, budget and find help in one tap',
+                    'ایک ٹیپ میں منصوبہ، بجٹ اور مدد'),
+              ),
+              const SizedBox(height: 12),
+              _QuickTools(onOpenTab: widget.onOpenTab, isUrdu: isUrdu),
+              const SizedBox(height: 26),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SectionTitle(
+                      title: t('Explore Punjab Destinations',
+                          'پنجاب کے مقامات دریافت کریں'),
+                      subtitle: t('Real places, photographed on location',
+                          'حقیقی مقامات، اصل تصاویر کے ساتھ'),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _push(const SearchResultsScreen()),
+                    child: Text(t('View all', 'سب دیکھیں'),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.emerald)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final f in _filters)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 8),
+                        child: _FilterPill(
+                          label: isUrdu ? f.ur : f.en,
+                          selected: _filter == f.id,
+                          onTap: () => setState(() => _filter = f.id),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: muted),
+              const SizedBox(height: 14),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth >= 900 ? 3 : 2;
+                  const spacing = 12.0;
+                  final tileWidth =
+                      (constraints.maxWidth - spacing * (columns - 1)) /
+                          columns;
+                  final extent = tileWidth * 0.75 + 104;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: visible.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                      mainAxisExtent: extent,
+                    ),
+                    itemBuilder: (context, index) {
+                      final d = visible[index];
+                      return _DestinationCard(
+                        destination: d,
+                        isUrdu: isUrdu,
+                        bookmarked: _bookmarks.contains(d.id),
+                        onBookmark: () {
+                          setState(() {
+                            if (!_bookmarks.add(d.id)) {
+                              _bookmarks.remove(d.id);
+                            }
+                          });
+                        },
+                        onTap: () => _openDestination(d.cityId),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      size: 13, color: AppTokens.textMuted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      t(
+                        'Distances are approximate road estimates. Season tags are suggested travel windows.',
+                        'فاصلے تخمینی سڑک کے اندازے ہیں۔ موسم کے ٹیگز تجویز کردہ سفری اوقات ہیں۔',
+                      ),
+                      style: const TextStyle(
+                          fontSize: 10.5, color: AppTokens.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const _EventsSection(),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      size: 13, color: AppTokens.textMuted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      t(
+                        'Independent guide · Not affiliated with any government body.',
+                        'آزاد گائیڈ · کسی سرکاری ادارے سے وابستہ نہیں۔',
+                      ),
+                      style: const TextStyle(
+                          fontSize: 10.5, color: AppTokens.textMuted),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: onAction,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
+  Widget _buildSearch(bool isUrdu, String Function(String, String) t) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: () => _push(const SearchResultsScreen()),
+        child: Container(
+          height: 54,
+          padding: const EdgeInsetsDirectional.only(start: 8, end: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppTokens.border),
+            boxShadow: AppShadows.card,
           ),
-          child: Text(
-            actionLabel,
-            style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: actionColor),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  t(
+                    'Search cities, forts, motorways, hospitals, or food...',
+                    'شہر، قلعے، موٹروے، ہسپتال یا کھانا تلاش کریں...',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 13.5, color: AppTokens.textMuted),
+                ),
+              ),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: AppTokens.emerald,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.search, color: Colors.white, size: 20),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: AppTokens.fontHeading,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppTokens.textPrimary,
+            height: 1.2,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            style:
+                const TextStyle(fontSize: 11, color: AppTokens.textSecondary),
+          ),
+        ],
       ],
     );
   }
 }
 
-// ── Quick category ──────────────────────────────────────────────────────────
-
-class _QuickCategory extends StatelessWidget {
-  const _QuickCategory({
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
     required this.label,
-    required this.icon,
-    required this.background,
-    required this.foreground,
-    required this.labelColor,
+    required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-  final Color labelColor;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration:
-                BoxDecoration(color: background, shape: BoxShape.circle),
-            child: Icon(icon, size: 24, color: foreground),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppTokens.emerald : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+              color: selected ? AppTokens.emerald : AppTokens.border),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : AppTokens.textSecondary,
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontSize: 10.5, fontWeight: FontWeight.w600, color: labelColor),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ── Tool card ───────────────────────────────────────────────────────────────
+class _QuickTools extends StatelessWidget {
+  const _QuickTools({required this.onOpenTab, required this.isUrdu});
 
-class _ToolCard extends StatelessWidget {
-  const _ToolCard({
+  final ValueChanged<int> onOpenTab;
+  final bool isUrdu;
+
+  @override
+  Widget build(BuildContext context) {
+    String t(String en, String ur) => isUrdu ? ur : en;
+    final tools = [
+      (
+        title: t('Smart Route Planner', 'سمارٹ روٹ پلانر'),
+        subtitle: t('Motorway routes, fuel & toll guidance',
+            'موٹروے روٹس، ایندھن اور ٹول رہنمائی'),
+        icon: Icons.alt_route_rounded,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        onTap: () => onOpenTab(1),
+      ),
+      (
+        title: t('AI Budget Calculator', 'اے آئی بجٹ کیلکولیٹر'),
+        subtitle: t('Day-by-day PKR trip planner', 'روز بروز PKR ٹرپ پلانر'),
+        icon: Icons.account_balance_wallet_rounded,
+        tint: AppTokens.pastelGold,
+        color: AppTokens.gold,
+        onTap: () => onOpenTab(2),
+      ),
+      (
+        title: t('24/7 Medical & Essentials', 'چوبیس گھنٹے طبی اور ضروریات'),
+        subtitle: t(
+            'Hospitals, bakeries & local help', 'ہسپتال، بیکری اور مقامی مدد'),
+        icon: Icons.medical_services_rounded,
+        tint: AppTokens.pastelTeal,
+        color: const Color(0xFF0F766E),
+        onTap: () => onOpenTab(3),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 10.0;
+        final width = (constraints.maxWidth - spacing * 2) / 3;
+        return Row(
+          children: [
+            for (var i = 0; i < tools.length; i++) ...[
+              if (i > 0) const SizedBox(width: spacing),
+              SizedBox(
+                width: width,
+                child: _QuickToolCard(
+                  title: tools[i].title,
+                  subtitle: tools[i].subtitle,
+                  icon: tools[i].icon,
+                  tint: tools[i].tint,
+                  color: tools[i].color,
+                  onTap: tools[i].onTap,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _QuickToolCard extends StatelessWidget {
+  const _QuickToolCard({
     required this.title,
     required this.subtitle,
-    required this.urduSubtitle,
     required this.icon,
-    required this.accent,
-    required this.accentBg,
-    required this.showUrdu,
-    required this.isDark,
-    required this.surface,
-    required this.border,
-    required this.ink,
-    required this.muted,
+    required this.tint,
+    required this.color,
     required this.onTap,
   });
 
   final String title;
   final String subtitle;
-  final String urduSubtitle;
   final IconData icon;
-  final Color accent;
-  final Color accentBg;
-  final bool showUrdu;
-  final bool isDark;
-  final Color surface;
-  final Color border;
-  final Color ink;
-  final Color muted;
+  final Color tint;
+  final Color color;
   final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          height: 132,
+          padding: const EdgeInsets.all(11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTokens.border),
+            boxShadow: AppShadows.card,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
+                child: Icon(icon, size: 17, color: color),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTokens.textPrimary,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Expanded(
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 10,
+                      color: AppTokens.textSecondary,
+                      height: 1.25),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DestinationCard extends StatelessWidget {
+  const _DestinationCard({
+    required this.destination,
+    required this.isUrdu,
+    required this.bookmarked,
+    required this.onBookmark,
+    required this.onTap,
+  });
+
+  final ({
+    String id,
+    String en,
+    String ur,
+    String placeEn,
+    String placeUr,
+    String? asset,
+    String? cityId,
+    List<String> tags,
+    String season,
+    String distance,
+  }) destination;
+  final bool isUrdu;
+  final bool bookmarked;
+  final VoidCallback onBookmark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTokens.border),
+            boxShadow: AppShadows.card,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (destination.asset != null)
+                      Image.asset(
+                        destination.asset!,
+                        fit: BoxFit.cover,
+                        cacheWidth: 640,
+                        errorBuilder: (_, __, ___) => const _PhotoPlaceholder(),
+                      )
+                    else
+                      const _PhotoPlaceholder(),
+                    PositionedDirectional(
+                      top: 6,
+                      start: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTokens.goldTint,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: AppTokens.goldBorder),
+                        ),
+                        child: Text(
+                          '${isUrdu ? 'بہترین' : 'Best'}: ${destination.season}',
+                          style: const TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.goldHover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    PositionedDirectional(
+                      top: 4,
+                      end: 4,
+                      child: GestureDetector(
+                        onTap: onBookmark,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            bookmarked
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 16,
+                            color: bookmarked
+                                ? AppTokens.alertRed
+                                : AppTokens.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isUrdu ? destination.ur : destination.en,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(Icons.place_outlined,
+                            size: 11, color: AppTokens.textMuted),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            isUrdu ? destination.placeUr : destination.placeEn,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 10, color: AppTokens.textSecondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    Align(
+                      alignment: isUrdu
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Text(
+                        destination.distance,
+                        textDirection: TextDirection.ltr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: AppTokens.textMuted,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTokens.emeraldTint, AppTokens.pastelGold],
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.image_not_supported_outlined,
+              size: 26, color: AppTokens.emerald),
+          SizedBox(height: 4),
+          Text(
+            'Photo unavailable',
+            style: TextStyle(fontSize: 9, color: AppTokens.textSecondary),
           ),
         ],
       ),
-      child: Material(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: accentBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, size: 20, color: accent),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.arrow_outward_rounded, size: 14, color: muted),
-                  ],
+    );
+  }
+}
+
+// ── Essentials tab ──────────────────────────────────────────────────────────
+
+class _EssentialsTab extends ConsumerWidget {
+  const _EssentialsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider);
+    final isUrdu = lang == AppLanguage.urdu;
+    String t(String en, String ur) => isUrdu ? ur : en;
+    void push(Widget screen) =>
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+
+    final gridItems = [
+      (
+        label: t('Pharmacies', 'فارمیسی'),
+        icon: Icons.medication_rounded,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        onTap: () => push(const FacilityFinderScreen(
+            initialType: FacilityType(
+                label: 'Pharmacies',
+                icon: Icons.medication_rounded,
+                query: 'pharmacy'))),
+      ),
+      (
+        label: t('ATMs', 'اے ٹی ایم'),
+        icon: Icons.atm_rounded,
+        tint: AppTokens.pastelBlue,
+        color: AppTokens.multaniBlue,
+        onTap: () => push(const FacilityFinderScreen(
+            initialType: FacilityType(
+                label: 'ATMs', icon: Icons.atm_rounded, query: 'ATM'))),
+      ),
+      (
+        label: t('Police', 'پولیس'),
+        icon: Icons.local_police_rounded,
+        tint: AppTokens.pastelRose,
+        color: AppTokens.alertRed,
+        onTap: () => push(const FacilityFinderScreen(
+            initialType: FacilityType(
+                label: 'Police',
+                icon: Icons.local_police_rounded,
+                query: 'police'))),
+      ),
+      (
+        label: t('Petrol pumps', 'پٹرول پمپ'),
+        icon: Icons.local_gas_station_rounded,
+        tint: AppTokens.pastelGold,
+        color: AppTokens.gold,
+        onTap: () => push(const FacilityFinderScreen(
+            initialType: FacilityType(
+                label: 'Petrol pumps',
+                icon: Icons.local_gas_station_rounded,
+                query: 'petrol'))),
+      ),
+      (
+        label: t('Restaurants', 'ریستوران'),
+        icon: Icons.restaurant_rounded,
+        tint: AppTokens.pastelRose,
+        color: const Color(0xFFB91C1C),
+        onTap: () =>
+            push(const SearchResultsScreen(initialCategoryName: 'Restaurants')),
+      ),
+      (
+        label: t('Road alerts', 'سڑک الرٹس'),
+        icon: Icons.warning_amber_rounded,
+        tint: AppTokens.pastelGold,
+        color: AppTokens.gold,
+        onTap: () => push(const RoadInfrastructureAlertsScreen()),
+      ),
+      (
+        label: t('Journey readiness', 'سفر کی تیاری'),
+        icon: Icons.checklist_rounded,
+        tint: AppTokens.pastelLilac,
+        color: const Color(0xFF6D28D9),
+        onTap: () => push(const JourneyReadinessScreen()),
+      ),
+      (
+        label: t('Profile & settings', 'پروفائل اور ترتیبات'),
+        icon: Icons.manage_accounts_outlined,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const Scaffold(
+                  backgroundColor: AppTokens.dashboardBg,
+                  body: SafeArea(child: _ProfileTabPlaceholder()),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.2,
-                    fontWeight: FontWeight.w700,
-                    color: ink,
+              ),
+            ),
+      ),
+      (
+        label: t('Map view', 'نقشہ'),
+        icon: Icons.map_outlined,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        onTap: () => push(const MapScreen()),
+      ),
+    ];
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1100),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),
+          children: [
+            _SectionTitle(
+              title: t('Essentials', 'ضروریات'),
+              subtitle: t('Hospitals, food and everyday help across Punjab',
+                  'پنجاب بھر میں ہسپتال، کھانا اور روزمرہ مدد'),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _EssentialsHeroCard(
+                    title: t('Hospitals & Medical', 'ہسپتال اور میڈیکل'),
+                    subtitle: t('Emergency, trauma centres and clinics',
+                        'ایمرجنسی، ٹراما سنٹر اور کلینک'),
+                    icon: Icons.local_hospital_rounded,
+                    tint: AppTokens.pastelRose,
+                    color: AppTokens.alertRed,
+                    onTap: () => push(const FacilityFinderScreen()),
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, height: 1.25, color: muted),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _EssentialsHeroCard(
+                    title: t('Bakeries & Local Food', 'بیکری اور مقامی کھانا'),
+                    subtitle: t('Cakes, sweets and traditional bakeries',
+                        'کیک، مٹھائی اور روایتی بیکری'),
+                    icon: Icons.bakery_dining_rounded,
+                    tint: AppTokens.pastelGold,
+                    color: AppTokens.gold,
+                    onTap: () => push(const SearchResultsScreen(
+                        initialCategoryName: 'Bakeries & Cakes')),
+                  ),
                 ),
-                if (showUrdu) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    urduSubtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontFamily: AppTokens.fontUrdu,
-                      fontSize: 10.5,
-                      height: 1.4,
-                      color: accent,
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SectionTitle(title: t('More essentials', 'مزید ضروریات')),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: gridItems.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                mainAxisExtent: 92,
+              ),
+              itemBuilder: (context, index) {
+                final item = gridItems[index];
+                return Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: item.onTap,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTokens.border),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                                color: item.tint, shape: BoxShape.circle),
+                            child: Icon(item.icon, size: 17, color: item.color),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            item.label,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppTokens.textSecondary,
+                                height: 1.15),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 22),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTokens.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified_user_outlined,
+                      size: 20, color: AppTokens.emerald),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      t(
+                        'Directory entries are not government-verified. Check the phone number and facilities before relying on them.',
+                        'ڈائریکٹری کے اندراجات سرکاری تصدیق شدہ نہیں ہیں۔ بھروسے سے پہلے فون نمبر اور سہولیات خود تصدیق کریں۔',
+                      ),
+                      style: const TextStyle(
+                          fontSize: 10.5,
+                          color: AppTokens.textSecondary,
+                          height: 1.4),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EssentialsHeroCard extends StatelessWidget {
+  const _EssentialsHeroCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.tint,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color tint;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTokens.border),
+            boxShadow: AppShadows.card,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTokens.textPrimary,
+                    height: 1.2),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppTokens.textSecondary,
+                    height: 1.3),
+              ),
+            ],
           ),
         ),
       ),
@@ -1663,113 +1686,228 @@ class _ToolCard extends StatelessWidget {
   }
 }
 
-// ── City photo card ─────────────────────────────────────────────────────────
+// ── SOS dialog ──────────────────────────────────────────────────────────────
 
-class _CityPhotoCard extends StatelessWidget {
-  const _CityPhotoCard({
-    required this.city,
-    required this.asset,
-    required this.caption,
-    required this.onTap,
-  });
+class _SosDialog extends StatelessWidget {
+  const _SosDialog();
 
-  final PunjabCity city;
-  final String asset;
-  final String caption;
-  final VoidCallback onTap;
+  Future<void> _call(String number) async {
+    final uri = Uri.parse('tel:$number');
+    try {
+      if (await canLaunchUrl(uri)) await launchUrl(uri);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 164,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.10),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
+    final lines = [
+      (
+        title: 'Rescue 1122',
+        sub: 'Ambulance, fire & rescue',
+        number: '1122',
+        icon: Icons.medical_services_rounded,
+        tint: AppTokens.pastelRose,
+        color: AppTokens.alertRed,
+        button: AppTokens.alertRed,
+      ),
+      (
+        title: 'Tourist Police 1421',
+        sub: 'Punjab tourist police helpline',
+        number: '1421',
+        icon: Icons.support_agent_rounded,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        button: AppTokens.emerald,
+      ),
+      (
+        title: 'Police 15',
+        sub: 'Police emergency',
+        number: '15',
+        icon: Icons.local_police_rounded,
+        tint: AppTokens.pastelBlue,
+        color: AppTokens.multaniBlue,
+        button: AppTokens.multaniBlue,
+      ),
+      (
+        title: 'Motorway Police 130',
+        sub: 'Motorway & highway patrol',
+        number: '130',
+        icon: Icons.directions_car_filled_rounded,
+        tint: AppTokens.pastelGold,
+        color: AppTokens.gold,
+        button: AppTokens.gold,
+      ),
+      (
+        title: 'Tourist Grievance 1787',
+        sub: 'Overcharging & hotel fraud complaints',
+        number: '1787',
+        icon: Icons.gavel_rounded,
+        tint: AppTokens.pastelLilac,
+        color: const Color(0xFF6D28D9),
+        button: const Color(0xFF475569),
+      ),
+    ];
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 480,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          fit: StackFit.expand,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              asset,
-              fit: BoxFit.cover,
-              cacheWidth: 640,
-              errorBuilder: (_, __, ___) =>
-                  const ColoredBox(color: AppTokens.emeraldDeep),
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0x11000000),
-                    Color(0x33000000),
-                    Color(0xDD000000)
-                  ],
-                  stops: [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 9,
-              left: 9,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.42),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.22)),
-                ),
-                child: Text(
-                  caption,
-                  style: const TextStyle(
-                      fontSize: 8.5,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 11,
-              right: 11,
-              bottom: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 8, 8),
+              child: Row(
                 children: [
-                  Text(
-                    city.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: AppTokens.fontHeading,
-                      color: Colors.white,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppTokens.pastelRose,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.health_and_safety_rounded,
+                        color: AppTokens.alertRed, size: 21),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '24/7 Tourist Emergency Helplines',
+                          style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTokens.textPrimary),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Public helplines in Punjab. Calls open your phone dialer; the app does not dispatch help.',
+                          style: TextStyle(
+                              fontSize: 10.5,
+                              color: AppTokens.textSecondary,
+                              height: 1.3),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    city.urduName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: TextDirection.rtl,
-                    style: const TextStyle(
-                      fontFamily: AppTokens.fontUrdu,
-                      color: Colors.white70,
-                      fontSize: 10,
-                      height: 1.5,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded,
+                        size: 20, color: AppTokens.textSecondary),
+                    tooltip: 'Close',
                   ),
                 ],
+              ),
+            ),
+            const Divider(height: 1, color: AppTokens.border),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Column(
+                  children: [
+                    for (final line in lines)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppTokens.dashboardBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTokens.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: line.tint,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(line.icon,
+                                    size: 17, color: line.color),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      line.title,
+                                      style: const TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTokens.textPrimary),
+                                    ),
+                                    Text(
+                                      line.sub,
+                                      style: const TextStyle(
+                                          fontSize: 10.5,
+                                          color: AppTokens.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              FilledButton.icon(
+                                onPressed: () => _call(line.number),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: line.button,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(0, 32),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999)),
+                                ),
+                                icon: const Icon(Icons.call_rounded, size: 13),
+                                label: Text(
+                                  line.number,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Numbers are public helplines. Verify locally if a line does not answer.',
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 10, color: AppTokens.textMuted),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 40,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          backgroundColor: AppTokens.inputFill,
+                          foregroundColor: AppTokens.textPrimary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Close',
+                            style: TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1779,145 +1917,140 @@ class _CityPhotoCard extends StatelessWidget {
   }
 }
 
-// ── Landmark card ───────────────────────────────────────────────────────────
+// ── AI concierge sheet ──────────────────────────────────────────────────────
 
-class _LandmarkCard extends StatelessWidget {
-  const _LandmarkCard({
-    required this.asset,
-    required this.title,
-    required this.city,
-    required this.label,
-    required this.tag,
-    required this.onTap,
-  });
-
-  final String asset;
-  final String title;
-  final String city;
-  final String label;
-  final String tag;
-  final VoidCallback onTap;
+class _AiConciergeSheet extends StatelessWidget {
+  const _AiConciergeSheet();
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
-    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+    final prompts = [
+      'Plan a 3-day Murree trip under Rs. 25,000',
+      'What should I see in one day in Lahore?',
+      'Which motorway rest stops have a mosque?',
+      'Is the Murree road open right now?',
+    ];
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 208,
-        decoration: BoxDecoration(
-          color: isDark ? AppTokens.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          18, 10, 18, 18 + MediaQuery.viewInsetsOf(context).bottom),
+      child: SafeArea(
+        top: false,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 124,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    asset,
-                    fit: BoxFit.cover,
-                    cacheWidth: 640,
-                    errorBuilder: (_, __, ___) =>
-                        const ColoredBox(color: AppTokens.emeraldDeep),
-                  ),
-                  Positioned(
-                    top: 9,
-                    left: 9,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: tag == 'UNESCO'
-                            ? AppTokens.gold
-                            : Colors.black.withValues(alpha: 0.48),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTokens.border,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppTokens.fontHeading,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: ink,
-                    ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppTokens.emeraldTint,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 10.5, color: muted),
-                  ),
-                  const SizedBox(height: 7),
-                  Row(
+                  child: const Icon(Icons.auto_awesome,
+                      size: 20, color: AppTokens.emerald),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.location_on_rounded,
-                          size: 11, color: AppTokens.gold),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          city,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: muted),
-                        ),
-                      ),
-                      const Text(
-                        'Guide',
+                      Text(
+                        'AI Punjab Travel Concierge',
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppTokens.gold,
-                        ),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.textPrimary),
                       ),
-                      const Icon(Icons.arrow_forward_rounded,
-                          size: 11, color: AppTokens.gold),
+                      Text(
+                        'Ask about routes, food, budgets or safety',
+                        style: TextStyle(
+                            fontSize: 11, color: AppTokens.textSecondary),
+                      ),
                     ],
                   ),
-                ],
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded,
+                      size: 20, color: AppTokens.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Suggested questions',
+              style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTokens.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final prompt in prompts)
+                  ActionChip(
+                    label: Text(prompt,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppTokens.textSecondary)),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: AppTokens.border),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999)),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const MapAiScreen()));
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const MapAiScreen()));
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTokens.emerald,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.chat_bubble_outline, size: 17),
+                label: const Text('Open AI guide',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
               ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'AI answers can be wrong. Verify live road status and emergency numbers with official sources.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10, color: AppTokens.textMuted),
             ),
           ],
         ),
@@ -1925,7 +2058,6 @@ class _LandmarkCard extends StatelessWidget {
     );
   }
 }
-
 // ── Events Section ──────────────────────────────────────────────────────────
 
 class _EventsSection extends ConsumerWidget {

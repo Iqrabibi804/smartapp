@@ -13,7 +13,7 @@ class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    const primary = AppTokens.pakistanGreen;
+    const primary = AppTokens.emerald;
     const onPrimary = Colors.white;
     final scaffold = isDark ? AppTokens.scaffoldDark : AppTokens.scaffold;
     final surface = isDark ? AppTokens.surfaceDark : AppTokens.surface;
@@ -108,7 +108,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: isDark ? surface : AppTokens.inputFill,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: TextStyle(color: textSecondary, fontSize: 14),
         border: OutlineInputBorder(
