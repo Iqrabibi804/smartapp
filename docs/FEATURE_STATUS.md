@@ -1,6 +1,6 @@
 # SMARTMAP PUNJAB — FEATURE STATUS MATRIX
 
-**Last updated:** 2026-11-21
+**Last updated:** 2026-11-22
 **Status vocabulary:** Not started · In progress · Implemented · Tested · Verified · Blocked
 
 > "Implemented" means code exists but has not passed automated tests and manual journey verification.
@@ -18,6 +18,7 @@
 | English/Urdu localization | `core/localization/app_language.dart` | In progress | Nastaliq font bundled; interface-wide switching and RTL mirroring still incomplete |
 | Bottom navigation | `features/home/screens/home_screen.dart` | Implemented | Home/Explore/Helpline/Pass structure to be consolidated |
 | Dark mode | `core/theme/` | Implemented | Being folded into new design system |
+| Dashboard redesign (3D logo, EN/اردو toggle, SOS modal, hero carousel, Traveler Essentials grid, bundled landmark photos) | `features/home/screens/home_screen.dart`, `core/widgets/app_logo.dart` | Tested (desktop-width browser check) | 430 px headless screenshots verified; photo provenance in `DATA_SOURCES.md` §9; SOS opens dialer only; device journey pending |
 
 ## 2. Directory and discovery
 

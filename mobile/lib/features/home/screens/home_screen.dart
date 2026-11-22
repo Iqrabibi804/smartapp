@@ -14,8 +14,6 @@ import '../../auth/services/auth_providers.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../map/screens/map_screen.dart';
 import '../../search/screens/search_results_screen.dart';
-import '../../categories/services/categories_service.dart';
-import '../../categories/models/category_model.dart';
 import '../../favorites/screens/saved_places_screen.dart';
 import '../../ai/screens/map_ai_screen.dart';
 import '../../trips/screens/trip_planner_screen.dart';
@@ -25,11 +23,8 @@ import '../../events/screens/events_list_screen.dart';
 import '../../events/screens/event_details_screen.dart';
 import '../../business/screens/business_registration_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
-import '../../places/models/place_model.dart';
-import '../../places/screens/place_details_screen.dart';
 import '../../places/screens/city_guide_screen.dart';
 import '../../places/screens/city_explorer_screen.dart';
-import '../../places/services/places_providers.dart';
 import '../../trips/screens/budget_calculator_screen.dart';
 import '../../trips/screens/group_bill_splitter_screen.dart';
 import '../../places/screens/local_vs_tourist_price_screen.dart';
@@ -74,29 +69,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? AppTokens.scaffoldDark : AppTokens.dashboardBg,
       body: SafeArea(child: _bodyForTab(_tabIndex)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const MapAiScreen()),
-          );
-        },
-        backgroundColor: AppTokens.pakistanGreen,
-        icon: const Icon(Icons.auto_awesome, color: AppTokens.heritageGold),
-        label: Text(
-          AppStrings.tr('ai_guide', lang),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      floatingActionButton: _tabIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MapAiScreen()),
+                );
+              },
+              backgroundColor: AppTokens.emerald,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              extendedPadding: const EdgeInsets.symmetric(horizontal: 16),
+              extendedIconLabelSpacing: 6,
+              icon: const Icon(Icons.auto_awesome,
+                  size: 17, color: AppTokens.gold),
+              label: Text(
+                AppStrings.tr('ai_guide', lang),
+                style: const TextStyle(
+                  fontFamily: AppTokens.fontBody,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tabIndex,
         onDestinationSelected: (i) => setState(() => _tabIndex = i),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home, color: AppTokens.pakistanGreen),
+            selectedIcon:
+                const Icon(Icons.home, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_home', lang),
           ),
           NavigationDestination(
@@ -106,17 +116,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           NavigationDestination(
             icon: const Icon(Icons.location_city_outlined),
-            selectedIcon: const Icon(Icons.location_city, color: AppTokens.pakistanGreen),
+            selectedIcon:
+                const Icon(Icons.location_city, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_cities', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.bookmark_border),
-            selectedIcon: const Icon(Icons.bookmark, color: AppTokens.pakistanGreen),
+            selectedIcon:
+                const Icon(Icons.bookmark, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_saved', lang),
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person, color: AppTokens.pakistanGreen),
+            selectedIcon:
+                const Icon(Icons.person, color: AppTokens.pakistanGreen),
             label: AppStrings.tr('tab_profile', lang),
           ),
         ],
@@ -136,59 +149,118 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
   final PageController _bannerController = PageController();
   Timer? _bannerTimer;
 
-  static const _banners = [
+  static const List<
+      ({
+        String asset,
+        String tag,
+        String title,
+        String subtitle,
+        String cityId,
+        String urdu
+      })> _heroSlides = [
     (
-      'Lahore: Heart of Punjab',
-      'Badshahi Mosque, Shahi Qila, Shalimar & Food Street',
-      'https://images.unsplash.com/photo-1589802829985-817e51171b92?auto=format&fit=crop&w=1200&q=80',
-      'lahore',
-      'لاہور',
-      'Historical & Food Street',
+      asset: 'assets/images/landmarks/taxila_dharmarajika.jpg',
+      tag: 'UNESCO HERITAGE',
+      title: 'Taxila: Gandhara UNESCO Site',
+      subtitle: 'Dharmarajika Stupa, Sirkap & ancient Buddhist relics',
+      cityId: 'taxila',
+      urdu: 'ٹیکسلا',
     ),
     (
-      'Islamabad & Margalla Hills',
-      'Faisal Mosque, Daman-e-Koh, Monal & Pine Trails',
-      'https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=1200&q=80',
-      'islamabad',
-      'اسلام آباد',
-      'Scenic & Fine Dining',
+      asset: 'assets/images/landmarks/badshahi_mosque.jpg',
+      tag: 'ROYAL HERITAGE',
+      title: 'Lahore: Royal Heritage',
+      subtitle: 'Badshahi Mosque, Lahore Fort & Walled City lanes',
+      cityId: 'lahore',
+      urdu: 'لاہور',
+    ),
+  ];
+
+  static const List<({String id, String asset, String caption})>
+      _popularCities = [
+    (
+      id: 'lahore',
+      asset: 'assets/images/landmarks/lahore_fort.jpg',
+      caption: 'Lahore Fort'
     ),
     (
-      'Bahawalpur & Cholistan Desert',
-      'Derawar Fort, Noor Mahal & Jeep Rally Heritage',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
-      'bahawalpur',
-      'بہاولپور',
-      'Desert & Royal Palaces',
+      id: 'multan',
+      asset: 'assets/images/landmarks/multan_shrine.jpg',
+      caption: 'Shah Rukn-e-Alam'
     ),
     (
-      'Murree & Galliyat Foothills',
-      'Mall Road, Patriata Cable Car & Cool Alpine Vistas',
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-      'murree',
-      'مری',
-      'Hill Station & Snow',
+      id: 'rawalpindi',
+      asset: 'assets/images/landmarks/rawalpindi_bazaar.jpg',
+      caption: 'Raja Bazaar'
     ),
     (
-      'Taxila: Gandhara UNESCO Site',
-      'Dharmarajika Stupa, Sirkap & Ancient Buddhist Relics',
-      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80',
-      'taxila',
-      'ٹیکسلا',
-      'Ancient Civilization',
+      id: 'bahawalpur',
+      asset: 'assets/images/landmarks/noor_mahal.jpg',
+      caption: 'Noor Mahal'
+    ),
+  ];
+
+  static const List<
+      ({
+        String asset,
+        String title,
+        String city,
+        String cityId,
+        String label,
+        String tag
+      })> _landmarks = [
+    (
+      asset: 'assets/images/landmarks/badshahi_mosque.jpg',
+      title: 'Badshahi Mosque',
+      city: 'Lahore',
+      cityId: 'lahore',
+      label: 'Mughal mosque, 1673',
+      tag: 'HERITAGE',
+    ),
+    (
+      asset: 'assets/images/landmarks/derawar_fort.jpg',
+      title: 'Derawar Fort',
+      city: 'Bahawalpur',
+      cityId: 'bahawalpur',
+      label: 'Cholistan desert fort',
+      tag: 'DESERT',
+    ),
+    (
+      asset: 'assets/images/landmarks/shalimar_gardens.jpg',
+      title: 'Shalimar Gardens',
+      city: 'Lahore',
+      cityId: 'lahore',
+      label: 'UNESCO Mughal garden',
+      tag: 'UNESCO',
+    ),
+    (
+      asset: 'assets/images/landmarks/taxila_dharmarajika.jpg',
+      title: 'Dharmarajika Stupa',
+      city: 'Taxila',
+      cityId: 'taxila',
+      label: 'UNESCO Gandhara site',
+      tag: 'UNESCO',
+    ),
+    (
+      asset: 'assets/images/landmarks/murree.jpg',
+      title: 'Murree Hills',
+      city: 'Murree',
+      cityId: 'murree',
+      label: 'Hill station, 2,291 m',
+      tag: 'HILLS',
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _bannerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (_bannerController.hasClients) {
         final page = _bannerController.page?.round() ?? 0;
-        final next = (page + 1) % _banners.length;
+        final next = (page + 1) % _heroSlides.length;
         _bannerController.animateToPage(
           next,
-          duration: const Duration(milliseconds: 700),
+          duration: const Duration(milliseconds: 650),
           curve: Curves.easeInOutCubic,
         );
       }
@@ -211,1309 +283,1141 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
     } catch (_) {}
   }
 
+  PunjabCity? _cityById(String id) {
+    for (final city in Punjab81CitiesData.allCities) {
+      if (city.id.toLowerCase() == id.toLowerCase()) return city;
+    }
+    return null;
+  }
+
+  void _push(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
+
+  void _openCity(String id) {
+    final city = _cityById(id);
+    if (city != null) _push(CityGuideScreen(city: city));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesProvider);
-    final popularPlacesAsync = ref.watch(popularPlacesProvider);
     final lang = ref.watch(languageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
-    final cardBgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final cardBorderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 80),
-      children: [
-        const OfflineStatusBanner(),
-        // ── Brand header ────────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const AppLogoMark(size: 42),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.tr('app_title', lang),
-                          style: TextStyle(
-                            fontFamily: AppTokens.fontHeading,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.4,
-                            color: primaryTextColor,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Explore Punjab. Travel with Confidence.',
-                          style: TextStyle(fontSize: 11.5, color: secondaryTextColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
-                    onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(),
-                    icon: Icon(
-                      isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                      size: 20,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppTokens.pakistanGreen.withValues(alpha: isDark ? 0.25 : 0.07),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTokens.pakistanGreen.withValues(alpha: 0.18)),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.location_on, size: 14, color: AppTokens.pakistanGreen),
-                        SizedBox(width: 4),
-                        Text(
-                          'Punjab, Pakistan',
-                          style: TextStyle(
-                            color: AppTokens.pakistanGreen,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppTokens.heritageGold.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.info_outline, size: 13, color: Color(0xFF8A6E3B)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Independent guide',
-                          style: TextStyle(
-                            color: isDark ? AppTokens.heritageGold : const Color(0xFF8A6E3B),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuButton<AppLanguage>(
-                    tooltip: 'Language',
-                    icon: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppTokens.surfaceDark : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: cardBorderColor),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.language, size: 15, color: primaryTextColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            lang == AppLanguage.english
-                                ? 'EN'
-                                : lang == AppLanguage.urdu
-                                    ? 'اردو'
-                                    : lang == AppLanguage.punjabi
-                                        ? 'پنجابی'
-                                        : lang == AppLanguage.chinese
-                                            ? '中文'
-                                            : 'عربي',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryTextColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                    onSelected: (selectedLang) => ref.read(languageProvider.notifier).setLanguage(selectedLang),
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: AppLanguage.english, child: Text('English')),
-                      PopupMenuItem(value: AppLanguage.urdu, child: Text('اردو')),
-                      PopupMenuItem(value: AppLanguage.punjabi, child: Text('پنجابی')),
-                      PopupMenuItem(value: AppLanguage.chinese, child: Text('中文')),
-                      PopupMenuItem(value: AppLanguage.arabic, child: Text('العربية')),
-                    ],
-                  ),
-                  IconButton(
-                    tooltip: 'Explore cities',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const CityExplorerScreen()),
-                      );
-                    },
-                    icon: Icon(Icons.tune, size: 18, color: primaryTextColor),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    final background = isDark ? AppTokens.scaffoldDark : AppTokens.dashboardBg;
+    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
+    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
+    final border = isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm;
 
-        // ── Search Bar ──────────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SearchResultsScreen()),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: cardBgColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorderColor),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A), size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      AppStrings.tr('search_hint', lang),
-                      style: TextStyle(color: secondaryTextColor, fontSize: 14),
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, color: secondaryTextColor, size: 14),
-                ],
+    return ColoredBox(
+      color: background,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 120),
+        children: [
+          const OfflineStatusBanner(),
+          _buildHeader(lang, isDark, ink, muted, surface, border),
+          const SizedBox(height: 6),
+          _buildSearch(lang, isDark, muted, surface, border),
+          const SizedBox(height: 18),
+          _buildCategories(isDark, ink),
+          const SizedBox(height: 20),
+          _buildHero(isDark),
+          const SizedBox(height: 8),
+          Center(
+            child: SmoothPageIndicator(
+              controller: _bannerController,
+              count: _heroSlides.length,
+              effect: ExpandingDotsEffect(
+                dotHeight: 5,
+                dotWidth: 6,
+                activeDotColor: AppTokens.gold,
+                dotColor:
+                    isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm,
               ),
             ),
           ),
-        ),
-
-        const SizedBox(height: 14),
-
-        // ── 🚨 1-Tap Emergency Helpline Ribbon (24/7 Free Call) ─────────────
-        SizedBox(
-          height: 34,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
+          const SizedBox(height: 24),
+          _buildTravelerEssentials(lang, isDark, ink, muted, surface, border),
+          const SizedBox(height: 26),
+          _buildPopularCities(ink, muted),
+          const SizedBox(height: 26),
+          _buildMustVisit(ink, muted),
+          const SizedBox(height: 26),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 18),
+            child: _EventsSection(),
+          ),
+          const SizedBox(height: 18),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            children: [
-              _buildHelplineChip('🚑 Rescue 1122', '1122', const Color(0xFFDC2626)),
-              const SizedBox(width: 8),
-              _buildHelplineChip('👮 Police 15', '15', const Color(0xFF2563EB)),
-              const SizedBox(width: 8),
-              _buildHelplineChip('🛣️ Motorway 130', '130', const Color(0xFFD97706)),
-              const SizedBox(width: 8),
-              _buildHelplineChip('🏛️ Tourist Help 1421', '1421', const Color(0xFF059669)),
-              const SizedBox(width: 8),
-              _buildHelplineChip('📞 Citizen Portal 1787', '1787', const Color(0xFF7C3AED)),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 14),
-
-        // ── 3D Hero Banner Carousel with City Guides ────────────────────────
-        SizedBox(
-          height: 195,
-          child: PageView.builder(
-            controller: _bannerController,
-            itemCount: _banners.length,
-            itemBuilder: (context, i) {
-              final b = _banners[i];
-              return GestureDetector(
-                onTap: () {
-                  final matchedCity = Punjab81CitiesData.allCities.firstWhere(
-                    (c) => c.name.toLowerCase() == b.$4.toLowerCase(),
-                    orElse: () => Punjab81CitiesData.allCities.first,
-                  );
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CityGuideScreen(city: matchedCity)),
-                  );
-                },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 16,
-                        offset: const Offset(0, 7),
-                      ),
-                    ],
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 13, color: muted),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Independent guide · Not affiliated with any government body.',
+                    style: TextStyle(fontSize: 10.5, color: muted),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        b.$3,
-                        fit: BoxFit.cover,
-                        cacheWidth: 900,
-                        errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade400),
-                      ),
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              Color(0x77000000),
-                              Color(0xDD000000),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                      // Top Pill: City Urdu Badge & Tag
-                      Positioned(
-                        top: 14,
-                        left: 16,
-                        right: 16,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white24),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.star, color: Color(0xFFFBBF24), size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    b.$6,
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF059669),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                b.$5,
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Bottom Details & Action
-                      Positioned(
-                        bottom: 14,
-                        left: 16,
-                        right: 16,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    b.$1,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    b.$2,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.88),
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white38),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Text('Guide', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_ios, color: Colors.white, size: 10),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 8),
-        Center(
-          child: SmoothPageIndicator(
-            controller: _bannerController,
-            count: _banners.length,
-            effect: const ExpandingDotsEffect(
-              dotHeight: 5,
-              dotWidth: 6,
-              activeDotColor: Color(0xFF059669),
-              dotColor: Colors.black12,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // ── 🌟 3D LAYMAN ASSISTANT HUB (عام آدمی کے لیے 4 بڑے امدادی کارڈز) ───
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.tr('smart_assistant', lang),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF059669).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text('آسان سفری سہولیات', style: TextStyle(color: Color(0xFF059669), fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // 2x2 Grid of Large, 3D Embossed Cards
-              Row(
-                children: [
-                  // 1. Hospitals & Emergency
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('hospitals', lang),
-                    urduTitle: 'ہاسپٹلز و کلینک',
-                    subtitle: 'Emergency & medical help',
-                    badge: '🚑 Emergency',
-                    icon: Icons.local_hospital_rounded,
-                    colors: [const Color(0xFF065F46), const Color(0xFF047857)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => FacilityFinderScreen(
-                            initialType: kFacilityTypes.first,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  // 2. Route Planner
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('route_planner', lang),
-                    urduTitle: 'سمارٹ روٹ پلانر',
-                    subtitle: 'M-2 / M-3 Motorway & Fuel',
-                    badge: '🛣️ Highway',
-                    icon: Icons.alt_route_rounded,
-                    colors: [const Color(0xFF0F172A), const Color(0xFF1E293B)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const TripPlannerScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  // 3. Bakeries & Cakes
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('bakeries', lang),
-                    urduTitle: 'کیک، بیکریز و کھانا',
-                    subtitle: 'Order Fresh from Top Shops',
-                    badge: '🎂 Food Delivery',
-                    icon: Icons.cake_rounded,
-                    colors: [const Color(0xFF831843), const Color(0xFF9D174D)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SearchResultsScreen(
-                            initialCategoryName: 'Bakeries & Cakes',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  // 4. Tourist SOS & Police
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('tourist_sos', lang),
-                    urduTitle: 'ٹورسٹ پولیس و مدد',
-                    subtitle: 'Direct Call 1421 & 1122',
-                    badge: '🚨 24/7 SOS',
-                    icon: Icons.shield_rounded,
-                    colors: [const Color(0xFF7F1D1D), const Color(0xFFB91C1C)],
-                    onTap: () => _showEmergencyModal(context),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 22),
-
-        // ── 🇵🇰 PAKISTAN-FIRST POWER FEATURES ──────────────────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.tr('pakistan_tools', lang),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text('🇵🇰 No Other App Has This', style: TextStyle(color: Color(0xFFDC2626), fontSize: 10, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('budget_calculator', lang),
-                    urduTitle: 'بجٹ کیلکولیٹر',
-                    subtitle: 'روپے ڈالیں، پلان بنائیں',
-                    badge: '💰 Rs. Plan',
-                    icon: Icons.calculate_rounded,
-                    colors: [const Color(0xFF065F46), const Color(0xFF059669)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const BudgetCalculatorScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('group_splitter', lang),
-                    urduTitle: 'گروپ بل تقسیم',
-                    subtitle: 'دوستوں کا حساب کتاب',
-                    badge: '👥 Friends',
-                    icon: Icons.group_rounded,
-                    colors: [const Color(0xFF1E3A5F), const Color(0xFF2563EB)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const GroupBillSplitterScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('anti_scam', lang),
-                    urduTitle: 'منصفانہ ریٹ گائیڈ',
-                    subtitle: 'Official DC rate lists not connected',
-                    badge: '⚖️ Price guide',
-                    icon: Icons.price_check_rounded,
-                    colors: [const Color(0xFF7F1D1D), const Color(0xFFDC2626)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const LocalVsTouristPriceScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: AppStrings.tr('offline_packs', lang),
-                    urduTitle: 'بغیر نیٹ سٹی پیک',
-                    subtitle: '30MB میں پورا شہر',
-                    badge: '📥 Offline',
-                    icon: Icons.cloud_download_rounded,
-                    colors: [const Color(0xFF4C1D95), const Color(0xFF7C3AED)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const OfflineCityPacksScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: 'Offline Pay Hub',
-                    urduTitle: 'بغیر نیٹ ادائیگیاں',
-                    subtitle: '*786# & *2262# گائیڈ',
-                    badge: '📶 USSD & OTC',
-                    icon: Icons.account_balance_wallet_rounded,
-                    colors: [const Color(0xFF006644), const Color(0xFF004D33)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const OfflinePaymentGuideScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: 'Journey Readiness',
-                    urduTitle: 'سفر کی تیاری',
-                    subtitle: 'Checklist before you leave',
-                    badge: '✅ Checklist',
-                    icon: Icons.checklist_rtl_rounded,
-                    colors: [const Color(0xFF0F766E), const Color(0xFF0D9488)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const JourneyReadinessScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: 'Local Culture',
-                    urduTitle: 'مقامی ثقافت',
-                    subtitle: 'Etiquette & useful phrases',
-                    badge: '🤝 General tips',
-                    icon: Icons.diversity_3_rounded,
-                    colors: [const Color(0xFF78350F), const Color(0xFFB45309)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CultureCompanionScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: 'Road Advisories',
-                    urduTitle: 'سڑک و راستہ معلومات',
-                    subtitle: 'NHA / NHMP — verify before travel',
-                    badge: '🚧 Not live',
-                    icon: Icons.warning_amber_rounded,
-                    colors: [const Color(0xFF991B1B), const Color(0xFFE65F2B)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RoadInfrastructureAlertsScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: 'Permits & NOC',
-                    urduTitle: 'پرمٹ و این او سی',
-                    subtitle: 'Guidance — no online submission',
-                    badge: '📋 Guidance',
-                    icon: Icons.assignment_outlined,
-                    colors: [const Color(0xFF1E3A8A), const Color(0xFF1D4ED8)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PermitsScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: 'Visitor Toolkit',
-                    urduTitle: 'غیر ملکی مسافر ٹول کٹ',
-                    subtitle: 'PTA, currency & embassies',
-                    badge: '🌍 Foreigners',
-                    icon: Icons.public_rounded,
-                    colors: [const Color(0xFF134E4A), const Color(0xFF0F766E)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ForeignerToolkitScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _build3DAssistantCard(
-                    title: 'Digital Pass',
-                    urduTitle: 'ڈیجیٹل ٹورسٹ پاس',
-                    subtitle: 'App ID — not a government pass',
-                    badge: '🪪 On-device',
-                    icon: Icons.badge_outlined,
-                    colors: [const Color(0xFF01411C), const Color(0xFF166534)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const DigitalTouristPassScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _build3DAssistantCard(
-                    title: 'Report an Issue',
-                    urduTitle: 'شکایت درج کریں',
-                    subtitle: 'Saved on device — not submitted',
-                    badge: '📝 Local only',
-                    icon: Icons.report_problem_outlined,
-                    colors: [const Color(0xFF7C2D12), const Color(0xFFB45309)],
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 22),
-
-
-        // ── 💡 LAYMAN VISUAL TRUST GUIDE: "یہ ایپ آپ کی کیسے مدد کرے گی؟" ────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBgColor,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: cardBorderColor),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(
+    AppLanguage lang,
+    bool isDark,
+    Color ink,
+    Color muted,
+    Color surface,
+    Color border,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
+      child: Row(
+        children: [
+          const AppLogoMark3D(size: 42),
+          const SizedBox(width: 10),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                Text(
+                  'SmartMap Punjab',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppTokens.fontHeading,
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                    color: isDark ? Colors.white : AppTokens.emerald,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Punjab, Pakistan · Independent guide',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 9.5, color: muted),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildLanguageToggle(lang, isDark, muted, surface, border),
+          const SizedBox(width: 6),
+          _buildSosButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageToggle(
+    AppLanguage lang,
+    bool isDark,
+    Color muted,
+    Color surface,
+    Color border,
+  ) {
+    final isUrdu = lang == AppLanguage.urdu;
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _languageOption(
+              'EN',
+              !isUrdu,
+              isDark,
+              muted,
+              () => ref
+                  .read(languageProvider.notifier)
+                  .setLanguage(AppLanguage.english)),
+          _languageOption(
+              'اردو',
+              isUrdu,
+              isDark,
+              muted,
+              () => ref
+                  .read(languageProvider.notifier)
+                  .setLanguage(AppLanguage.urdu)),
+        ],
+      ),
+    );
+  }
+
+  Widget _languageOption(
+    String label,
+    bool selected,
+    bool isDark,
+    Color muted,
+    VoidCallback onTap,
+  ) {
+    final isUrduLabel = label == 'اردو';
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+        decoration: BoxDecoration(
+          color: selected ? AppTokens.emerald : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: isUrduLabel ? AppTokens.fontUrdu : AppTokens.fontBody,
+            fontSize: isUrduLabel ? 12 : 10.5,
+            height: isUrduLabel ? 1.7 : 1.2,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : muted,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSosButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: () => _showEmergencyModal(context),
+        child: Container(
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppTokens.alertRed,
+            borderRadius: BorderRadius.circular(17),
+            boxShadow: [
+              BoxShadow(
+                color: AppTokens.alertRed.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.emergency_rounded, size: 14, color: Colors.white),
+              SizedBox(width: 4),
+              Text(
+                'SOS',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Search ────────────────────────────────────────────────────────────────
+
+  Widget _buildSearch(
+    AppLanguage lang,
+    bool isDark,
+    Color muted,
+    Color surface,
+    Color border,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Material(
+        color: surface,
+        borderRadius: BorderRadius.circular(26),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(26),
+          onTap: () => _push(const SearchResultsScreen()),
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.only(left: 8, right: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: AppTokens.pastelMint,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.search_rounded,
+                      size: 19, color: AppTokens.emerald),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Search Lahore, Taxila, food, hotels...',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, color: muted),
+                  ),
+                ),
+                Icon(Icons.tune_rounded, size: 17, color: muted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Categories ────────────────────────────────────────────────────────────
+
+  Widget _buildCategories(bool isDark, Color ink) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickCategory(
+              label: 'Cities',
+              icon: Icons.location_city_rounded,
+              background: AppTokens.pastelMint,
+              foreground: AppTokens.emerald,
+              labelColor: ink,
+              onTap: () => _push(const CityExplorerScreen()),
+            ),
+          ),
+          Expanded(
+            child: _QuickCategory(
+              label: 'Heritage',
+              icon: Icons.account_balance_rounded,
+              background: AppTokens.pastelGold,
+              foreground: const Color(0xFFA16207),
+              labelColor: ink,
+              onTap: () => _push(
+                const SearchResultsScreen(
+                    initialCategoryName: 'Historical & Religious'),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _QuickCategory(
+              label: 'Food',
+              icon: Icons.restaurant_rounded,
+              background: AppTokens.pastelRose,
+              foreground: const Color(0xFFC2410C),
+              labelColor: ink,
+              onTap: () => _push(
+                const SearchResultsScreen(initialCategoryName: 'Restaurants'),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _QuickCategory(
+              label: 'Stays',
+              icon: Icons.hotel_rounded,
+              background: AppTokens.pastelBlue,
+              foreground: AppTokens.multaniBlue,
+              labelColor: ink,
+              onTap: () => _push(
+                const SearchResultsScreen(initialCategoryName: 'Hotels'),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _QuickCategory(
+              label: 'Medical',
+              icon: Icons.local_hospital_rounded,
+              background: AppTokens.pastelLilac,
+              foreground: const Color(0xFF6D28D9),
+              labelColor: ink,
+              onTap: () => _push(
+                FacilityFinderScreen(initialType: kFacilityTypes.first),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Hero ──────────────────────────────────────────────────────────────────
+
+  Widget _buildHero(bool isDark) {
+    return SizedBox(
+      height: 198,
+      child: PageView.builder(
+        controller: _bannerController,
+        itemCount: _heroSlides.length,
+        itemBuilder: (context, i) {
+          final slide = _heroSlides[i];
+          return GestureDetector(
+            onTap: () => _openCity(slide.cityId),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.16),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    slide.asset,
+                    fit: BoxFit.cover,
+                    cacheWidth: 1100,
+                    errorBuilder: (_, __, ___) => const ColoredBox(
+                      color: AppTokens.emeraldDeep,
+                      child: Center(
+                        child: Icon(Icons.landscape_rounded,
+                            color: Colors.white38, size: 40),
+                      ),
+                    ),
+                  ),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x22000000),
+                          Color(0x55000000),
+                          Color(0xE6062618),
+                        ],
+                        stops: [0.0, 0.45, 1.0],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 14,
+                    left: 14,
+                    right: 14,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTokens.gold,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            slide.tag,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.7,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: Text(
+                            slide.urdu,
+                            textDirection: TextDirection.rtl,
+                            style: const TextStyle(
+                              fontFamily: AppTokens.fontUrdu,
+                              color: Colors.white,
+                              fontSize: 11,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 15,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                slide.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: AppTokens.fontHeading,
+                                  color: Colors.white,
+                                  fontSize: 19,
+                                  height: 1.15,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                slide.subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.78),
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 13, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppTokens.gold,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Explore',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.arrow_forward_rounded,
+                                  color: Colors.white, size: 13),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── Traveler Essentials ───────────────────────────────────────────────────
+
+  Widget _buildTravelerEssentials(
+    AppLanguage lang,
+    bool isDark,
+    Color ink,
+    Color muted,
+    Color surface,
+    Color border,
+  ) {
+    final showUrdu = lang == AppLanguage.urdu;
+    final tools = <({
+      String title,
+      String subtitle,
+      String urdu,
+      IconData icon,
+      Color accent,
+      Color accentBg,
+      VoidCallback onTap
+    })>[
+      (
+        title: 'Route Planner',
+        subtitle: 'Plan a route with fuel stops',
+        urdu: 'روٹ اور ایندھن کی منصوبہ بندی',
+        icon: Icons.alt_route_rounded,
+        accent: AppTokens.emerald,
+        accentBg: AppTokens.pastelMint,
+        onTap: () => _push(const TripPlannerScreen()),
+      ),
+      (
+        title: 'Anti-Scam Rates',
+        subtitle: 'Know fair prices before you bargain',
+        urdu: 'منصفانہ ریٹ کی رہنمائی',
+        icon: Icons.price_check_rounded,
+        accent: AppTokens.gold,
+        accentBg: AppTokens.pastelGold,
+        onTap: () => _push(const LocalVsTouristPriceScreen()),
+      ),
+      (
+        title: 'Offline City Packs',
+        subtitle: 'City guides without a signal',
+        urdu: 'بغیر نیٹ شہر کی گائیڈ',
+        icon: Icons.cloud_download_rounded,
+        accent: AppTokens.multaniBlue,
+        accentBg: AppTokens.pastelBlue,
+        onTap: () => _push(const OfflineCityPacksScreen()),
+      ),
+      (
+        title: 'Budget Calculator',
+        subtitle: 'Estimate your trip in rupees',
+        urdu: 'روپوں میں سفر کا بجٹ',
+        icon: Icons.calculate_rounded,
+        accent: AppTokens.emerald,
+        accentBg: AppTokens.pastelMint,
+        onTap: () => _push(const BudgetCalculatorScreen()),
+      ),
+      (
+        title: 'Bill Splitter',
+        subtitle: 'Split group expenses fairly',
+        urdu: 'گروپ کا بل برابر تقسیم کریں',
+        icon: Icons.groups_rounded,
+        accent: const Color(0xFFB45309),
+        accentBg: AppTokens.pastelGold,
+        onTap: () => _push(const GroupBillSplitterScreen()),
+      ),
+      (
+        title: 'Road & Landslide Alerts',
+        subtitle: 'Advisories to verify before travel',
+        urdu: 'سڑک اور لینڈ سلائیڈ معلومات',
+        icon: Icons.warning_amber_rounded,
+        accent: AppTokens.alertRed,
+        accentBg: AppTokens.pastelRose,
+        onTap: () => _push(const RoadInfrastructureAlertsScreen()),
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: 'Traveler Essentials',
+            subtitle: 'Six everyday tools for a smoother Punjab trip',
+            actionLabel: 'More tools',
+            actionColor: AppTokens.emerald,
+            onAction: () => _showMoreTools(),
+            ink: ink,
+            muted: muted,
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: tools.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: showUrdu ? 164 : 142,
+            ),
+            itemBuilder: (context, i) {
+              final tool = tools[i];
+              return _ToolCard(
+                title: tool.title,
+                subtitle: tool.subtitle,
+                urduSubtitle: tool.urdu,
+                icon: tool.icon,
+                accent: tool.accent,
+                accentBg: tool.accentBg,
+                showUrdu: showUrdu,
+                isDark: isDark,
+                surface: surface,
+                border: border,
+                ink: ink,
+                muted: muted,
+                onTap: tool.onTap,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Popular Cities ────────────────────────────────────────────────────────
+
+  Widget _buildPopularCities(Color ink, Color muted) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: _SectionHeader(
+            title: 'Popular Cities',
+            subtitle: 'Real places, photographed on location',
+            actionLabel: 'All 81 cities',
+            actionColor: AppTokens.emerald,
+            onAction: () => _push(const CityExplorerScreen()),
+            ink: ink,
+            muted: muted,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 164,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            scrollDirection: Axis.horizontal,
+            itemCount: _popularCities.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final entry = _popularCities[i];
+              final city = _cityById(entry.id);
+              if (city == null) return const SizedBox.shrink();
+              return _CityPhotoCard(
+                city: city,
+                asset: entry.asset,
+                caption: entry.caption,
+                onTap: () => _openCity(entry.id),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Must-Visit Destinations ───────────────────────────────────────────────
+
+  Widget _buildMustVisit(Color ink, Color muted) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: _SectionHeader(
+            title: 'Must-Visit Destinations',
+            subtitle: 'Photographs from Wikimedia Commons contributors',
+            actionLabel: 'View all',
+            actionColor: AppTokens.emerald,
+            onAction: () => _push(const SearchResultsScreen()),
+            ink: ink,
+            muted: muted,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 216,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            scrollDirection: Axis.horizontal,
+            itemCount: _landmarks.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final landmark = _landmarks[i];
+              return _LandmarkCard(
+                asset: landmark.asset,
+                title: landmark.title,
+                city: landmark.city,
+                label: landmark.label,
+                tag: landmark.tag,
+                onTap: () => _openCity(landmark.cityId),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── More tools sheet ──────────────────────────────────────────────────────
+
+  void _showMoreTools() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
+    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
+    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final items = <({
+          IconData icon,
+          Color color,
+          String title,
+          String subtitle,
+          VoidCallback onTap
+        })>[
+          (
+            icon: Icons.local_hospital_rounded,
+            color: AppTokens.emerald,
+            title: 'Hospitals & clinics',
+            subtitle: 'Find medical facilities by type',
+            onTap: () => _pushFromSheet(
+                ctx, FacilityFinderScreen(initialType: kFacilityTypes.first)),
+          ),
+          (
+            icon: Icons.cake_rounded,
+            color: const Color(0xFFC2410C),
+            title: 'Bakeries & cakes',
+            subtitle: 'Fresh bakes from listed shops',
+            onTap: () => _pushFromSheet(
+                  ctx,
+                  const SearchResultsScreen(
+                      initialCategoryName: 'Bakeries & Cakes'),
+                ),
+          ),
+          (
+            icon: Icons.account_balance_wallet_rounded,
+            color: AppTokens.multaniBlue,
+            title: 'Offline payment guide',
+            subtitle: 'USSD and over-the-counter options',
+            onTap: () => _pushFromSheet(ctx, const OfflinePaymentGuideScreen()),
+          ),
+          (
+            icon: Icons.checklist_rtl_rounded,
+            color: const Color(0xFF0F766E),
+            title: 'Journey readiness',
+            subtitle: 'A checklist before you leave',
+            onTap: () => _pushFromSheet(ctx, const JourneyReadinessScreen()),
+          ),
+          (
+            icon: Icons.diversity_3_rounded,
+            color: AppTokens.gold,
+            title: 'Local culture',
+            subtitle: 'Etiquette and useful phrases',
+            onTap: () => _pushFromSheet(ctx, const CultureCompanionScreen()),
+          ),
+          (
+            icon: Icons.assignment_rounded,
+            color: const Color(0xFF1E3A8A),
+            title: 'Permits & NOC',
+            subtitle: 'Guidance only — no online submission',
+            onTap: () => _pushFromSheet(ctx, const PermitsScreen()),
+          ),
+          (
+            icon: Icons.public_rounded,
+            color: const Color(0xFF134E4A),
+            title: 'Foreign visitor toolkit',
+            subtitle: 'PTA, currency and embassies',
+            onTap: () => _pushFromSheet(ctx, const ForeignerToolkitScreen()),
+          ),
+          (
+            icon: Icons.badge_rounded,
+            color: AppTokens.emeraldDeep,
+            title: 'Digital tourist pass',
+            subtitle: 'On-device ID — not a government pass',
+            onTap: () => _pushFromSheet(ctx, const DigitalTouristPassScreen()),
+          ),
+          (
+            icon: Icons.report_problem_rounded,
+            color: AppTokens.alertRed,
+            title: 'Report an issue',
+            subtitle: 'Saved on device — not submitted',
+            onTap: () => _pushFromSheet(ctx, const ComplaintsScreen()),
+          ),
+        ];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          padding: EdgeInsets.only(
+            top: 10,
+            bottom: MediaQuery.of(ctx).padding.bottom + 12,
+          ),
+          child: SafeArea(
+            top: false,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.72),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 4),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTokens.borderDark
+                            : AppTokens.cardBorderWarm,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'More traveler tools',
+                    style: TextStyle(
+                      fontFamily: AppTokens.fontHeading,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Supporting guides, kept out of the main grid.',
+                    style: TextStyle(fontSize: 11.5, color: muted),
+                  ),
+                  const SizedBox(height: 10),
+                  for (final item in items)
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      leading: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: item.color.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Icon(item.icon, size: 20, color: item.color),
+                      ),
+                      title: Text(
+                        item.title,
+                        style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: ink),
+                      ),
+                      subtitle: Text(
+                        item.subtitle,
+                        style: TextStyle(fontSize: 11, color: muted),
+                      ),
+                      trailing: Icon(Icons.arrow_forward_ios_rounded,
+                          size: 12, color: muted),
+                      onTap: item.onTap,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _pushFromSheet(BuildContext sheetContext, Widget screen) {
+    Navigator.of(sheetContext).pop();
+    _push(screen);
+  }
+
+  // ── Emergency SOS ─────────────────────────────────────────────────────────
+
+  void _showEmergencyModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppTokens.surfaceDark : Colors.white;
+    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
+    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+            20, 10, 20, MediaQuery.of(ctx).padding.bottom + 18),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTokens.borderDark
+                          : AppTokens.cardBorderWarm,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF059669).withValues(alpha: 0.12),
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFBE8E5),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.help_outline, color: Color(0xFF059669), size: 20),
+                      child: const Icon(Icons.sos_rounded,
+                          color: AppTokens.alertRed, size: 22),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'یہ ایپ آپ کی کیسے مدد کرے گی؟',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryTextColor),
+                            'Emergency helplines',
+                            style: TextStyle(
+                              fontFamily: AppTokens.fontHeading,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: ink,
+                            ),
                           ),
                           Text(
-                            'Simple visual guide for tourists and laymen',
-                            style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                            'Calls open your phone dialer. This app does not dispatch help.',
+                            style: TextStyle(fontSize: 11, color: muted),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Divider(height: 1, color: cardBorderColor),
-                const SizedBox(height: 10),
-                _buildLaymanFeature(
-                  icon: Icons.shield_outlined,
-                  color: const Color(0xFFEC4899),
-                  urdu: 'خواتین اور فیملی سیفٹی آڈٹ:',
-                  eng: 'ہر اسپاٹ پر صاف فیملی واش روم، محفوظ ماحول اور لیڈی ٹریولر تصدیق',
+                const SizedBox(height: 14),
+                _emergencyTile(
+                  title: 'Rescue 1122',
+                  subtitle: 'Ambulance, fire & rescue',
+                  number: '1122',
+                  color: AppTokens.alertRed,
+                  icon: Icons.medical_services_rounded,
+                  ink: ink,
+                  muted: muted,
                 ),
-                const SizedBox(height: 8),
-                _buildLaymanFeature(
-                  icon: Icons.price_check,
-                  color: const Color(0xFFD97706),
-                  urdu: 'آج کا ریٹ (Anti-Scam Rate):',
-                  eng: 'مری و فورٹس پر زائد پیسے طلب کرنے سے بچاؤ — روزانہ کا تصدیق شدہ ریٹ',
+                _emergencyTile(
+                  title: 'Police 15',
+                  subtitle: 'Police emergency',
+                  number: '15',
+                  color: AppTokens.multaniBlue,
+                  icon: Icons.local_police_rounded,
+                  ink: ink,
+                  muted: muted,
                 ),
-                const SizedBox(height: 8),
-                _buildLaymanFeature(
-                  icon: Icons.wifi_off_outlined,
-                  color: const Color(0xFF2563EB),
-                  urdu: 'آف لائن روڈ اسٹیٹس اور لینڈ سلائیڈ:',
-                  eng: 'پہاڑوں اور صحرا میں سگنل بند ہونے پر بھی لوکلز کی لائیو روڈ بلاک الرٹس',
+                _emergencyTile(
+                  title: 'Motorway 130',
+                  subtitle: 'Motorway & highway police',
+                  number: '130',
+                  color: AppTokens.gold,
+                  icon: Icons.directions_car_filled_rounded,
+                  ink: ink,
+                  muted: muted,
                 ),
-                const SizedBox(height: 8),
-                _buildLaymanFeature(
-                  icon: Icons.calendar_month_outlined,
-                  color: const Color(0xFF7C3AED),
-                  urdu: 'پنجاب کلچرل و عرس کیلنڈر:',
-                  eng: 'درباروں، میلوں اور فیسٹیولز کے رش کی پیشگی معلومات اور ہوٹل الرٹ',
+                _emergencyTile(
+                  title: 'Tourist Help 1421',
+                  subtitle: 'Punjab tourist police helpline',
+                  number: '1421',
+                  color: AppTokens.emerald,
+                  icon: Icons.support_agent_rounded,
+                  ink: ink,
+                  muted: muted,
                 ),
-                const SizedBox(height: 8),
-                _buildLaymanFeature(
-                  icon: Icons.airport_shuttle_outlined,
-                  color: const Color(0xFF059669),
-                  urdu: 'عوامی وین و چنگچی روٹس:',
-                  eng: 'لاہور سے کٹاس راج یا روہتاس فورٹ تک کم خرچ لوکل ویگن کنکشن',
-                ),
-                const SizedBox(height: 8),
-                _buildLaymanFeature(
-                  icon: Icons.eco_outlined,
-                  color: const Color(0xFF10B981),
-                  urdu: 'گرین ٹورسٹ اسکور و ڈسکاؤنٹ:',
-                  eng: 'کوڑے دان کے استعمال پر گرین کوائنز حاصل کریں اور اگلی ٹرپ پر انعام پائیں',
+                const SizedBox(height: 4),
+                Text(
+                  'Numbers are public helplines in Pakistan. Verify locally if a line does not answer.',
+                  style: TextStyle(fontSize: 10, color: muted, height: 1.4),
                 ),
               ],
             ),
           ),
         ),
-
-        const SizedBox(height: 24),
-
-        // ── 🌟 EXPLORE BY PUNJAB CITIES (81 CITIES SELECTOR) ────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Where do you want to go?',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
-                    ),
-                    Text(
-                      'Choose a city to explore its food, hospitals & sights',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: secondaryTextColor),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CityExplorerScreen()),
-                  );
-                },
-                child: const Text('All 81 Cities →', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // Horizontal Cities Cards
-        SizedBox(
-          height: 150,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            scrollDirection: Axis.horizontal,
-            itemCount: 8, // Show top 8 famous cities on home
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, i) {
-              final city = Punjab81CitiesData.allCities[i];
-              return _CityQuickCard(city: city);
-            },
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── Categories Section (Clean Rounded Pill Design) ──────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Explore Categories',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SearchResultsScreen()),
-                  );
-                },
-                child: const Text('See all'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 96,
-          child: categoriesAsync.when(
-            data: (categories) => ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
-              itemBuilder: (context, i) {
-                final cat = categories[i];
-                return _CleanCategoryCard(
-                  cat: cat,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => SearchResultsScreen(
-                          initialCategoryId: cat.id,
-                          initialCategoryName: cat.name,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(
-              child: Text('Could not load categories', style: TextStyle(fontSize: 12, color: secondaryTextColor)),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 26),
-
-        // ── Must-Visit Punjab Destinations (Photos & Ratings) ───────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Must-Visit Destinations',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor),
-                    ),
-                    Text(
-                      'Top-rated iconic places across Punjab & Islamabad',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: secondaryTextColor),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SearchResultsScreen()),
-                  );
-                },
-                child: const Text('View all'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 230,
-          child: popularPlacesAsync.when(
-            data: (places) {
-              if (places.isEmpty) {
-                return const Center(child: Text('No destinations available'));
-              }
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                itemCount: places.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, i) => _DestinationCard(place: places[i]),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Text('Could not load places: $e', style: const TextStyle(fontSize: 12)),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 26),
-
-        // ── Events & Festivals Section ──────────────────────────────────────
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: _EventsSection(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHelplineChip(String label, String number, Color color) {
-    return InkWell(
-      onTap: () => _makeCall(number),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.call, size: 11, color: color),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _build3DAssistantCard({
+  Widget _emergencyTile({
     required String title,
-    required String urduTitle,
     required String subtitle,
-    required String badge,
-    required IconData icon,
-    required List<Color> colors,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: colors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: colors.first.withValues(alpha: 0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: Colors.white, size: 20),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      badge,
-                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                urduTitle,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                maxLines: 1,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
-                ),
-                maxLines: 1,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 9,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLaymanFeature({
-    required IconData icon,
-    required Color color,
-    required String urdu,
-    required String eng,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                urdu,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              ),
-              Text(
-                eng,
-                style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showEmergencyModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Row(
-              children: [
-                Icon(Icons.shield, color: Color(0xFFDC2626), size: 28),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tourist 24/7 Emergency Helplines',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                      ),
-                      Text(
-                        'سیاحوں کے لیے مفت ہنگامی حکومتی سہولیات',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF059669), fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // 1. Rescue 1122
-            _emergencyDialTile(
-              title: 'Rescue 1122 (Ambulance & Fire)',
-              urdu: 'ریسکیو 1122 ایمبولینس و طبی امداد (مفت)',
-              number: '1122',
-              color: const Color(0xFFDC2626),
-              icon: Icons.medical_services_rounded,
-            ),
-
-            // 2. Tourist Police Helpline 1421 & 15
-            _emergencyDialTile(
-              title: 'Tourist Police (Punjab Helpline)',
-              urdu: 'ٹورسٹ پولیس 1421 و پنجاب پولیس 15',
-              number: '1421',
-              color: const Color(0xFF2563EB),
-              icon: Icons.local_police_rounded,
-            ),
-
-            // 3. Motorway Police 130
-            _emergencyDialTile(
-              title: 'Motorway Police Helpline (130)',
-              urdu: 'موٹروے ایمرجنسی و ہائی وے پٹرول 130',
-              number: '130',
-              color: const Color(0xFFD97706),
-              icon: Icons.car_crash_rounded,
-            ),
-
-            // 4. Citizen Complaints Portal 1787
-            _emergencyDialTile(
-              title: 'Tourist Grievance Portal (1787)',
-              urdu: 'سیاحتی شکایات، زائد کرایہ و ہوٹل فراڈ رپورٹ',
-              number: '1787',
-              color: const Color(0xFF7C3AED),
-              icon: Icons.gavel_rounded,
-            ),
-
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 46,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close (بند کریں)'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _emergencyDialTile({
-    required String title,
-    required String urdu,
     required String number,
     required Color color,
     required IconData icon,
+    required Color ink,
+    required Color muted,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 19),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
-                const SizedBox(height: 2),
-                Text(urdu, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                Text(
+                  title,
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700, color: ink),
+                ),
+                Text(subtitle, style: TextStyle(fontSize: 10.5, color: muted)),
               ],
             ),
           ),
           ElevatedButton.icon(
             onPressed: () => _makeCall(number),
-            icon: const Icon(Icons.call, size: 14),
-            label: Text('Call $number', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.call, size: 13),
+            label: Text(
+              number,
+              style:
+                  const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: color,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -1522,30 +1426,271 @@ class _HomeTabContentState extends ConsumerState<_HomeTabContent> {
   }
 }
 
-// ── City Quick Card (On Home Screen) ─────────────────────────────────────────
+// ── Section header ──────────────────────────────────────────────────────────
 
-class _CityQuickCard extends StatelessWidget {
-  final PunjabCity city;
-  const _CityQuickCard({required this.city});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.actionColor,
+    required this.onAction,
+    required this.ink,
+    required this.muted,
+  });
+
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final Color actionColor;
+  final VoidCallback onAction;
+  final Color ink;
+  final Color muted;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => CityGuideScreen(city: city)),
-        );
-      },
-      child: Container(
-        width: 145,
-        decoration: BoxDecoration(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: AppTokens.fontHeading,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  color: ink,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: muted),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        TextButton(
+          onPressed: onAction,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            actionLabel,
+            style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: actionColor),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Quick category ──────────────────────────────────────────────────────────
+
+class _QuickCategory extends StatelessWidget {
+  const _QuickCategory({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+    required this.labelColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color background;
+  final Color foreground;
+  final Color labelColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration:
+                BoxDecoration(color: background, shape: BoxShape.circle),
+            child: Icon(icon, size: 24, color: foreground),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 10.5, fontWeight: FontWeight.w600, color: labelColor),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tool card ───────────────────────────────────────────────────────────────
+
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({
+    required this.title,
+    required this.subtitle,
+    required this.urduSubtitle,
+    required this.icon,
+    required this.accent,
+    required this.accentBg,
+    required this.showUrdu,
+    required this.isDark,
+    required this.surface,
+    required this.border,
+    required this.ink,
+    required this.muted,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String urduSubtitle;
+  final IconData icon;
+  final Color accent;
+  final Color accentBg;
+  final bool showUrdu;
+  final bool isDark;
+  final Color surface;
+  final Color border;
+  final Color ink;
+  final Color muted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: surface,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(18),
+          child: Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: accentBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, size: 20, color: accent),
+                    ),
+                    const Spacer(),
+                    Icon(Icons.arrow_outward_rounded, size: 14, color: muted),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: ink,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, height: 1.25, color: muted),
+                ),
+                if (showUrdu) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    urduSubtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontFamily: AppTokens.fontUrdu,
+                      fontSize: 10.5,
+                      height: 1.4,
+                      color: accent,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── City photo card ─────────────────────────────────────────────────────────
+
+class _CityPhotoCard extends StatelessWidget {
+  const _CityPhotoCard({
+    required this.city,
+    required this.asset,
+    required this.caption,
+    required this.onTap,
+  });
+
+  final PunjabCity city;
+  final String asset;
+  final String caption;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 164,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -1553,44 +1698,51 @@ class _CityQuickCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              city.coverImage,
+            Image.asset(
+              asset,
               fit: BoxFit.cover,
-              cacheWidth: 600,
-              errorBuilder: (_, __, ___) => Container(color: Colors.blueGrey),
+              cacheWidth: 640,
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: AppTokens.emeraldDeep),
             ),
-            Container(
+            const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.2),
-                    Colors.black.withValues(alpha: 0.85),
-                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x11000000),
+                    Color(0x33000000),
+                    Color(0xDD000000)
+                  ],
+                  stops: [0.0, 0.5, 1.0],
                 ),
               ),
             ),
             Positioned(
-              top: 10,
-              right: 10,
+              top: 9,
+              left: 9,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.black.withValues(alpha: 0.42),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.22)),
                 ),
                 child: Text(
-                  city.urduName,
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  caption,
+                  style: const TextStyle(
+                      fontSize: 8.5,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ),
             Positioned(
+              left: 11,
+              right: 11,
               bottom: 10,
-              left: 10,
-              right: 10,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1599,18 +1751,22 @@ class _CityQuickCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
+                      fontFamily: AppTokens.fontHeading,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    city.tagline,
+                    city.urduName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textDirection: TextDirection.rtl,
                     style: const TextStyle(
+                      fontFamily: AppTokens.fontUrdu,
                       color: Colors.white70,
                       fontSize: 10,
+                      height: 1.5,
                     ),
                   ),
                 ],
@@ -1623,87 +1779,45 @@ class _CityQuickCard extends StatelessWidget {
   }
 }
 
+// ── Landmark card ───────────────────────────────────────────────────────────
 
-// ── Clean Category Card ──────────────────────────────────────────────────────
-
-class _CleanCategoryCard extends StatelessWidget {
-  final CategoryModel cat;
-  final VoidCallback onTap;
-
-  const _CleanCategoryCard({
-    required this.cat,
+class _LandmarkCard extends StatelessWidget {
+  const _LandmarkCard({
+    required this.asset,
+    required this.title,
+    required this.city,
+    required this.label,
+    required this.tag,
     required this.onTap,
   });
 
+  final String asset;
+  final String title;
+  final String city;
+  final String label;
+  final String tag;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
+    final ink = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1F2937);
+    final muted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Column(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(iconForCategory(cat.icon), color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A), size: 26),
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: 72,
-            child: Text(
-              cat.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: isDark ? Colors.white : const Color(0xFF334155)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Destination Card with Image, Rating, Price ──────────────────────────────
-
-class _DestinationCard extends StatelessWidget {
-  final PlaceModel place;
-  const _DestinationCard({required this.place});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => PlaceDetailsScreen(placeId: place.id)),
-        );
-      },
       child: Container(
-        width: 200,
+        width: 208,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06)),
+          color: isDark ? AppTokens.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: isDark ? AppTokens.borderDark : AppTokens.cardBorderWarm),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.05),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -1712,53 +1826,38 @@ class _DestinationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 125,
+              height: 124,
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (place.images.isNotEmpty)
-                    Image.network(
-                      place.images.first,
-                      fit: BoxFit.cover,
-                      cacheWidth: 500,
-                      errorBuilder: (_, __, ___) => _fallbackImage(),
-                    )
-                  else
-                    _fallbackImage(),
+                  Image.asset(
+                    asset,
+                    fit: BoxFit.cover,
+                    cacheWidth: 640,
+                    errorBuilder: (_, __, ___) =>
+                        const ColoredBox(color: AppTokens.emeraldDeep),
+                  ),
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 9,
+                    left: 9,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(20),
+                        color: tag == 'UNESCO'
+                            ? AppTokens.gold
+                            : Colors.black.withValues(alpha: 0.48),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (place.hasReviews) ...[
-                            const Icon(Icons.star, size: 12, color: Colors.amber),
-                            const SizedBox(width: 3),
-                            Text(
-                              place.rating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ] else
-                            const Text(
-                              'New',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                        ],
+                      child: Text(
+                        tag,
+                        style: const TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -1766,61 +1865,62 @@ class _DestinationCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    place.name,
+                    title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                    style: TextStyle(
+                      fontFamily: AppTokens.fontHeading,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: ink,
+                    ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 10.5, color: muted),
+                  ),
+                  const SizedBox(height: 7),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 11, color: AppColors.textSecondary),
+                      const Icon(Icons.location_on_rounded,
+                          size: 11, color: AppTokens.gold),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
-                          place.address.isNotEmpty ? place.address : place.description,
+                          city,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: muted),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF10B981).withValues(alpha: 0.15) : const Color(0xFF0F172A).withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      place.priceRange.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A),
+                      const Text(
+                        'Guide',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTokens.gold,
+                        ),
                       ),
-                    ),
+                      const Icon(Icons.arrow_forward_rounded,
+                          size: 11, color: AppTokens.gold),
+                    ],
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _fallbackImage() {
-    return Container(
-      color: Colors.grey.shade300,
-      child: const Center(
-        child: Icon(Icons.image_not_supported, size: 36, color: Colors.grey),
       ),
     );
   }
@@ -1836,10 +1936,13 @@ class _EventsSection extends ConsumerWidget {
     final eventsAsync = ref.watch(upcomingEventsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
+    final secondaryTextColor =
+        isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
     final cardBgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final cardBorderColor = isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06);
-    final itemBgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final cardBorderColor =
+        isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06);
+    final itemBgColor =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1856,11 +1959,18 @@ class _EventsSection extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.event, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A), size: 22),
+                  Icon(Icons.event,
+                      color: isDark
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF0F172A),
+                      size: 22),
                   const SizedBox(width: 8),
                   Text(
                     'Upcoming Festivals & Tours',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryTextColor),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor),
                   ),
                 ],
               ),
@@ -1895,7 +2005,9 @@ class _EventsSection extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(14),
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => EventDetailsScreen(eventId: event.id)),
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  EventDetailsScreen(eventId: event.id)),
                         );
                       },
                       child: Padding(
@@ -1907,8 +2019,15 @@ class _EventsSection extends ConsumerWidget {
                               child: Container(
                                 width: 48,
                                 height: 48,
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A).withValues(alpha: 0.08),
-                                child: Icon(Icons.festival, color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A), size: 24),
+                                color: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : const Color(0xFF0F172A)
+                                        .withValues(alpha: 0.08),
+                                child: Icon(Icons.festival,
+                                    color: isDark
+                                        ? const Color(0xFF10B981)
+                                        : const Color(0xFF0F172A),
+                                    size: 24),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -1918,19 +2037,25 @@ class _EventsSection extends ConsumerWidget {
                                 children: [
                                   Text(
                                     event.name,
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryTextColor),
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: primaryTextColor),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${event.date.day}/${event.date.month}/${event.date.year} · ${event.address}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 11, color: secondaryTextColor),
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: secondaryTextColor),
                                   ),
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios, size: 14, color: secondaryTextColor),
+                            Icon(Icons.arrow_forward_ios,
+                                size: 14, color: secondaryTextColor),
                           ],
                         ),
                       ),
@@ -1969,7 +2094,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
   void _showSafetyModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -1980,24 +2106,32 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
               children: [
                 Icon(Icons.shield, color: Color(0xFFDC2626), size: 28),
                 SizedBox(width: 10),
-                Text('Tourist Safety & 24/7 Helplines', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Tourist Safety & 24/7 Helplines',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 8),
-            const Text('Toll-free emergency numbers active across all Punjab cities and tourist routes:',
+            const Text(
+                'Toll-free emergency numbers active across all Punjab cities and tourist routes:',
                 style: TextStyle(fontSize: 12, color: Colors.black54)),
             const SizedBox(height: 16),
-            _sosItem('Rescue 1122 Ambulance', '1122', Icons.medical_services, Colors.red, () => _makeCall('1122')),
-            _sosItem('Tourist Police Helpline', '15', Icons.local_police, Colors.blue, () => _makeCall('15')),
-            _sosItem('Tourism Department Punjab', '1787', Icons.support_agent, Colors.teal, () => _makeCall('1787')),
-            _sosItem('Motorway & Highway Police', '130', Icons.traffic, Colors.indigo, () => _makeCall('130')),
+            _sosItem('Rescue 1122 Ambulance', '1122', Icons.medical_services,
+                Colors.red, () => _makeCall('1122')),
+            _sosItem('Tourist Police Helpline', '15', Icons.local_police,
+                Colors.blue, () => _makeCall('15')),
+            _sosItem('Tourism Department Punjab', '1787', Icons.support_agent,
+                Colors.teal, () => _makeCall('1787')),
+            _sosItem('Motorway & Highway Police', '130', Icons.traffic,
+                Colors.indigo, () => _makeCall('130')),
           ],
         ),
       ),
     );
   }
 
-  static Widget _sosItem(String title, String num, IconData icon, Color color, VoidCallback onTap) {
+  static Widget _sosItem(String title, String num, IconData icon, Color color,
+      VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -2014,8 +2148,14 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('Dial $num', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('Dial $num',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -2024,10 +2164,12 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
               backgroundColor: color,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: onTap,
-            child: const Text('Call', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            child: const Text('Call',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
           ),
         ],
       ),
@@ -2040,9 +2182,11 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
     final isAdmin = user?.role == 'admin';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
+    final secondaryTextColor =
+        isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
     final cardBgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final cardBorderColor = isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06);
+    final cardBorderColor =
+        isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06);
     final currentThemeMode = ref.watch(themeModeProvider);
 
     return ListView(
@@ -2067,17 +2211,24 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundColor: isDark ? Colors.white12 : const Color(0xFF0F172A).withValues(alpha: 0.08),
+                backgroundColor: isDark
+                    ? Colors.white12
+                    : const Color(0xFF0F172A).withValues(alpha: 0.08),
                 child: Icon(
                   isAdmin ? Icons.admin_panel_settings : Icons.person,
                   size: 44,
-                  color: isDark ? const Color(0xFF10B981) : const Color(0xFF0F172A),
+                  color: isDark
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 user?.name ?? 'Tourist Guest',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryTextColor),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor),
               ),
               const SizedBox(height: 4),
               Text(
@@ -2086,11 +2237,17 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: isAdmin ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
+                  color: isAdmin
+                      ? const Color(0xFFFEF2F2)
+                      : const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: isAdmin ? Colors.red.shade300 : const Color(0xFF10B981)),
+                  border: Border.all(
+                      color: isAdmin
+                          ? Colors.red.shade300
+                          : const Color(0xFF10B981)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -2098,7 +2255,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                     Icon(
                       isAdmin ? Icons.security : Icons.luggage,
                       size: 14,
-                      color: isAdmin ? Colors.red.shade700 : const Color(0xFF059669),
+                      color: isAdmin
+                          ? Colors.red.shade700
+                          : const Color(0xFF059669),
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -2106,7 +2265,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isAdmin ? Colors.red.shade700 : const Color(0xFF059669),
+                        color: isAdmin
+                            ? Colors.red.shade700
+                            : const Color(0xFF059669),
                       ),
                     ),
                   ],
@@ -2131,11 +2292,15 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: const Color(0xFF10B981), size: 20),
+                  Icon(isDark ? Icons.dark_mode : Icons.light_mode,
+                      color: const Color(0xFF10B981), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'App Appearance / ڈارک موڈ سیٹنگز',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryTextColor),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor),
                   ),
                 ],
               ),
@@ -2147,7 +2312,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                       label: '☀️ Light',
                       urdu: 'روشن موڈ',
                       isSelected: currentThemeMode == ThemeMode.light,
-                      onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light),
+                      onTap: () => ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(ThemeMode.light),
                       isDark: isDark,
                     ),
                   ),
@@ -2157,7 +2324,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                       label: '🌙 Dark',
                       urdu: 'ڈارک موڈ',
                       isSelected: currentThemeMode == ThemeMode.dark,
-                      onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark),
+                      onTap: () => ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(ThemeMode.dark),
                       isDark: isDark,
                     ),
                   ),
@@ -2167,7 +2336,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                       label: '📱 System',
                       urdu: 'فون سسٹم',
                       isSelected: currentThemeMode == ThemeMode.system,
-                      onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system),
+                      onTap: () => ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(ThemeMode.system),
                       isDark: isDark,
                     ),
                   ),
@@ -2182,7 +2353,10 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
         // ── Tourist Dashboard Section ──
         Text(
           '🎒 Traveler Dashboard',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: primaryTextColor),
+          style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: primaryTextColor),
         ),
         const SizedBox(height: 10),
 
@@ -2193,7 +2367,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
           title: 'My Custom Trip Plans',
           subtitle: 'View saved itineraries, multi-city tours & routes',
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyTripsScreen()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const MyTripsScreen()));
           },
         ),
 
@@ -2204,7 +2379,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
           title: 'Saved Places & Bookmarks',
           subtitle: 'Quick access to your favorite historical sites & food',
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavedPlacesScreen()));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SavedPlacesScreen()));
           },
         ),
 
@@ -2237,7 +2413,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
           title: 'Register a Tourist Business',
           subtitle: 'List your hotel, bakery, restaurant or transport service',
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BusinessRegistrationScreen()));
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const BusinessRegistrationScreen()));
           },
         ),
 
@@ -2247,7 +2424,10 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
         if (isAdmin) ...[
           const Text(
             '🛡️ Tourism Official Admin Console',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF991B1B)),
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF991B1B)),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -2263,13 +2443,15 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const AdminDashboardScreen()));
               },
               child: const Padding(
                 padding: EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.admin_panel_settings, color: Colors.white, size: 30),
+                    Icon(Icons.admin_panel_settings,
+                        color: Colors.white, size: 30),
                     SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -2277,17 +2459,22 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                         children: [
                           Text(
                             'Open Administrator Dashboard',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15),
                           ),
                           SizedBox(height: 2),
                           Text(
                             'Verify places, approve business registrations & moderate reviews',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 14),
+                    Icon(Icons.arrow_forward_ios,
+                        color: Colors.white70, size: 14),
                   ],
                 ),
               ),
@@ -2311,13 +2498,16 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                 children: [
                   Icon(Icons.info_outline, size: 18, color: Color(0xFF0F172A)),
                   SizedBox(width: 8),
-                  Text('Tourist (User) vs Admin Distinction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text('Tourist (User) vs Admin Distinction',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
               SizedBox(height: 8),
               Text(
                 '• Tourist (You): Discovers 81 Punjab cities, searches hospitals, orders cakes, plans trips, reviews places, and uses emergency helplines.\n• Administrator: Tourism Department authority responsible for verifying new listings, checking business licenses, and issuing tourist alerts.',
-                style: TextStyle(fontSize: 12, color: Colors.black87, height: 1.4),
+                style:
+                    TextStyle(fontSize: 12, color: Colors.black87, height: 1.4),
               ),
             ],
           ),
@@ -2332,7 +2522,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             foregroundColor: Colors.red,
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           onPressed: () async {
             await ref.read(authControllerProvider.notifier).logout();
@@ -2344,7 +2535,8 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
             }
           },
           icon: const Icon(Icons.logout),
-          label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+          label: const Text('Log Out',
+              style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -2394,7 +2586,9 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                 fontSize: 10,
                 color: isSelected
                     ? Colors.white.withValues(alpha: 0.85)
-                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    : (isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B)),
               ),
             ),
           ],
@@ -2417,7 +2611,10 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(
+            color: isDark
+                ? const Color(0xFF334155)
+                : Colors.black.withValues(alpha: 0.06)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -2452,13 +2649,15 @@ class _ProfileTabPlaceholder extends ConsumerWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? const Color(0xFF94A3B8) : Colors.black54,
+                        color:
+                            isDark ? const Color(0xFF94A3B8) : Colors.black54,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 13, color: isDark ? Colors.white38 : Colors.black26),
+              Icon(Icons.arrow_forward_ios,
+                  size: 13, color: isDark ? Colors.white38 : Colors.black26),
             ],
           ),
         ),

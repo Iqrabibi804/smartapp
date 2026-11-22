@@ -253,3 +253,17 @@ Full results are recorded in `docs/TESTING_REPORT.md` section 5.
 Verification: `flutter analyze` — no errors or warnings; `flutter test` 20/20; `apksigner verify` passes; `aapt dump badging` confirms package/version. No Android device was attached, so in-place APK installation is still pending.
 
 Open items for store release: rotate the exposed Atlas credential; restrict/rotate the Maps key in `AndroidManifest.xml`; on-device smoke test; privacy policy URL; Urdu/RTL completion.
+
+---
+
+## Dashboard redesign log — 2026-11-22
+
+- **Header:** glossy 3D emerald/gold crescent-star pin (`AppLogoMark3D`, custom painter with gradient fill, specular highlight and cast shadow) beside the SmartMap Punjab wordmark; EN / اردو pill toggle bound to `languageProvider`; compact red SOS pill opening an emergency modal (Rescue 1122, Police 15, Motorway 130, Tourist Help 1421 — dialer only, no dispatch).
+- **Palette:** dashboard surface `#FAF8F5`, Royal Emerald `#0E5A36`, mustard gold `#D97706`, Multani blue `#1D4ED8`, warm card border, five pastel badge tints. Tokens added to `AppTokens`.
+- **Search + categories + hero:** rounded search pill ("Search Lahore, Taxila, food, hotels...") routing to Search Results; five pastel circular categories (Cities, Heritage, Food, Stays, Medical); two-slide hero carousel (Taxila Gandhara UNESCO Site, Lahore Royal Heritage) with dark-to-emerald gradient, gold tag, gold `Explore →` button, 5-second auto-advance.
+- **Traveler Essentials:** former "Smart Travel Assistant" and "Pakistan-First Tools" merged into one 2×3 grid of white bordered cards with flat 2D pastel icon tiles (Route Planner, Anti-Scam Rates, Offline City Packs, Budget Calculator, Bill Splitter, Road & Landslide Alerts), plus a "More tools" sheet. Urdu subtitles render only when the header toggle is set to اردو (English-only default).
+- **Authentic imagery:** Popular Cities (Lahore Fort, Shah Rukn-e-Alam, Raja Bazaar, Noor Mahal) and Must-Visit Destinations (Badshahi Mosque, Derawar Fort, Shalimar Gardens, Dharmarajika Stupa, Murree Hills) now use nine bundled Wikimedia Commons photographs under `assets/images/landmarks/`; provenance recorded in `docs/DATA_SOURCES.md` §9.
+- **Clean finish:** removed the long "How this app helps" text list; compact floating `AI Guide` pill bottom-right with 120 px list padding so it never covers card text.
+- **Honesty:** SOS modal states calls open the dialer and the app does not dispatch help; Road & Landslide Alerts remain sourced advisories, not a live feed; footer keeps "Independent guide · Not affiliated with any government body."
+
+Verification: `dart format` clean; `flutter analyze` 0 errors / 0 warnings (18 pre-existing infos); `flutter test` 20/20; headless-browser screenshots at 430 px width checked for header, hero, grid, photo cards and FAB (no overflow stripes).

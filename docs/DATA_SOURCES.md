@@ -72,7 +72,21 @@ live unless a live source is connected — and at v1.0.0 none are.
 - Ratings shown for backend records are computed from actual submitted reviews.
 - Business listings enter `pending` moderation before appearing.
 
-## 9. Explicitly not sourced
+## 9. Dashboard landmark photography (bundled assets)
+
+- **Directory:** `mobile/assets/images/landmarks/` (9 JPEGs, ~3.8 MB total)
+- **Files:** badshahi_mosque, lahore_fort, shalimar_gardens, derawar_fort,
+  multan_shrine, noor_mahal, rawalpindi_bazaar, murree, taxila_dharmarajika.
+- **Publisher:** Wikimedia Commons contributors. Images were downloaded from the
+  Commons 1920px thumbnail endpoint; each depicts the named landmark.
+- **Retrieval date:** 2026-11-21.
+- **Licence:** individual Wikimedia Commons licences (CC BY / CC BY-SA / public
+  domain as tagged on each file page) apply; attribution to Commons contributors is
+  shown in the Must-Visit Destinations section subtitle.
+- **Status:** bundled offline assets — not fetched live, not licensed stock. If a
+  file is replaced, record the new Commons file page URL here.
+
+## 10. Explicitly not sourced
 
 - Live road/weather conditions
 - Official government approvals, permits or verification
@@ -80,7 +94,7 @@ live unless a live source is connected — and at v1.0.0 none are.
 - Live currency exchange rates
 - Emergency service availability or SMS delivery confirmation
 
-## 10. Maintenance rule
+## 11. Maintenance rule
 
 Any new dataset must record here: publisher, URL, retrieval date, and whether the app
 shows it as live, cached, or unavailable. If provenance cannot be stated, the data does

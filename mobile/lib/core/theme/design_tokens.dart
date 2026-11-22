@@ -11,6 +11,20 @@ class AppTokens {
   static const Color heritageGold = Color(0xFFC5A66A);
   static const Color alertRed = Color(0xFFB91C1C);
   static const Color scaffold = Color(0xFFF4F6F2);
+
+  // Dashboard identity: warm ivory paper, royal emerald, mustard gold
+  // and Multani blue used only in small icon badges.
+  static const Color dashboardBg = Color(0xFFFAF8F5);
+  static const Color emerald = Color(0xFF0E5A36);
+  static const Color emeraldDeep = Color(0xFF0A3E24);
+  static const Color gold = Color(0xFFD97706);
+  static const Color multaniBlue = Color(0xFF1D4ED8);
+  static const Color cardBorderWarm = Color(0xFFECE5D8);
+  static const Color pastelMint = Color(0xFFE4F2EA);
+  static const Color pastelGold = Color(0xFFFBF0DA);
+  static const Color pastelBlue = Color(0xFFE7EEFC);
+  static const Color pastelRose = Color(0xFFFBE8E2);
+  static const Color pastelLilac = Color(0xFFF0EAF9);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF1F2937);
   static const Color textSecondary = Color(0xFF64748B);
