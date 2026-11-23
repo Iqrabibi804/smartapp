@@ -53,11 +53,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                // Never ship a debug-signed release. Fail loudly instead.
-                throw GradleException("android/key.properties is missing; release signing is not configured.")
+            // Release signing is configured only when private signing material exists.
+            // Without it, the release build remains unsigned.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
