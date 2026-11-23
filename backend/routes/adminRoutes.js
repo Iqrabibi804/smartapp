@@ -130,10 +130,19 @@ router.put(
 
     const review = await Review.findByIdAndUpdate(
       req.params.id,
-      { status, reportCount: status === 'approved' ? 0 : undefined },
+      { status, ...(status === 'approved' ? { reportCount: 0, reportedBy: [] } : {}) },
       { new: true }
     );
     if (!review) throw new ApiError(404, 'Review not found.');
+
+    const reviewStats = await Review.aggregate([
+      { $match: { placeId: review.placeId, status: 'approved' } },
+      { $group: { _id: '$placeId', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ]);
+    await Place.findByIdAndUpdate(review.placeId, {
+      rating: Math.round((reviewStats[0]?.avgRating || 0) * 10) / 10,
+      reviewCount: reviewStats[0]?.count || 0,
+    });
 
     await recordAudit(req, {
       action: 'review.status.update',
