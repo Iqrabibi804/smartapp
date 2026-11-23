@@ -122,15 +122,13 @@ class PlacesService {
       categoryName: categoryName,
       city: city,
       minRating: minRating,
+      priceRange: priceRange,
       sort: sort,
     );
 
-    // If filter produced nothing but a category was specified, show category places
-    if (results.isEmpty && (categoryName != null || city != null)) {
-      return PunjabOfflineData.filterPlaces(city: city, categoryName: categoryName);
-    }
-
-    return results.isNotEmpty ? results : PunjabOfflineData.places;
+    // Keep the user's filters intact when offline; an empty result is more honest
+    // than silently returning unrelated places.
+    return results;
   }
 
   static String _searchKey({
