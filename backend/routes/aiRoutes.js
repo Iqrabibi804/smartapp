@@ -34,7 +34,11 @@ async function parseQuery(message) {
   return filters;
 }
 
-function explainPlace(place, filters) {
+function explainPlace(place, filters, usedFallback = false) {
+  if (usedFallback) {
+    return `${place.name} is a nearby alternative. Its category, price, or rating may not match every filter you requested.`;
+  }
+
   const reasons = [];
   if (filters.categoryId) reasons.push('matches what you asked for');
   if (filters.priceRange === 'low') reasons.push('is budget-friendly');
@@ -84,7 +88,7 @@ router.post(
 
     const recommendations = places.map((place) => ({
       place,
-      explanation: explainPlace(place, filters),
+      explanation: explainPlace(place, filters, usedFallback),
     }));
 
     let reply =
