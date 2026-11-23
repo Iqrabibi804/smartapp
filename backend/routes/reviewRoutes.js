@@ -151,6 +151,7 @@ router.post(
     review.reportCount = review.reportedBy.length;
     if (review.reportCount >= 3) review.status = 'reported';
     await review.save();
+    if (review.status === 'reported') await recalculatePlaceRating(review.placeId);
 
     res.json({ success: true, message: 'Report recorded. Repeated reports from the same account are not counted again.' });
   })
