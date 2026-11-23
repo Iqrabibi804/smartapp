@@ -11,6 +11,18 @@ void main() {
       }
     });
 
+    test('offline category IDs filter the expected category', () {
+      final results = PunjabOfflineData.filterPlaces(categoryId: 'cat-hospitals');
+      expect(results, isNotEmpty);
+      for (final place in results) {
+        expect(place.categoryName, 'Hospitals & Medical');
+      }
+    });
+
+    test('unknown offline category IDs return no unrelated places', () {
+      expect(PunjabOfflineData.filterPlaces(categoryId: 'unknown-category'), isEmpty);
+    });
+
     test('city filter only returns places referencing that city', () {
       final results = PunjabOfflineData.filterPlaces(city: 'Lahore');
       expect(results, isNotEmpty);
