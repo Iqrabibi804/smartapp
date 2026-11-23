@@ -1,10 +1,8 @@
 import '../../features/categories/models/category_model.dart';
-import '../../features/events/models/event_model.dart';
 import '../../features/places/models/place_model.dart';
 
-/// Comprehensive offline fallback data for Punjab places, categories, and events.
-/// Enables 100% functionality on physical Android devices when APK is running
-/// without an online backend server.
+/// Bundled offline reference data for selected Punjab places and categories.
+/// Place details may be incomplete or outdated; verify critical information before travel.
 class PunjabOfflineData {
   PunjabOfflineData._();
 
@@ -44,7 +42,7 @@ class PunjabOfflineData {
     PlaceModel(
       id: 'pl-harappa-site',
       name: 'Harappa Archaeological Site & Museum',
-      description: '5,000-year-old Indus Valley Civilization UNESCO heritage site with magnificent granary, cemetery, citadel, and archaeological museum.',
+      description: 'Archaeological remains of the Indus Valley Civilization, with excavated settlement areas and a museum. Harappa is included on UNESCO's Tentative List, not the World Heritage List.',
       latitude: 30.6300,
       longitude: 72.8650,
       address: 'Harappa Bypass Road, Sahiwal District, Punjab',
@@ -563,50 +561,8 @@ class PunjabOfflineData {
     ),
   ];
 
-  static final List<EventModel> events = [
-    EventModel(
-      id: 'ev-cholistan-rally',
-      name: 'Cholistan Desert Jeep Rally 2026',
-      description: 'Pakistan’s biggest motorsport championship featuring 400+ kilometers of desert speed racing, cultural music, and camel caravans at Derawar Fort.',
-      latitude: 28.7670,
-      longitude: 71.3340,
-      address: 'Derawar Fort, Cholistan Desert, Bahawalpur',
-      date: DateTime.now().add(const Duration(days: 14)),
-      startTime: '08:00 AM',
-      endTime: '08:00 PM',
-      organizer: 'Tourism Development Corporation of Punjab (TDCP)',
-      ticketInfo: 'Free Public Spectator Zones',
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=80',
-    ),
-    EventModel(
-      id: 'ev-lahore-spring',
-      name: 'Lahore Spring Floral & Horse Show',
-      description: 'Annual heritage festival showcasing Punjabi tent pegging, championship horse and cattle exhibitions, flower beds, and Sufi folk music.',
-      latitude: 31.5450,
-      longitude: 74.3400,
-      address: 'Jilani Park (Race Course), Jail Road, Lahore',
-      date: DateTime.now().add(const Duration(days: 21)),
-      startTime: '09:00 AM',
-      endTime: '10:00 PM',
-      organizer: 'Parks and Horticulture Authority (PHA) Punjab',
-      ticketInfo: 'Rs. 100 General Entry',
-      image: 'https://images.unsplash.com/photo-1589802829985-817e51171b92?auto=format&fit=crop&w=1000&q=80',
-    ),
-    EventModel(
-      id: 'ev-harappa-mela',
-      name: 'Harappa Archeological & Heritage Mela',
-      description: 'Celebration of the 5,000-year Indus Valley heritage with folk puppet theatre, pottery workshops, traditional lassi & butter stalls, and scholar tours.',
-      latitude: 30.6300,
-      longitude: 72.8650,
-      address: 'Archaeological Complex, Harappa, Sahiwal',
-      date: DateTime.now().add(const Duration(days: 28)),
-      startTime: '10:00 AM',
-      endTime: '06:00 PM',
-      organizer: 'Punjab Directorate of Archaeology & TDCP',
-      ticketInfo: 'Free Entry',
-      image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1000&q=80',
-    ),
-  ];
+  // No offline events are published until dates and organizers can be verified.
+  static final List events = [];
 
   /// Filter places in-memory with intelligent keyword, city, and category matching
   static List<PlaceModel> filterPlaces({
@@ -615,6 +571,7 @@ class PunjabOfflineData {
     String? categoryName,
     String? city,
     double? minRating,
+    String? priceRange,
     String? sort,
   }) {
     final results = places.where((place) {
@@ -648,6 +605,10 @@ class PunjabOfflineData {
       }
 
       if (minRating != null && place.rating < minRating) {
+        return false;
+      }
+
+      if (priceRange != null && priceRange.isNotEmpty && place.priceRange != priceRange) {
         return false;
       }
 
