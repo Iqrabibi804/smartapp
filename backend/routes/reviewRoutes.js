@@ -149,10 +149,10 @@ router.post(
     }
     review.reportedBy.push(req.user._id);
     review.reportCount = review.reportedBy.length;
-    review.status = 'reported';
+    if (review.reportCount >= 3) review.status = 'reported';
     await review.save();
 
-    res.json({ success: true, message: 'Review reported. An admin will review it.' });
+    res.json({ success: true, message: 'Report recorded. Repeated reports from the same account are not counted again.' });
   })
 );
 
