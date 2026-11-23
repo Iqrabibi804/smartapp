@@ -55,8 +55,20 @@ router.post(
   asyncHandler(async (req, res) => {
     const { message, lat, lng } = req.body;
 
-    if (!message || !message.trim()) {
-      return res.status(400).json({ success: false, message: 'A message is required.' });
+    if (typeof message !== 'string' || !message.trim() || message.length > 500) {
+      return res.status(400).json({ success: false, message: 'A message between 1 and 500 characters is required.' });
+    }
+
+    const hasLat = lat !== undefined && lat !== null;
+    const hasLng = lng !== undefined && lng !== null;
+    if (hasLat !== hasLng) {
+      return res.status(400).json({ success: false, message: 'lat and lng must be provided together.' });
+    }
+    if (hasLat && (
+      typeof lat !== 'number' || !Number.isFinite(lat) || lat < -90 || lat > 90 ||
+      typeof lng !== 'number' || !Number.isFinite(lng) || lng < -180 || lng > 180
+    )) {
+      return res.status(400).json({ success: false, message: 'Invalid latitude or longitude.' });
     }
 
     const filters = await parseQuery(message);
@@ -66,7 +78,7 @@ router.post(
     if (filters.priceRange) query.priceRange = filters.priceRange;
     if (filters.minRating) query.rating = { $gte: filters.minRating };
 
-    const hasLocation = typeof lat === 'number' && typeof lng === 'number';
+    const hasLocation = hasLat && hasLng;
     if (hasLocation) {
       query.location = {
         $near: {
