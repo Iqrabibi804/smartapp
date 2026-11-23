@@ -169,7 +169,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
                   ),
                   child: Text(
                     hasVerifiedDetails
-                        ? 'Verified information${place.source != null ? ' • Source: ${place.source}' : ''}${place.lastVerifiedAt != null ? ' • Checked: ${place.lastVerifiedAt}' : ''}'
+                        ? "Verified information${place.source != null ? ' • Source: ${place.source}' : ''}${place.lastVerifiedAt != null ? ' • Checked: ${place.lastVerifiedAt}' : ''}"
                         : place.verificationStatus == 'community_reported'
                             ? 'Community reported — not independently verified. Confirm details before travelling.'
                             : 'Not yet verified — confirm important details with the venue before travelling.',
