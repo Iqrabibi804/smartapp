@@ -11,6 +11,10 @@ router.get(
   asyncHandler(async (req, res) => {
     const { lat, lng, radiusKm } = req.query;
     const includePast = req.query.all === 'true';
+    const parsedRadius = radiusKm === undefined ? 20 : Number(radiusKm);
+    if (!Number.isFinite(parsedRadius) || parsedRadius <= 0 || parsedRadius > 100) {
+      throw new ApiError(400, 'radiusKm must be greater than 0 and no more than 100.');
+    }
     const filter = { verificationStatus: 'verified' };
 
     if (!includePast) {
@@ -29,7 +33,7 @@ router.get(
       filter.location = {
         $near: {
           $geometry: { type: 'Point', coordinates: [parsedLng, parsedLat] },
-          $maxDistance: (() => { const radius = radiusKm === undefined ? 20 : Number(radiusKm); if (!Number.isFinite(radius) || radius <= 0 || radius > 100) throw new ApiError(400, 'radiusKm must be greater than 0 and no more than 100.'); return radius * 1000; })(),
+          $maxDistance: parsedRadius * 1000,
         },
       };
     }
