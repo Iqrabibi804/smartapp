@@ -51,7 +51,7 @@ class PlaceModel {
     this.facilities = const [],
     this.openingHours = const {},
     this.categoryName,
-    this.paymentMethods = const ['Cash', 'Easypaisa'],
+    this.paymentMethods = const [],
     this.isFemaleSafe = false,
     this.isFamilyFriendly = false,
     this.localPrice,
@@ -65,7 +65,7 @@ class PlaceModel {
     final payments = (json['paymentMethods'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
-        const ['Cash', 'Easypaisa'];
+        const <String>[];
 
     return PlaceModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',
