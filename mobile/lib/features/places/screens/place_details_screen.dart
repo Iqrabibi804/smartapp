@@ -78,7 +78,8 @@ class _PlaceDetailsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(placeReviewsProvider(place.id));
-    final hasVerifiedDetails = place.verified || place.verificationStatus == 'verified';
+    final hasVerifiedDetails = place.verificationStatus == 'verified' ||
+        (place.verificationStatus == null && place.verified);
 
     return CustomScrollView(
       slivers: [
@@ -155,7 +156,27 @@ class _PlaceDetailsContent extends ConsumerWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: hasVerifiedDetails ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: hasVerifiedDetails
+                        ? const Color(0xFF10B981).withValues(alpha: 0.35)
+                        : const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    hasVerifiedDetails
+                        ? 'Verified information${place.source != null ? ' • Source: ${place.source}' : ''}${place.lastVerifiedAt != null ? ' • Checked: ${place.lastVerifiedAt}' : ''}'
+                        : place.verificationStatus == 'community_reported'
+                            ? 'Community reported — not independently verified. Confirm details before travelling.'
+                            : 'Not yet verified — confirm important details with the venue before travelling.',
+                    style: const TextStyle(fontSize: 12, height: 1.35),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (place.categoryName != null)
                   Text(place.categoryName!,
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
