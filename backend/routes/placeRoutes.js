@@ -112,7 +112,9 @@ router.get(
       });
     }
 
-    const catParam = categoryId || categoryName;
+    const catParam = categoryId && mongoose.Types.ObjectId.isValid(categoryId)
+      ? categoryId
+      : (categoryName || categoryId);
     if (catParam && catParam.toLowerCase() !== 'all') {
       if (mongoose.Types.ObjectId.isValid(catParam)) {
         conditions.push({ categoryId: new mongoose.Types.ObjectId(catParam) });
@@ -171,11 +173,11 @@ router.get(
 router.get(
   '/nearby',
   asyncHandler(async (req, res) => {
-    const lat = parseFloat(req.query.lat);
-    const lng = parseFloat(req.query.lng);
+    const lat = readCoordinate(req.query.lat, 'lat', -90, 90);
+    const lng = readCoordinate(req.query.lng, 'lng', -180, 180);
     const radiusKm = readRadius(req.query.radiusKm, 5);
 
-    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    if (lat === undefined || lng === undefined) {
       return res.status(400).json({ success: false, message: 'lat and lng query params are required.' });
     }
 
