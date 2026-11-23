@@ -145,7 +145,7 @@ router.get(
 router.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const place = await Place.findOne({ _id: req.params.id })
+    const place = await Place.findOne({ _id: req.params.id, ...publishedPlaceFilter() })
       .populate('categoryId', 'name icon')
       .lean();
 
