@@ -176,19 +176,8 @@ class _PlaceDetailsContent extends ConsumerWidget {
                 const SizedBox(height: 20),
                 _ActionsRow(place: place),
 
-                // ── 💳 Pakistani Payments (JazzCash, Easypaisa, NBP, Cash) ──
-                if (place.paymentMethods.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _PaymentMethodsRow(place: place),
-                ],
-
-                // ── 🎙️ Urdu Audio Guide Narration Player ──────────────────────
-                if (place.audioGuideUrdu != null && place.audioGuideUrdu!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _AudioGuidePlayer(narration: place.audioGuideUrdu!, placeName: place.name),
-                ],
-
-                const SizedBox(height: 16),
+                // Payment options and audio playback remain hidden until
+                // venue-confirmed payment data and real audio playback are available.
                 _TravelRealityCard(place: place),
 
                 const SizedBox(height: 24),
