@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Event = require('../models/Event');
 const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
+const { withPlaceVerification } = require('../utils/placeVerification');
 
 test('public place policy allows verified and explicitly community-reported records only', () => {
   const filter = publishedPlaceFilter();
@@ -46,4 +47,27 @@ test('new events default to needs_verification and cannot be published by defaul
   });
   assert.equal(event.verificationStatus, 'needs_verification');
   assert.equal(event.source, null);
+});
+
+test('place verification requires a source reference', () => {
+  assert.throws(() => withPlaceVerification({ verified: true }), /source reference is required/i);
+});
+
+test('place verification records source and verification timestamp', () => {
+  const update = withPlaceVerification({ verificationStatus: 'verified', source: 'https://official.example/place' });
+  assert.equal(update.verified, true);
+  assert.equal(update.verificationStatus, 'verified');
+  assert.equal(update.source, 'https://official.example/place');
+  assert.ok(update.lastVerifiedAt instanceof Date);
+});
+
+test('ordinary place edits do not silently refresh verification timestamp', () => {
+  const priorDate = new Date('2026-01-01T00:00:00.000Z');
+  const update = withPlaceVerification({ description: 'Updated description' }, {
+    verified: true,
+    verificationStatus: 'verified',
+    source: 'https://official.example/place',
+    lastVerifiedAt: priorDate,
+  });
+  assert.equal(update.lastVerifiedAt, undefined);
 });
