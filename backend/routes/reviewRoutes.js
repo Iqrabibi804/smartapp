@@ -28,6 +28,15 @@ async function recalculatePlaceRating(placeId) {
 router.get(
   '/places/:placeId/reviews',
   asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.placeId)) {
+      throw new ApiError(400, 'A valid placeId is required.');
+    }
+    const place = await Place.findOne({
+      _id: req.params.placeId,
+      ...publishedPlaceFilter(),
+    }).select('_id').lean();
+    if (!place) throw new ApiError(404, 'Published place not found.');
+
     const reviews = await Review.find({ placeId: req.params.placeId, status: 'approved' })
       .populate('userId', 'name profileImage')
       .sort({ createdAt: -1 })
@@ -162,8 +171,8 @@ router.post(
   protect,
   asyncHandler(async (req, res) => {
     const { comment } = req.body;
-    if (!comment || !comment.trim()) {
-      throw new ApiError(400, 'Reply comment is required.');
+    if (typeof comment !== 'string' || !comment.trim() || comment.length > 2000) {
+      throw new ApiError(400, 'Reply comment is required and must be no more than 2000 characters.');
     }
 
     const review = await Review.findById(req.params.id);
