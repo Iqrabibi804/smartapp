@@ -78,6 +78,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(placeReviewsProvider(place.id));
+    final hasVerifiedDetails = place.verified || place.verificationStatus == 'verified';
 
     return CustomScrollView(
       slivers: [
@@ -89,7 +90,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
             background: Stack(
               fit: StackFit.expand,
               children: [
-                if (place.images.isNotEmpty)
+                if (hasVerifiedDetails && place.images.isNotEmpty)
                   Image.network(
                     place.images.first,
                     fit: BoxFit.cover,
@@ -147,7 +148,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
                       child: Text(place.name,
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
-                    if (place.verificationStatus == 'verified')
+                    if (hasVerifiedDetails)
                       const Padding(
                         padding: EdgeInsets.only(left: 6),
                         child: Icon(Icons.verified, color: AppColors.primary),
@@ -185,22 +186,30 @@ class _PlaceDetailsContent extends ConsumerWidget {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 _InfoRow(icon: Icons.location_on_outlined, text: place.address),
-                if (place.phone != null)
+                if (!hasVerifiedDetails)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Contact details, opening hours, facilities and photos are shown only after verification.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                    ),
+                  ),
+                if (hasVerifiedDetails && place.phone != null)
                   InkWell(
                     onTap: () => _launchUrl(context, 'tel:${place.phone!}'),
                     child: _InfoRow(icon: Icons.phone_outlined, text: place.phone!),
                   ),
-                if (place.website != null)
+                if (hasVerifiedDetails && place.website != null)
                   InkWell(
                     onTap: () => _launchUrl(context, place.website!),
                     child: _InfoRow(icon: Icons.language, text: place.website!),
                   ),
-                if (place.openingHours.isNotEmpty)
+                if (hasVerifiedDetails && place.openingHours.isNotEmpty)
                   _InfoRow(
                     icon: Icons.access_time,
                     text: place.openingHours.entries.map((e) => '${e.key}: ${e.value}').join('\n'),
                   ),
-                if (place.facilities.isNotEmpty) ...[
+                if (hasVerifiedDetails && place.facilities.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text('Facilities',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
