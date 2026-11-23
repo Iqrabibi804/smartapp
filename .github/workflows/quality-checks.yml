@@ -23,6 +23,9 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
       - name: Check JavaScript syntax
         run: find backend -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
 
