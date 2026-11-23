@@ -1,4 +1,5 @@
 import '../../features/categories/models/category_model.dart';
+import '../../features/events/models/event_model.dart';
 import '../../features/places/models/place_model.dart';
 
 /// Bundled offline reference data for selected Punjab places and categories.
@@ -562,7 +563,7 @@ class PunjabOfflineData {
   ];
 
   // No offline events are published until dates and organizers can be verified.
-  static final List events = [];
+  static final List<EventModel> events = [];
 
   /// Filter places in-memory with intelligent keyword, city, and category matching
   static List<PlaceModel> filterPlaces({
