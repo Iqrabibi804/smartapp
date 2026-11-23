@@ -1,0 +1,46 @@
+name: Quality checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, fix/critical-quality-seo]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Check JavaScript syntax
+        run: find backend -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+
+  flutter:
+    name: Flutter tests and web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Flutter dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Run Flutter tests
+        working-directory: mobile
+        run: flutter test
+      - name: Build Flutter web release
+        working-directory: mobile
+        run: flutter build web --release
