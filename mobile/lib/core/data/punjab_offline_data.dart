@@ -43,7 +43,7 @@ class PunjabOfflineData {
     PlaceModel(
       id: 'pl-harappa-site',
       name: 'Harappa Archaeological Site & Museum',
-      description: 'Archaeological remains of the Indus Valley Civilization, with excavated settlement areas and a museum. Harappa is included on UNESCO's Tentative List, not the World Heritage List.',
+      description: "Archaeological remains of the Indus Valley Civilization, with excavated settlement areas and a museum. Harappa is included on UNESCO's Tentative List, not the World Heritage List.",
       latitude: 30.6300,
       longitude: 72.8650,
       address: 'Harappa Bypass Road, Sahiwal District, Punjab',
