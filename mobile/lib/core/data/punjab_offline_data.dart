@@ -575,7 +575,21 @@ class PunjabOfflineData {
     String? priceRange,
     String? sort,
   }) {
+    const categoryNamesById = {
+      'cat-tourist': 'Tourist Attractions',
+      'cat-historical': 'Historical & Religious',
+      'cat-hotels': 'Hotels',
+      'cat-restaurants': 'Restaurants',
+      'cat-bakeries': 'Bakeries & Cakes',
+      'cat-hospitals': 'Hospitals & Medical',
+      'cat-shopping': 'Shopping & Malls',
+      'cat-parks': 'Parks & Nature',
+    };
+    final selectedCategory = categoryName ?? categoryNamesById[categoryId];
+
     final results = places.where((place) {
+      if (categoryId != null && selectedCategory == null) return false;
+
       if (city != null && city.isNotEmpty && city.toLowerCase() != 'all cities') {
         final matchesCity = place.address.toLowerCase().contains(city.toLowerCase()) ||
             place.name.toLowerCase().contains(city.toLowerCase()) ||
@@ -583,8 +597,8 @@ class PunjabOfflineData {
         if (!matchesCity) return false;
       }
 
-      if (categoryName != null && categoryName.isNotEmpty) {
-        final normCat = categoryName.toLowerCase().trim();
+      if (selectedCategory != null && selectedCategory.isNotEmpty) {
+        final normCat = selectedCategory.toLowerCase().trim();
         final matchesCat = place.categoryName?.toLowerCase().contains(normCat) == true ||
             normCat.contains(place.categoryName?.toLowerCase() ?? '') ||
             (normCat.contains('hospital') && (place.categoryName?.contains('Hospital') == true || place.name.contains('Hospital'))) ||
