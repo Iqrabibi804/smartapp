@@ -449,8 +449,12 @@ class _ActionsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favAsync = ref.watch(favoritesControllerProvider);
     final isSaved = favAsync.valueOrNull?.contains(place.id) ?? false;
+    final isVerified = place.verificationStatus == 'verified' ||
+        (place.verificationStatus == null && place.verified);
 
     final actions = [
+      if (isVerified)
+
       (
         Icons.directions,
         'Directions',
@@ -464,6 +468,7 @@ class _ActionsRow extends ConsumerWidget {
           ),
         ),
       ),
+      if (isVerified && place.phone != null && place.phone!.trim().isNotEmpty)
       (
         Icons.call,
         'Call',
@@ -482,6 +487,7 @@ class _ActionsRow extends ConsumerWidget {
         isSaved ? 'Saved' : 'Save',
         () => ref.read(favoritesControllerProvider.notifier).toggle(place),
       ),
+      if (isVerified)
       (
         Icons.emergency_share,
         'WhatsApp SOS',
