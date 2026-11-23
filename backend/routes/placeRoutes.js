@@ -9,6 +9,39 @@ const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 
 const router = express.Router();
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\const router = express.Router();
+');
+
+function readStringParam(value, name, maxLength = 100) {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') {
+    throw new ApiError(400, `${name} must be a string.`);
+  }
+  const normalized = value.trim();
+  if (normalized.length > maxLength) {
+    throw new ApiError(400, `${name} must be ${maxLength} characters or fewer.`);
+  }
+  return normalized;
+}
+
+function readCoordinate(value, name, min, max) {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new ApiError(400, `${name} must be between ${min} and ${max}.`);
+  }
+  return parsed;
+}
+
+function readRadius(value, fallback) {
+  if (value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 100) {
+    throw new ApiError(400, 'radiusKm must be greater than 0 and no more than 100.');
+  }
+  return parsed;
+}
+
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -31,16 +64,35 @@ router.get(
 router.get(
   '/search',
   asyncHandler(async (req, res) => {
-    const { q, categoryId, categoryName, city, minRating, priceRange, sort } = req.query;
-    const lat = parseFloat(req.query.lat);
-    const lng = parseFloat(req.query.lng);
-    const radiusKm = parseFloat(req.query.radiusKm) || 25;
-    const hasLocation = !Number.isNaN(lat) && !Number.isNaN(lng);
+    const q = readStringParam(req.query.q, 'q', 100);
+    const categoryId = readStringParam(req.query.categoryId, 'categoryId', 100);
+    const categoryName = readStringParam(req.query.categoryName, 'categoryName', 100);
+    const city = readStringParam(req.query.city, 'city', 100);
+    const sort = readStringParam(req.query.sort, 'sort', 20);
+    const priceRange = readStringParam(req.query.priceRange, 'priceRange', 20);
+    const minRatingValue = req.query.minRating === undefined ? undefined : Number(req.query.minRating);
+    if (minRatingValue !== undefined && (!Number.isFinite(minRatingValue) || minRatingValue < 0 || minRatingValue > 5)) {
+      throw new ApiError(400, 'minRating must be between 0 and 5.');
+    }
+    if (priceRange !== undefined && !['free', 'low', 'medium', 'high'].includes(priceRange)) {
+      throw new ApiError(400, 'priceRange must be free, low, medium, or high.');
+    }
+    if (sort !== undefined && !['rating', 'popular'].includes(sort)) {
+      throw new ApiError(400, 'sort must be rating or popular.');
+    }
+
+    const lat = readCoordinate(req.query.lat, 'lat', -90, 90);
+    const lng = readCoordinate(req.query.lng, 'lng', -180, 180);
+    if ((lat === undefined) !== (lng === undefined)) {
+      throw new ApiError(400, 'lat and lng must be provided together.');
+    }
+    const radiusKm = readRadius(req.query.radiusKm, 25);
+    const hasLocation = lat !== undefined && lng !== undefined;
 
     const conditions = [publishedPlaceFilter()];
 
-    if (q && q.trim()) {
-      const term = q.trim();
+    if (q) {
+      const term = escapeRegex(q);
       conditions.push({
         $or: [
           { name: { $regex: term, $options: 'i' } },
@@ -50,8 +102,8 @@ router.get(
       });
     }
 
-    if (city && city.trim() && city.toLowerCase() !== 'all' && city.toLowerCase() !== 'all cities') {
-      const cityRegex = new RegExp(city.trim(), 'i');
+    if (city && city.toLowerCase() !== 'all' && city.toLowerCase() !== 'all cities') {
+      const cityRegex = new RegExp(escapeRegex(city), 'i');
       conditions.push({
         $or: [
           { city: cityRegex },
@@ -62,7 +114,7 @@ router.get(
     }
 
     const catParam = categoryId || categoryName;
-    if (catParam && catParam.trim() && catParam.toLowerCase() !== 'all') {
+    if (catParam && catParam.toLowerCase() !== 'all') {
       if (mongoose.Types.ObjectId.isValid(catParam)) {
         conditions.push({ categoryId: new mongoose.Types.ObjectId(catParam) });
       } else {
@@ -82,11 +134,14 @@ router.get(
         const matchedCats = await Category.find({ name: { $regex: searchPattern, $options: 'i' } });
         if (matchedCats.length > 0) {
           conditions.push({ categoryId: { $in: matchedCats.map(c => c._id) } });
+        } else {
+          // An unknown category must not silently broaden the search to every place.
+          conditions.push({ _id: { $in: [] } });
         }
       }
     }
-    if (minRating) {
-      conditions.push({ rating: { $gte: parseFloat(minRating) } });
+    if (minRatingValue !== undefined) {
+      conditions.push({ rating: { $gte: minRatingValue } });
     }
     if (priceRange) {
       conditions.push({ priceRange: priceRange });
@@ -119,7 +174,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const lat = parseFloat(req.query.lat);
     const lng = parseFloat(req.query.lng);
-    const radiusKm = parseFloat(req.query.radiusKm) || 5;
+    const radiusKm = readRadius(req.query.radiusKm, 5);
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
       return res.status(400).json({ success: false, message: 'lat and lng query params are required.' });
