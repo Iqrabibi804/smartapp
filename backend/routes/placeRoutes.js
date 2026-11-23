@@ -6,6 +6,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
+const { withPlaceVerification } = require('../utils/placeVerification');
 
 const router = express.Router();
 
@@ -232,7 +233,8 @@ router.post(
   protect,
   authorize('admin'),
   asyncHandler(async (req, res) => {
-    const place = await Place.create({ ...req.body, submittedBy: req.user._id });
+    const data = withPlaceVerification(req.body);
+    const place = await Place.create({ ...data, submittedBy: req.user._id });
     res.status(201).json({ success: true, place });
   })
 );
@@ -242,8 +244,10 @@ router.put(
   protect,
   authorize('admin'),
   asyncHandler(async (req, res) => {
-    const place = await Place.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const place = await Place.findById(req.params.id);
     if (!place) throw new ApiError(404, 'Place not found.');
+    place.set(withPlaceVerification(req.body, place.toObject()));
+    await place.save();
     res.json({ success: true, place });
   })
 );
