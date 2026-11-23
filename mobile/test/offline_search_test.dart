@@ -28,6 +28,19 @@ void main() {
       }
     });
 
+    test('price range filter returns only matching price bands', () {
+      final results = PunjabOfflineData.filterPlaces(priceRange: 'high');
+      expect(results, isNotEmpty);
+      for (final place in results) {
+        expect(place.priceRange, 'high');
+      }
+    });
+
+    test('unmatched price range returns no unrelated places', () {
+      final results = PunjabOfflineData.filterPlaces(priceRange: 'not-a-real-band');
+      expect(results, isEmpty);
+    });
+
     test('sort by rating returns descending ratings', () {
       final results = PunjabOfflineData.filterPlaces(sort: 'rating');
       expect(results, isNotEmpty);
