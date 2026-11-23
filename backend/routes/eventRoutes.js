@@ -9,20 +9,27 @@ const router = express.Router();
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { lat, lng, radiusKm, all } = req.query;
+    const { lat, lng, radiusKm } = req.query;
+    const includePast = req.query.all === 'true';
     const filter = { verificationStatus: 'verified' };
 
-    if (!all) {
+    if (!includePast) {
       filter.date = { $gte: new Date() };
     }
 
-    const parsedLat = parseFloat(lat);
-    const parsedLng = parseFloat(lng);
-    if (!Number.isNaN(parsedLat) && !Number.isNaN(parsedLng)) {
+    const parsedLat = lat === undefined ? undefined : Number(lat);
+    const parsedLng = lng === undefined ? undefined : Number(lng);
+    if ((parsedLat === undefined) !== (parsedLng === undefined)) {
+      throw new ApiError(400, 'lat and lng must be provided together.');
+    }
+    if (parsedLat !== undefined && (!Number.isFinite(parsedLat) || parsedLat < -90 || parsedLat > 90 || !Number.isFinite(parsedLng) || parsedLng < -180 || parsedLng > 180)) {
+      throw new ApiError(400, 'Invalid latitude or longitude.');
+    }
+    if (parsedLat !== undefined) {
       filter.location = {
         $near: {
           $geometry: { type: 'Point', coordinates: [parsedLng, parsedLat] },
-          $maxDistance: (parseFloat(radiusKm) || 20) * 1000,
+          $maxDistance: (() => { const radius = radiusKm === undefined ? 20 : Number(radiusKm); if (!Number.isFinite(radius) || radius <= 0 || radius > 100) throw new ApiError(400, 'radiusKm must be greater than 0 and no more than 100.'); return radius * 1000; })(),
         },
       };
     }
