@@ -9,6 +9,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { recordAudit } = require('../utils/audit');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const { withPlaceVerification } = require('../utils/placeVerification');
 
 const router = express.Router();
 
@@ -184,11 +185,10 @@ router.get(
 router.put(
   '/places/:id',
   asyncHandler(async (req, res) => {
-    const place = await Place.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const place = await Place.findById(req.params.id);
     if (!place) throw new ApiError(404, 'Place not found.');
+    place.set(withPlaceVerification(req.body, place.toObject()));
+    await place.save();
 
     await recordAudit(req, {
       action: 'place.update',
