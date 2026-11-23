@@ -9,7 +9,7 @@ const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 
 const router = express.Router();
 
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\const router = express.Router();
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\const router = express.Router();');
 ');
 
 function readStringParam(value, name, maxLength = 100) {
