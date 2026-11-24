@@ -24,17 +24,39 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
-      - name: Reconcile lockfile with backend manifest
-        working-directory: backend
-        run: npm install --package-lock-only --ignore-scripts
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
       - name: Enforce zero dependency vulnerabilities
         working-directory: backend
+        shell: bash
         run: |
-          npm audit --json > npm-audit.json || true
-          node -e "const a=require('./npm-audit.json'); console.log('Full dependency audit:', a.metadata?.vulnerabilities); for (const [name,v] of Object.entries(a.vulnerabilities || {})) console.log(name, '|', v.severity, '| direct:', v.isDirect, '| fix:', JSON.stringify(v.fixAvailable)); if ((a.metadata?.vulnerabilities?.total || 0) > 0) process.exit(1)"
+          set +e
+          npm audit --json > npm-audit.json
+          audit_exit=$?
+          set -e
+          node <<'NODE'
+          const fs = require('node:fs');
+          let audit;
+          try {
+            audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          } catch {
+            throw new Error('npm audit did not return valid JSON; refusing to pass.');
+          }
+          const vulnerabilities = audit.metadata?.vulnerabilities;
+          if (!vulnerabilities || typeof vulnerabilities.total !== 'number') {
+            throw new Error('npm audit returned no vulnerability summary; refusing to pass.');
+          }
+          console.log('Full dependency audit:', vulnerabilities);
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            console.log(name, '|', item.severity, '| direct:', item.isDirect, '| fix:', JSON.stringify(item.fixAvailable));
+          }
+          if (vulnerabilities.total > 0) process.exit(1);
+          NODE
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "npm audit exited with code $audit_exit."
+            exit "$audit_exit"
+          fi
       - name: Run backend tests
         working-directory: backend
         run: npm test
