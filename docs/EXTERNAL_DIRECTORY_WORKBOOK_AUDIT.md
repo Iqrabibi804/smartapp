@@ -56,7 +56,7 @@ flutter pub get
 flutter test
 ```
 
-The output path is `mobile/assets/data/punjab_directory.json.gz`. The asset is gzip-compressed to keep the offline app bundle small; Flutter decodes it at runtime using the `archive` package.
+The output path is `mobile/assets/data/punjab_directory.json`.
 
 ## Integration status
 
