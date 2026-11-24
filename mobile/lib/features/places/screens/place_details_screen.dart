@@ -78,8 +78,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(placeReviewsProvider(place.id));
-    final hasVerifiedDetails = place.verificationStatus == 'verified' ||
-        (place.verificationStatus == null && place.verified);
+    final hasVerifiedDetails = place.hasVerifiedDetails;
 
     return CustomScrollView(
       slivers: [
@@ -449,8 +448,7 @@ class _ActionsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favAsync = ref.watch(favoritesControllerProvider);
     final isSaved = favAsync.valueOrNull?.contains(place.id) ?? false;
-    final isVerified = place.verificationStatus == 'verified' ||
-        (place.verificationStatus == null && place.verified);
+    final isVerified = place.hasVerifiedDetails;
 
     final actions = [
       if (isVerified)
