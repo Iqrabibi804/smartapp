@@ -27,6 +27,20 @@ void main() {
       expect(place.hasVerifiedDetails, isFalse);
     });
 
+    test('invalid verification timestamp is not trusted', () {
+      final place = PlaceModel.fromJson({
+        '_id': 'invalid-date',
+        'name': 'Place',
+        'verified': true,
+        'verificationStatus': 'verified',
+        'source': 'https://official.example/place',
+        'lastVerifiedAt': 'not-a-date',
+        'location': {'type': 'Point', 'coordinates': [73.0, 31.0]},
+      });
+
+      expect(place.hasVerifiedDetails, isFalse);
+    });
+
     test('verified details require status, source and timestamp', () {
       final place = PlaceModel.fromJson({
         '_id': 'verified-place',
