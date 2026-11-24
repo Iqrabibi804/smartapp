@@ -44,4 +44,14 @@ The workbook is useful as a research and candidate-data source, but it is **not 
 
 ## Recommended next step
 
-Create a separate offline OSM transport directory first, with an explicit `needs_verification` state and OSM attribution. Then enrich hotel and restaurant records with object coordinates and reconcile them against existing bundled records before exposing them in search. Police directories should remain out of the public app until official verification is complete.
+A searchable local-directory screen and workbook importer are now present on the feature branch. To generate the real offline asset, place the workbook at the repository root and run:
+
+```powershell
+python -m pip install openpyxl
+python scripts/import_directory_workbook.py .\\Punjab_Islamabad_Hierarchy_Police_completed.xlsx
+cd mobile
+flutter pub get
+flutter test
+```
+
+The script writes `mobile/assets/data/punjab_directory.json`. The checked-in JSON is currently an empty build-safe placeholder, not the workbook records. This is intentional until the generated asset can be added and validated; do not claim the workbook's 2,266 business/transport rows are already available in the app. The UI includes separate bus, hotel, restaurant and police-reference tabs. Hotel/restaurant entries remain list/map-link records because their workbook sheets have no coordinate columns. Police entries are labelled as secondary-source references and are not exposed as emergency-call actions. After the generated asset is added, run the full Flutter test and Android/web build before merging. Police directories should remain out of the public app as an authoritative emergency directory until official verification is complete.
