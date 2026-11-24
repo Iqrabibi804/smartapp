@@ -83,8 +83,9 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
     final all = records;
     final cities = all.map(cityOf).where((e) => e.isNotEmpty).toSet().toList()..sort();
     final q = search.text.trim().toLowerCase();
+    final selectedCity = cities.contains(city) ? city : 'All cities';
     final shown = all.where((r) {
-      if (city != 'All cities' && cityOf(r) != city) return false;
+      if (selectedCity != 'All cities' && cityOf(r) != selectedCity) return false;
       return q.isEmpty || r.values.any((v) => v.toString().toLowerCase().contains(q));
     }).toList();
 
@@ -129,7 +130,7 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: cities.contains(city) || city == 'All cities' ? city : 'All cities',
+                        value: selectedCity,
                         isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Filter by city'),
                         items: [
@@ -150,7 +151,7 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
                     ]),
                   ),
                   Expanded(child: shown.isEmpty
-                    ? const Center(child: Text('No matching entries.'))
+                    : const Center(child: Text('No records are available in this category yet. Run the workbook importer to populate the offline directory.'))
                     : ListView.separated(
                         padding: const EdgeInsets.all(14),
                         itemCount: shown.length,
