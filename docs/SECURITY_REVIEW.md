@@ -1,6 +1,6 @@
 # SMARTMAP PUNJAB — SECURITY REVIEW
 
-**Date:** 2026-11-21
+**Date:** 2026-11-24
 **Scope:** Flutter client, Node/Express API, MongoDB models, repository secrets.
 
 ## 1. Secrets
@@ -9,9 +9,9 @@
 |---|---|
 | `MONGO_URI` placed in `mobile/.env` (client-side file) | **Removed.** The file now contains only a note; the client never uses database credentials. |
 | Live MongoDB Atlas URI committed in `backend/.env.example` | **Removed.** Placeholder is now `mongodb://127.0.0.1:27017/smartmap_ai`. The exposed credential remains in earlier Git history and must be rotated in MongoDB Atlas. |
-| Google Maps API key hardcoded in `AndroidManifest.xml` | **Open.** Mobile map keys are shipped in the APK by design, but this key must be restricted in Google Cloud to the app package + SHA-1 and to Maps SDK only. Rotation is recommended once the release keystore exists. |
+| Google Maps API key hardcoded in `AndroidManifest.xml` | **Source fix applied.** The manifest now uses a Gradle placeholder populated from a local Gradle property or environment variable. The previously exposed key must still be rotated/restricted in Google Cloud; Android keys are extractable from APKs and must be application/API restricted. |
 | Server JWT secret | **Hardened.** The server now refuses to start unless `JWT_SECRET` is at least 32 characters. |
-| Source scan for hardcoded passwords / `sk-` / `AIza` outside the manifest | No additional matches. |
+| Source scan for hardcoded passwords / `sk-` / `AIza` outside the manifest | No additional matches in the reviewed current source tree; historical Git commits still require credential rotation. |
 
 ## 2. Authentication and authorization
 
@@ -60,13 +60,14 @@
 
 ## 7. Verification
 
-- `node --check` passes on all changed backend files.
-- `flutter analyze`: 0 errors / 0 warnings; `flutter test`: 20/20 (client unchanged by this phase).
+- CI runs the full backend dependency audit, backend tests and JavaScript syntax checks.
+- CI runs Flutter tests, Android debug APK compilation and Flutter web release compilation.
+- Check the latest [Quality checks workflow](https://github.com/Iqrabibi804/smartapp/actions/workflows/quality-checks.yml) for current commit-specific results; do not treat older successful runs as proof for newer commits.
 
 ## 8. Required follow-ups
 
 1. Rotate the MongoDB Atlas credential exposed in Git history.
-2. Restrict or rotate the Google Maps API key; move it to a build-time property.
+2. Rotate/restrict the previously exposed Google Maps API key. The current source now injects it through a build-time property; keep it application- and API-restricted.
 3. Add email verification and consider MFA for admin accounts.
 4. Add upload scanning/quota and keep identity documents off public storage.
 5. Extend audit logging to emergency-contact and rate-list management once those admin
