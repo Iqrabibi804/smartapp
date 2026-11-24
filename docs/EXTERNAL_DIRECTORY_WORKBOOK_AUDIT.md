@@ -60,6 +60,6 @@ The output path is `mobile/assets/data/punjab_directory.json`.
 
 ## Integration status
 
-The searchable directory UI has bus-station, hotel, restaurant and police-reference tabs, city filtering, search, map/reference links, OSM attribution and an explicit police-source warning. Unverified phone values are hidden. The importer and UI are committed on the feature branch.
+The searchable directory UI has bus-station, hotel, restaurant and police-reference tabs, city filtering, search, map/reference links, OSM attribution and an explicit police-source warning. The police-reference tab includes Islamabad station entries, Islamabad area-to-station mappings and Lahore station/post entries. Unverified phone values are hidden. The importer and UI are committed on the feature branch.
 
 **The generated workbook JSON is not yet checked into the app asset.** The current asset remains an empty build-safe placeholder, so the workbook's records are not yet available offline in the running app. This is a deliberate data-integration blocker, not a claim that the workbook is already bundled. After replacing the placeholder with the generated JSON, update the widget test to assert real category counts and rerun Flutter tests, Android APK build and web release build before merging.
