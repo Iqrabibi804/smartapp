@@ -13,6 +13,7 @@ dependencies:
 
   # State management
   flutter_riverpod: ^2.5.1
+  archive: ^3.6.1
 
   # Networking
   dio: ^5.4.3+1
@@ -41,7 +42,7 @@ flutter:
 
   assets:
     - assets/images/landmarks/
-    - assets/data/punjab_directory.json
+    - assets/data/punjab_directory.json.gz
 
   fonts:
     - family: PlusJakartaSans
