@@ -64,6 +64,17 @@ test('place verification records source and verification timestamp', () => {
   assert.ok(update.lastVerifiedAt instanceof Date);
 });
 
+test('unverifying a place clears the verified flag and status', () => {
+  const update = withPlaceVerification({ verified: false }, {
+    verified: true,
+    verificationStatus: 'verified',
+    source: 'https://official.example/place',
+    lastVerifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+  });
+  assert.equal(update.verified, false);
+  assert.equal(update.verificationStatus, 'needs_verification');
+});
+
 test('ordinary place edits do not silently refresh verification timestamp', () => {
   const priorDate = new Date('2026-01-01T00:00:00.000Z');
   const update = withPlaceVerification({ description: 'Updated description' }, {
