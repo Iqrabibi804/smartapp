@@ -2,6 +2,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smartmap_ai/features/places/models/place_model.dart';
 
 void main() {
+  group('PlaceModel verification provenance', () {
+    test('legacy verified flag without source is not trusted', () {
+      final place = PlaceModel.fromJson({
+        '_id': 'legacy-place',
+        'name': 'Legacy place',
+        'verified': true,
+        'location': {'type': 'Point', 'coordinates': [73.0, 31.0]},
+      });
+
+      expect(place.hasVerifiedDetails, isFalse);
+    });
+
+    test('verified status without verification timestamp is not trusted', () {
+      final place = PlaceModel.fromJson({
+        '_id': 'missing-date',
+        'name': 'Place',
+        'verified': true,
+        'verificationStatus': 'verified',
+        'source': 'https://official.example/place',
+        'location': {'type': 'Point', 'coordinates': [73.0, 31.0]},
+      });
+
+      expect(place.hasVerifiedDetails, isFalse);
+    });
+
+    test('verified details require status, source and timestamp', () {
+      final place = PlaceModel.fromJson({
+        '_id': 'verified-place',
+        'name': 'Verified place',
+        'verified': true,
+        'verificationStatus': 'verified',
+        'source': 'https://official.example/place',
+        'lastVerifiedAt': '2026-11-20T10:00:00.000Z',
+        'location': {'type': 'Point', 'coordinates': [73.0, 31.0]},
+      });
+
+      expect(place.hasVerifiedDetails, isTrue);
+    });
+  });
+
   group('PlaceModel payment data', () {
     test('missing payment methods stay unknown instead of defaulting to cash apps', () {
       final place = PlaceModel.fromJson({
