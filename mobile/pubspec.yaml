@@ -41,6 +41,7 @@ flutter:
 
   assets:
     - assets/images/landmarks/
+    - assets/data/punjab_directory.json
 
   fonts:
     - family: PlusJakartaSans
