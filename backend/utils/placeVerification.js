@@ -24,10 +24,14 @@ function withPlaceVerification(payload, existing = {}) {
     update.source = source.slice(0, 500);
     update.lastVerifiedAt = new Date();
   } else if (
-    update.verificationStatus !== undefined &&
-    update.verificationStatus !== 'verified'
+    update.verified === false ||
+    (update.verificationStatus !== undefined &&
+      update.verificationStatus !== 'verified')
   ) {
     update.verified = false;
+    if (update.verificationStatus === undefined) {
+      update.verificationStatus = 'needs_verification';
+    }
   }
 
   return update;
