@@ -30,7 +30,10 @@ jobs:
       - name: Install locked dependencies
         working-directory: backend
         run: npm ci
-      - name: Apply non-breaking npm security fixes
+      - name: Update vulnerable packages within declared version ranges
+        working-directory: backend
+        run: npm update express qs nodemon minimatch || true
+      - name: Apply remaining non-breaking npm security fixes
         working-directory: backend
         run: npm audit fix || true
       - name: Run backend tests
