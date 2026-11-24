@@ -11,6 +11,7 @@ business, phone number, police station or administrative record as verified.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import math
 from datetime import datetime, timezone
@@ -94,7 +95,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("mobile/assets/data/punjab_directory.json"),
+        default=Path("mobile/assets/data/punjab_directory.json.gz"),
     )
     args = parser.parse_args()
     if not args.workbook.is_file():
@@ -144,10 +145,8 @@ def main() -> None:
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n",
-        encoding="utf-8",
-    )
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
+    args.output.write_bytes(gzip.compress(payload.encode("utf-8"), compresslevel=9, mtime=0))
     print(f"Generated: {args.output}")
     for key, count in data["metadata"]["sheetCounts"].items():
         print(f"  {key}: {count}")
