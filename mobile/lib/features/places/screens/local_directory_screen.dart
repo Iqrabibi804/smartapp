@@ -60,10 +60,24 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
   List<Map<String, dynamic>> get records {
     final key = categories[tabs.index].$2;
     if (key == 'police') {
-      return [
+      final stations = [
         ...(data['islamabadPolice'] as List? ?? const []),
         ...(data['lahorePolice'] as List? ?? const []),
-      ].whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      ].whereType<Map>().map((e) => Map<String, dynamic>.from(e));
+      final areaMappings = (data['islamabadAreaToStation'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) {
+            final row = Map<String, dynamic>.from(e);
+            return <String, dynamic>{
+              'City': row['City'],
+              'Police Station': row['Covered by Police Station'],
+              'Police Zone': row['Police Zone'],
+              'Area / Sector': row['Area / Sector'],
+              'Phone': row['Phone'],
+              '_referenceType': 'Area mapping',
+            };
+          });
+      return [...stations, ...areaMappings];
     }
     return (data[key] as List? ?? const [])
         .whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
@@ -191,7 +205,7 @@ class _DirectoryCard extends StatelessWidget {
     final detail = category == 'busStations' ? item['Type']
       : category == 'hotels' ? item['Type']
       : category == 'restaurants' ? item['Cuisine / specialty'] ?? item['Area / street']
-      : item['Police Zone'] ?? item['Police Division'] ?? item['Circle'];
+      : item['Area / Sector'] ?? item['Police Zone'] ?? item['Police Division'] ?? item['Circle'];
     final phone = item['Phone'];
     final link = item['OSM link'] ?? item['Google Maps'] ?? '';
     return Container(
