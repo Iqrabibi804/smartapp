@@ -5,6 +5,7 @@ import '../../../core/theme/design_tokens.dart';
 import '../models/place_model.dart';
 import '../services/places_providers.dart';
 import 'place_details_screen.dart';
+import 'police_directory_screen.dart';
 
 class FacilityType {
   const FacilityType({
@@ -144,6 +145,22 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
               style: TextStyle(fontSize: 12, height: 1.4),
             ),
           ),
+          if (_selected.label == 'Police')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PoliceDirectoryScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.account_tree_outlined),
+                  label: const Text('Open Islamabad & Lahore police directory'),
+                ),
+              ),
+            ),
           Expanded(
             child: results.when(
               loading: () => const Center(child: CircularProgressIndicator()),
