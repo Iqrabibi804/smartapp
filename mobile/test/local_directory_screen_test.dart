@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:archive/archive.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,12 +9,7 @@ import 'package:smartmap_ai/features/places/screens/local_directory_screen.dart'
 void main() {
   testWidgets('local directory exposes categories and reflects bundled data',
       (tester) async {
-    final compressed = await rootBundle.load('assets/data/punjab_directory.json.gz');
-    final bytes = compressed.buffer.asUint8List(
-      compressed.offsetInBytes,
-      compressed.lengthInBytes,
-    );
-    final raw = utf8.decode(GZipDecoder().decodeBytes(bytes));
+    final raw = await rootBundle.loadString('assets/data/punjab_directory.json');
     final data = jsonDecode(raw) as Map<String, dynamic>;
 
     await tester.pumpWidget(
