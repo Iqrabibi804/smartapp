@@ -151,7 +151,7 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
                     ]),
                   ),
                   Expanded(child: shown.isEmpty
-                    : const Center(child: Text('No records are available in this category yet. Run the workbook importer to populate the offline directory.'))
+                    ? const Center(child: Text('No records are available in this category yet. Run the workbook importer to populate the offline directory.'))
                     : ListView.separated(
                         padding: const EdgeInsets.all(14),
                         itemCount: shown.length,
