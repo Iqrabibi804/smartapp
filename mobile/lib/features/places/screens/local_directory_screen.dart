@@ -205,8 +205,9 @@ class _DirectoryCard extends StatelessWidget {
         Text([city, detail ?? ''].where((v) => v.toString().trim().isNotEmpty).join(' · '),
           style: const TextStyle(fontSize: 11, color: AppTokens.textSecondary)),
         if (phone != null && phone.toString().isNotEmpty)
-          Padding(padding: const EdgeInsets.only(top: 5),
-            child: Text('Phone: $phone', style: const TextStyle(fontSize: 11, color: AppTokens.textSecondary))),
+          const Padding(padding: EdgeInsets.only(top: 5),
+            child: Text('Contact details hidden until independently verified',
+              style: TextStyle(fontSize: 10, color: AppTokens.textMuted))),
         Row(children: [
           if (link.toString().isNotEmpty)
             TextButton.icon(onPressed: () => onOpen(link.toString()),
