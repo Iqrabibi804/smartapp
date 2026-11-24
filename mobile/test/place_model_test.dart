@@ -41,6 +41,20 @@ void main() {
       expect(place.hasVerifiedDetails, isFalse);
     });
 
+    test('verified status cannot override a false verified flag', () {
+      final place = PlaceModel.fromJson({
+        '_id': 'contradictory-place',
+        'name': 'Place',
+        'verified': false,
+        'verificationStatus': 'verified',
+        'source': 'https://official.example/place',
+        'lastVerifiedAt': '2026-11-20T10:00:00.000Z',
+        'location': {'type': 'Point', 'coordinates': [73.0, 31.0]},
+      });
+
+      expect(place.hasVerifiedDetails, isFalse);
+    });
+
     test('verified details require status, source and timestamp', () {
       final place = PlaceModel.fromJson({
         '_id': 'verified-place',
