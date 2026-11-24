@@ -582,7 +582,7 @@ class _RelatedCard extends StatelessWidget {
             SizedBox(
               height: 70,
               width: double.infinity,
-              child: place.images.isNotEmpty
+              child: place.hasVerifiedDetails && place.images.isNotEmpty
                   ? Image.network(
                       place.images.first,
                       fit: BoxFit.cover,
@@ -593,7 +593,9 @@ class _RelatedCard extends StatelessWidget {
                     )
                   : Container(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      child: const Icon(Icons.place, color: AppColors.primary),
+                      child: const Center(
+                        child: Icon(Icons.place, color: AppColors.primary),
+                      ),
                     ),
             ),
             Padding(
