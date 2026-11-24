@@ -23,8 +23,8 @@ async function connectDB() {
     console.log(`MongoDB connected: ${mongoose.connection.host}`);
   } catch (err) {
     console.error('MongoDB connection failed:', err.message);
-    console.warn('Continuing without DB connection (development mode).');
-    // Optionally attempt local fallback later
+    // Do not start an API instance that cannot serve database-backed routes.
+    throw err;
   }
 }
 
