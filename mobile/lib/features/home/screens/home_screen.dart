@@ -26,6 +26,7 @@ import '../../places/screens/city_guide_screen.dart';
 import '../../places/screens/offline_city_packs_screen.dart';
 import '../../places/screens/road_infrastructure_alerts_screen.dart';
 import '../../places/screens/facility_finder_screen.dart';
+import '../../places/screens/local_directory_screen.dart';
 import '../../places/screens/restaurants_screen.dart';
 import '../../places/screens/stays_screen.dart';
 import '../../places/screens/complaints_screen.dart';
@@ -506,6 +507,12 @@ class _Sidebar extends StatelessWidget {
                   icon: Icons.local_hospital_outlined,
                   selected: false,
                   onTap: () => push(const FacilityFinderScreen()),
+                ),
+                link(
+                  label: isUrdu ? 'مقامی ڈائریکٹری' : 'Transport & Local Directory',
+                  icon: Icons.directions_bus_outlined,
+                  selected: false,
+                  onTap: () => push(const LocalDirectoryScreen()),
                 ),
                 link(
                   label: isUrdu ? 'سٹے اور ہوٹل' : 'Stays & Hotels',
@@ -1462,6 +1469,13 @@ class _EssentialsTab extends ConsumerWidget {
         onTap: () => push(const StaysScreen()),
       ),
       (
+        label: t('Transport & directory', 'ٹرانسپورٹ اور ڈائریکٹری'),
+        icon: Icons.directions_bus_rounded,
+        tint: AppTokens.pastelBlue,
+        color: AppTokens.multaniBlue,
+        onTap: () => push(const LocalDirectoryScreen()),
+      ),
+      (
         label: t('Road alerts', 'سڑک الرٹس'),
         icon: Icons.warning_amber_rounded,
         tint: AppTokens.pastelGold,
@@ -1545,8 +1559,12 @@ class _EssentialsTab extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: gridItems.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.sizeOf(context).width >= 700
+                    ? 4
+                    : MediaQuery.sizeOf(context).width >= 420
+                        ? 3
+                        : 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 mainAxisExtent: 92,
