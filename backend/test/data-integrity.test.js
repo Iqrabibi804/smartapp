@@ -6,13 +6,16 @@ const Event = require('../models/Event');
 const { publishedPlaceFilter } = require('../utils/publishedPlaceFilter');
 const { withPlaceVerification } = require('../utils/placeVerification');
 
-test('public place policy allows verified and explicitly community-reported records only', () => {
+test('public place policy requires source and timestamp for verified records', () => {
   const filter = publishedPlaceFilter();
-  assert.deepEqual(filter.$or[0].verificationStatus.$in, ['verified', 'community_reported']);
-  assert.deepEqual(filter.$or[1], {
-    verificationStatus: { $exists: false },
-    verified: true,
-  });
+  assert.equal(filter.$or[0].verificationStatus, 'verified');
+  assert.deepEqual(filter.$or[0].source, { $type: 'string', $ne: '' });
+  assert.deepEqual(filter.$or[0].lastVerifiedAt, { $type: 'date' });
+  assert.deepEqual(filter.$or[1], { verificationStatus: 'community_reported' });
+  assert.equal(filter.$or[2].verificationStatus.$exists, false);
+  assert.equal(filter.$or[2].verified, true);
+  assert.deepEqual(filter.$or[2].source, { $type: 'string', $ne: '' });
+  assert.deepEqual(filter.$or[2].lastVerifiedAt, { $type: 'date' });
 });
 
 test('review schema rejects ratings outside 1 through 5', () => {
