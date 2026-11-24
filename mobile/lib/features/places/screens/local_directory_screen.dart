@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -43,8 +45,13 @@ class _LocalDirectoryScreenState extends State<LocalDirectoryScreen>
 
   Future<void> load() async {
     try {
-      final decoded = jsonDecode(
-          await rootBundle.loadString('assets/data/punjab_directory.json'));
+      final compressed = await rootBundle.load('assets/data/punjab_directory.json.gz');
+      final bytes = compressed.buffer.asUint8List(
+        compressed.offsetInBytes,
+        compressed.lengthInBytes,
+      );
+      final jsonBytes = GZipDecoder().decodeBytes(bytes);
+      final decoded = jsonDecode(utf8.decode(jsonBytes));
       if (decoded is! Map<String, dynamic>) throw const FormatException();
       if (!mounted) return;
       setState(() { data = decoded; loading = false; error = null; });
