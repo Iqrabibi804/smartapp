@@ -29,6 +29,14 @@ class PlaceModel {
 
   bool get hasReviews => reviewCount > 0;
 
+  /// Sensitive venue details are trusted only when verification has both
+  /// source provenance and a recorded verification timestamp.
+  bool get hasVerifiedDetails =>
+      verified &&
+      verificationStatus == 'verified' &&
+      (source?.trim().isNotEmpty ?? false) &&
+      DateTime.tryParse(lastVerifiedAt ?? '') != null;
+
   PlaceModel({
     required this.id,
     required this.name,
@@ -51,7 +59,7 @@ class PlaceModel {
     this.facilities = const [],
     this.openingHours = const {},
     this.categoryName,
-    this.paymentMethods = const ['Cash', 'Easypaisa'],
+    this.paymentMethods = const [],
     this.isFemaleSafe = false,
     this.isFamilyFriendly = false,
     this.localPrice,
@@ -65,7 +73,7 @@ class PlaceModel {
     final payments = (json['paymentMethods'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
-        const ['Cash', 'Easypaisa'];
+        const <String>[];
 
     return PlaceModel(
       id: json['_id'] as String? ?? json['id'] as String? ?? '',

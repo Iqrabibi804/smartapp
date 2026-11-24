@@ -15,6 +15,14 @@ const eventSchema = new mongoose.Schema(
     organizer: { type: String, default: '' },
     ticketInfo: { type: String, default: 'Free entry' },
     image: { type: String, default: null },
+    verificationStatus: {
+      type: String,
+      enum: ['verified', 'needs_verification', 'cancelled'],
+      default: 'needs_verification',
+      index: true,
+    },
+    source: { type: String, default: null, trim: true },
+    lastVerifiedAt: { type: Date, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true }

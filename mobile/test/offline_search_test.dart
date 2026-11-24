@@ -11,6 +11,18 @@ void main() {
       }
     });
 
+    test('offline category IDs filter the expected category', () {
+      final results = PunjabOfflineData.filterPlaces(categoryId: 'cat-hospitals');
+      expect(results, isNotEmpty);
+      for (final place in results) {
+        expect(place.categoryName, 'Hospitals & Medical');
+      }
+    });
+
+    test('unknown offline category IDs return no unrelated places', () {
+      expect(PunjabOfflineData.filterPlaces(categoryId: 'unknown-category'), isEmpty);
+    });
+
     test('city filter only returns places referencing that city', () {
       final results = PunjabOfflineData.filterPlaces(city: 'Lahore');
       expect(results, isNotEmpty);
@@ -26,6 +38,19 @@ void main() {
       for (final place in results) {
         expect(place.rating, greaterThanOrEqualTo(4.5));
       }
+    });
+
+    test('price range filter returns only matching price bands', () {
+      final results = PunjabOfflineData.filterPlaces(priceRange: 'high');
+      expect(results, isNotEmpty);
+      for (final place in results) {
+        expect(place.priceRange, 'high');
+      }
+    });
+
+    test('unmatched price range returns no unrelated places', () {
+      final results = PunjabOfflineData.filterPlaces(priceRange: 'not-a-real-band');
+      expect(results, isEmpty);
     });
 
     test('sort by rating returns descending ratings', () {

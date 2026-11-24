@@ -1,0 +1,86 @@
+name: Quality checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Enforce zero dependency vulnerabilities
+        working-directory: backend
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > npm-audit.json
+          audit_exit=$?
+          set -e
+          node <<'NODE'
+          const fs = require('node:fs');
+          let audit;
+          try {
+            audit = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          } catch {
+            throw new Error('npm audit did not return valid JSON; refusing to pass.');
+          }
+          const vulnerabilities = audit.metadata?.vulnerabilities;
+          if (!vulnerabilities || typeof vulnerabilities.total !== 'number') {
+            throw new Error('npm audit returned no vulnerability summary; refusing to pass.');
+          }
+          console.log('Full dependency audit:', vulnerabilities);
+          for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+            console.log(name, '|', item.severity, '| direct:', item.isDirect, '| fix:', JSON.stringify(item.fixAvailable));
+          }
+          if (vulnerabilities.total > 0) process.exit(1);
+          NODE
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "npm audit exited with code $audit_exit."
+            exit "$audit_exit"
+          fi
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+      - name: Check JavaScript syntax
+        run: find backend -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+
+  flutter:
+    name: Flutter tests and web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Flutter dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Run Flutter tests
+        working-directory: mobile
+        run: flutter test
+      - name: Build Android debug APK
+        working-directory: mobile
+        run: flutter build apk --debug
+      - name: Build Flutter web release
+        working-directory: mobile
+        run: flutter build web --release

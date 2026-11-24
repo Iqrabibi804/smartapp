@@ -13,6 +13,7 @@ const reviewSchema = new mongoose.Schema(
       default: 'approved',
     },
     reportCount: { type: Number, default: 0 },
+    reportedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     ownerReply: {
       comment: { type: String, default: '' },
       createdAt: { type: Date },

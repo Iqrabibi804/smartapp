@@ -78,6 +78,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(placeReviewsProvider(place.id));
+    final hasVerifiedDetails = place.hasVerifiedDetails;
 
     return CustomScrollView(
       slivers: [
@@ -89,7 +90,7 @@ class _PlaceDetailsContent extends ConsumerWidget {
             background: Stack(
               fit: StackFit.expand,
               children: [
-                if (place.images.isNotEmpty)
+                if (hasVerifiedDetails && place.images.isNotEmpty)
                   Image.network(
                     place.images.first,
                     fit: BoxFit.cover,
@@ -147,14 +148,34 @@ class _PlaceDetailsContent extends ConsumerWidget {
                       child: Text(place.name,
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
-                    if (place.verificationStatus == 'verified')
+                    if (hasVerifiedDetails)
                       const Padding(
                         padding: EdgeInsets.only(left: 6),
                         child: Icon(Icons.verified, color: AppColors.primary),
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: hasVerifiedDetails ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: hasVerifiedDetails
+                        ? const Color(0xFF10B981).withValues(alpha: 0.35)
+                        : const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    hasVerifiedDetails
+                        ? "Verified information${place.source != null ? ' • Source: ${place.source}' : ''}${place.lastVerifiedAt != null ? ' • Checked: ${place.lastVerifiedAt}' : ''}"
+                        : place.verificationStatus == 'community_reported'
+                            ? 'Community reported — not independently verified. Confirm details before travelling.'
+                            : 'Not yet verified — confirm important details with the venue before travelling.',
+                    style: const TextStyle(fontSize: 12, height: 1.35),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (place.categoryName != null)
                   Text(place.categoryName!,
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
@@ -176,19 +197,8 @@ class _PlaceDetailsContent extends ConsumerWidget {
                 const SizedBox(height: 20),
                 _ActionsRow(place: place),
 
-                // ── 💳 Pakistani Payments (JazzCash, Easypaisa, NBP, Cash) ──
-                if (place.paymentMethods.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _PaymentMethodsRow(place: place),
-                ],
-
-                // ── 🎙️ Urdu Audio Guide Narration Player ──────────────────────
-                if (place.audioGuideUrdu != null && place.audioGuideUrdu!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _AudioGuidePlayer(narration: place.audioGuideUrdu!, placeName: place.name),
-                ],
-
-                const SizedBox(height: 16),
+                // Payment options and audio playback remain hidden until
+                // venue-confirmed payment data and real audio playback are available.
                 _TravelRealityCard(place: place),
 
                 const SizedBox(height: 24),
@@ -196,22 +206,30 @@ class _PlaceDetailsContent extends ConsumerWidget {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 _InfoRow(icon: Icons.location_on_outlined, text: place.address),
-                if (place.phone != null)
+                if (!hasVerifiedDetails)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Contact details, opening hours, facilities and photos are shown only after verification.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                    ),
+                  ),
+                if (hasVerifiedDetails && place.phone != null)
                   InkWell(
                     onTap: () => _launchUrl(context, 'tel:${place.phone!}'),
                     child: _InfoRow(icon: Icons.phone_outlined, text: place.phone!),
                   ),
-                if (place.website != null)
+                if (hasVerifiedDetails && place.website != null)
                   InkWell(
                     onTap: () => _launchUrl(context, place.website!),
                     child: _InfoRow(icon: Icons.language, text: place.website!),
                   ),
-                if (place.openingHours.isNotEmpty)
+                if (hasVerifiedDetails && place.openingHours.isNotEmpty)
                   _InfoRow(
                     icon: Icons.access_time,
                     text: place.openingHours.entries.map((e) => '${e.key}: ${e.value}').join('\n'),
                   ),
-                if (place.facilities.isNotEmpty) ...[
+                if (hasVerifiedDetails && place.facilities.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   const Text('Facilities',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -225,298 +243,28 @@ class _PlaceDetailsContent extends ConsumerWidget {
                   ),
                 ],
 
-                // ── 🛡️ FEATURE 1: Female & Family Safety Shield ───────────────
+                // Do not publish unsupported safety scores, live prices, transit fares,
+                // or reward promises. These need a verified source and working data flow.
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFDF2F8), Colors.white],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF472B6).withValues(alpha: 0.4)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFF472B6).withValues(alpha: 0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEC4899),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.shield_outlined, color: Colors.white, size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'خواتین اور فیملی سیفٹی تصدیق',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF831843)),
-                                ),
-                                Text(
-                                  'Female & Family Safety Audit (TDCP Verified)',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF9D174D)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text('98% Safe', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Divider(height: 1, color: Color(0xFFFCE7F3)),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _safetyTag(
-                              icon: Icons.wc,
-                              title: 'خواتین واش روم',
-                              status: 'صاف اور محفوظ',
-                              isYes: true,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _safetyTag(
-                              icon: Icons.nightlife,
-                              title: 'رات 8 بجے کے بعد',
-                              status: 'فیملی ماحول',
-                              isYes: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _safetyTag(
-                              icon: Icons.verified_user,
-                              title: 'لیڈی ٹریولر تصدیق',
-                              status: '320+ خواتین کی رائے',
-                              isYes: true,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _safetyTag(
-                              icon: Icons.local_police,
-                              title: 'ٹورسٹ پولیس گشت',
-                              status: '24/7 فعال (1421)',
-                              isYes: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ── 💰 FEATURE 2: آج کا ریٹ (Anti-Scam Live Fair Price) ─────────
-                const SizedBox(height: 16),
-                Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFFBEB),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.45)),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFD97706),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.price_check, color: Colors.white, size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'آج کا منصفانہ ریٹ (No Overcharging)',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF92400E)),
-                                ),
-                                Text(
-                                  'Daily crowdsourced rates verified by local guides',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD97706),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text('Live Today', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
+                      Text(
+                        'Travel information notice',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                       ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            _rateItem('سرکاری ٹکٹ / داخلہ فیس:', 'Rs. 50 - 100 فی کس (بچے مفت)'),
-                            const Divider(height: 12),
-                            _rateItem('گاڑی کی محفوظ پارکنگ:', 'Rs. 50 - 100 (کوئی زیادہ نہ دے)'),
-                            const Divider(height: 12),
-                            _rateItem('لوکل گائیڈ فیس:', 'Rs. 500 - 800 (مقررہ سرکاری شرح)'),
-                            const Divider(height: 12),
-                            _rateItem('قریبی ہوٹل کا مناسب کمرہ:', 'Rs. 3,500 - 6,000 / رات'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '⚠️ نوٹ: اگر کوئی زائد پیسے طلب کرے تو پنجاب سٹیزن پورٹل یا 1787 پر فورا رپورٹ کریں۔',
-                        style: TextStyle(fontSize: 11, color: Color(0xFFB45309), fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ── 🚐 FEATURE 5: لوکل وین اور چنگچی کنکشن (Local Transport Routes) ──
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.5)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF16A34A),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.alt_route, color: Colors.white, size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'عوامی ٹرانسپورٹ و لوکل وین روٹ',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF166534)),
-                                ),
-                                Text(
-                                  'Step-by-step local connection for budget travelers',
-                                  style: TextStyle(fontSize: 11, color: Color(0xFF15803D)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _transitStep('1', 'مین لاری اڈہ / بس اسٹاپ سے لوکل کوسٹر یا ویگن پکڑیں (کرایہ: Rs. 150-250)'),
-                      const SizedBox(height: 6),
-                      _transitStep('2', 'مقامی چوک پر اتریں اور چنگچی رکشہ لیں (کرایہ: Rs. 50-80 فی سواری)'),
-                      const SizedBox(height: 6),
-                      _transitStep('3', 'اسپاٹ کے مرکزی گیٹ تک سیدھا راستہ (کوئی پیدل دشواری نہیں)'),
-                    ],
-                  ),
-                ),
-
-                // ── 🌿 FEATURE 7: گرین ٹورسٹ اسکور (Responsible Clean Tourist) ──
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.eco, color: Color(0xFF10B981), size: 22),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'گرین ٹورسٹ مہم (Clean Punjab Initiative)',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text('+50 Points', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'کوڑا کرکٹ ڈسٹ بن میں ڈالیں، تصویر اپلوڈ کر کے گرین کوائنز حاصل کریں اور اگلی ٹرپ کے ہوٹل پر رعایت پائیں!',
-                        style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          minimumSize: const Size(double.infinity, 38),
-                        ),
-                        onPressed: () => _showCleanlinessPhotoDialog(context, place.name),
-                        icon: const Icon(Icons.camera_alt, size: 16),
-                        label: const Text('صفائی کی تصویر بھیجیں اور انعام جیتیں', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      SizedBox(height: 6),
+                      Text(
+                        'Safety conditions, current entry fees, local transport fares, and on-site facilities are not independently verified here. Confirm these details with the venue or relevant local authority before travelling.',
+                        style: TextStyle(height: 1.4, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -700,8 +448,11 @@ class _ActionsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favAsync = ref.watch(favoritesControllerProvider);
     final isSaved = favAsync.valueOrNull?.contains(place.id) ?? false;
+    final isVerified = place.hasVerifiedDetails;
 
     final actions = [
+      if (isVerified)
+
       (
         Icons.directions,
         'Directions',
@@ -715,6 +466,7 @@ class _ActionsRow extends ConsumerWidget {
           ),
         ),
       ),
+      if (isVerified && place.phone != null && place.phone!.trim().isNotEmpty)
       (
         Icons.call,
         'Call',
@@ -733,6 +485,7 @@ class _ActionsRow extends ConsumerWidget {
         isSaved ? 'Saved' : 'Save',
         () => ref.read(favoritesControllerProvider.notifier).toggle(place),
       ),
+      if (isVerified)
       (
         Icons.emergency_share,
         'WhatsApp SOS',
@@ -829,7 +582,7 @@ class _RelatedCard extends StatelessWidget {
             SizedBox(
               height: 70,
               width: double.infinity,
-              child: place.images.isNotEmpty
+              child: place.hasVerifiedDetails && place.images.isNotEmpty
                   ? Image.network(
                       place.images.first,
                       fit: BoxFit.cover,
@@ -840,7 +593,9 @@ class _RelatedCard extends StatelessWidget {
                     )
                   : Container(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      child: const Icon(Icons.place, color: AppColors.primary),
+                      child: const Center(
+                        child: Icon(Icons.place, color: AppColors.primary),
+                      ),
                     ),
             ),
             Padding(
@@ -872,646 +627,6 @@ class _RelatedCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Female Safety Tag Widget ────────────────────────────────────────────────
-
-Widget _safetyTag({
-  required IconData icon,
-  required String title,
-  required String status,
-  required bool isYes,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(8),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: const Color(0xFFFCE7F3)),
-    ),
-    child: Row(
-      children: [
-        Icon(icon, size: 16, color: const Color(0xFFEC4899)),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF831843)),
-              ),
-              Text(
-                status,
-                style: const TextStyle(fontSize: 10, color: Color(0xFF059669), fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-// ─── Anti-Scam Rate Item Widget ──────────────────────────────────────────────
-
-Widget _rateItem(String label, String value) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF78350F), fontWeight: FontWeight.w500)),
-      Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF92400E))),
-    ],
-  );
-}
-
-// ─── Local Transit Step Widget ───────────────────────────────────────────────
-
-Widget _transitStep(String stepNumber, String text) {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 20,
-        height: 20,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: Color(0xFF16A34A),
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          stepNumber,
-          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-        ),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF14532D), height: 1.3),
-        ),
-      ),
-    ],
-  );
-}
-
-// ─── Cleanliness Photo Upload Dialog (Green Tourist Initiative) ─────────────
-
-void _showCleanlinessPhotoDialog(BuildContext context, String placeName) {
-  bool photoTaken = false;
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-    ),
-    builder: (ctx) {
-      return StatefulBuilder(
-        builder: (context, setModalState) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.eco, color: Color(0xFF10B981), size: 22),
-                        SizedBox(width: 8),
-                        Text(
-                          'صفائی کی تصویر اور انعام',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text('+50 Green Coins', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 11)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'کوڑا دان استعمال کرنے کی تصویر کھینچیں یا اپلوڈ کریں۔ ہماری AI تصویر کی تصدیق کر کے آپ کے اکاؤنٹ میں 50 پوائنٹس شامل کر دے گی۔',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
-                ),
-                const SizedBox(height: 16),
-
-                if (!photoTaken) ...[
-                  Container(
-                    height: 140,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.camera_alt_outlined, size: 40, color: Color(0xFF64748B)),
-                        const SizedBox(height: 8),
-                        const Text('ابھی تک کوئی تصویر منسلک نہیں کی گئی', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: () {
-                                setModalState(() => photoTaken = true);
-                              },
-                              icon: const Icon(Icons.camera, size: 16),
-                              label: const Text('کیمرہ کھولیں', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: () {
-                                setModalState(() => photoTaken = true);
-                              },
-                              icon: const Icon(Icons.photo_library, size: 16),
-                              label: const Text('گیلری', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ] else ...[
-                  // Captured Photo Preview with Geotag Stamp
-                  Container(
-                    height: 160,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
-                      borderRadius: BorderRadius.circular(14),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=600&q=80'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Colors.black87],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 10,
-                          left: 12,
-                          right: 12,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on, color: Color(0xFF10B981), size: 14),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        placeName,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
-                                      ),
-                                    ],
-                                  ),
-                                  const Text('📍 TDCP Clean Geotag Verified', style: TextStyle(color: Colors.white70, fontSize: 9)),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.check, size: 12, color: Colors.white),
-                                    SizedBox(width: 2),
-                                    Text('AI Pass', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: photoTaken ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: !photoTaken
-                        ? null
-                        : () {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('🎉 مبارک ہو! آپ کی صفائی کی تصویر کی تصدیق ہو گئی، اور 50 گرین کوائنز آپ کے والٹ میں جمع ہو گئے! 🌿'),
-                                backgroundColor: Color(0xFF059669),
-                                duration: Duration(seconds: 4),
-                              ),
-                            );
-                          },
-                    icon: const Icon(Icons.cloud_upload_outlined, size: 18),
-                    label: Text(
-                      photoTaken ? 'تصویر جمع کروائیں اور 50 کوائنز لیں' : 'پہلے تصویر کھینچیں یا اپلوڈ کریں',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
-// ─── Payment Methods Row ─────────────────────────────────────────────────────
-
-class _PaymentMethodsRow extends StatelessWidget {
-  final PlaceModel place;
-  const _PaymentMethodsRow({required this.place});
-
-  void _showPaymentGuide(BuildContext context, String method) {
-    final isEasy = method.toLowerCase().contains('easy');
-    final isJazz = method.toLowerCase().contains('jazz');
-    final isCash = method.toLowerCase().contains('cash');
-    final isBank = method.toLowerCase().contains('nbp') || method.toLowerCase().contains('bank');
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: (isEasy
-                              ? const Color(0xFF16A34A)
-                              : isJazz
-                                  ? const Color(0xFFDC2626)
-                                  : isBank
-                                      ? const Color(0xFF2563EB)
-                                      : const Color(0xFF0F172A))
-                          .withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isEasy || isJazz
-                          ? Icons.phone_android
-                          : isCash
-                              ? Icons.money
-                              : Icons.account_balance,
-                      color: isEasy
-                          ? const Color(0xFF16A34A)
-                          : isJazz
-                              ? const Color(0xFFDC2626)
-                              : isBank
-                                  ? const Color(0xFF2563EB)
-                                  : const Color(0xFF0F172A),
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$method سے ادائیگی کی سہولت',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          place.name,
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(height: 1),
-              const SizedBox(height: 14),
-              if (isEasy) ...[
-                const Text(
-                  'ایزی پیسہ سے پیسے کیسے بھیجیں؟',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF16A34A)),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '1. دکان دار یا ہوٹل کے کاؤنٹر پر موجود ایزی پیسہ نمبر یا QR کوڈ چیک کریں۔\n'
-                  '2. اپنی ایزی پیسہ ایپ کھول کر "Send Money" یا "Till Payment" منتخب کریں۔\n'
-                  '3. بل کی رقم درج کر کے ٹرانسفر کریں اور تصدیقی سکرین شاٹ دکان دار کو دکھائیں۔',
-                  style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
-                ),
-              ] else if (isJazz) ...[
-                const Text(
-                  'جاز کیش سے پیسے کیسے بھیجیں؟',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFDC2626)),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '1. جاز کیش ایپ کھولیں یا اپنے فون سے *786# ملائیں۔\n'
-                  '2. دکان دار کا جاز کیش اکاؤنٹ یا ٹل کوڈ درج کریں۔\n'
-                  '3. رقم ادا کر کے کاؤنٹر پر رسید کی تصدیق کروائیں۔',
-                  style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
-                ),
-              ] else if (isCash) ...[
-                const Text(
-                  'نقد رقم کی ادائیگی:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'یہ جگہ پاکستانی روپوں میں کیش ادائیگی قبول کرتی ہے۔ کاؤنٹر پر بل بنوا کر براہِ راست نقد ادائیگی کریں۔',
-                  style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
-                ),
-              ] else ...[
-                Text(
-                  '$method کی معلومات:',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'دکان دار کے بینک اکاؤنٹ یا راست آئی ڈی (Raast ID) پر آن لائن فنڈ ٹرانسفر کی سہولت دستیاب ہے۔',
-                  style: TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF334155)),
-                ),
-              ],
-              if (place.phone != null && place.phone!.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.phone, size: 16, color: Color(0xFF0F172A)),
-                      const SizedBox(width: 8),
-                      Text('دکان دار کا نمبر: ${place.phone}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('سمجھ آ گئی (OK, Got it)'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final rawPayments = place.paymentMethods;
-    final hasDigital = rawPayments.any((p) =>
-        p.toLowerCase().contains('easy') ||
-        p.toLowerCase().contains('jazz') ||
-        p.toLowerCase().contains('bank') ||
-        p.toLowerCase().contains('nbp'));
-
-    // Normalize: if digital is accepted, show 'Cash' instead of contradictory 'Cash Only'
-    final payments = rawPayments.map((p) {
-      if (p.toLowerCase() == 'cash only' && hasDigital) return 'Cash';
-      return p;
-    }).toList();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.account_balance_wallet_outlined, size: 18, color: Color(0xFF0F172A)),
-          const SizedBox(width: 8),
-          const Text('ادائیگی:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A))),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: payments.map((p) {
-                final isJazz = p.toLowerCase().contains('jazz');
-                final isEasy = p.toLowerCase().contains('easy');
-                final isBank = p.toLowerCase().contains('nbp') || p.toLowerCase().contains('bank');
-                final color = isJazz
-                    ? const Color(0xFFDC2626)
-                    : isEasy
-                        ? const Color(0xFF16A34A)
-                        : isBank
-                            ? const Color(0xFF2563EB)
-                            : const Color(0xFF475569);
-
-                return InkWell(
-                  onTap: () => _showPaymentGuide(context, p),
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: color.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle, size: 11, color: color),
-                        const SizedBox(width: 4),
-                        Text(
-                          p,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Audio Guide Player Widget ───────────────────────────────────────────────
-
-class _AudioGuidePlayer extends StatefulWidget {
-  final String narration;
-  final String placeName;
-  const _AudioGuidePlayer({required this.narration, required this.placeName});
-
-  @override
-  State<_AudioGuidePlayer> createState() => _AudioGuidePlayerState();
-}
-
-class _AudioGuidePlayerState extends State<_AudioGuidePlayer> {
-  bool _isPlaying = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.headphones, color: Color(0xFF10B981), size: 20),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'اردو آڈیو گائیڈ (Self-Guided Audio)',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    Text(
-                      'Listen to the authentic local story in Urdu without paying a human guide',
-                      style: TextStyle(color: Colors.white70, fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton.filled(
-                style: IconButton.styleFrom(
-                  backgroundColor: _isPlaying ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                ),
-                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.white),
-                onPressed: () {
-                  setState(() => _isPlaying = !_isPlaying);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(_isPlaying
-                          ? '🔊 آڈیو گائیڈ چل رہی ہے: ${widget.placeName}'
-                          : '⏸️ آڈیو گائیڈ روک دی گئی'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white12),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  _isPlaying ? Icons.graphic_eq : Icons.volume_up_outlined,
-                  size: 16,
-                  color: const Color(0xFF10B981),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.narration,
-                    style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

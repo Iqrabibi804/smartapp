@@ -23,10 +23,15 @@ live unless a live source is connected — and at v1.0.0 none are.
 - **Ratings / review counts:** **zeroed in this release.** The app now shows
   "No reviews yet" until real user reviews exist. No seeded star ratings remain.
 - **Images:** Unsplash stock photography (illustrative).
-- **Phone numbers:** removed during the data audit unless independently confirmable;
-  remaining contact fields must be checked before reliance.
-- **Verification status:** bundled places carry `verified: false`; no "verified" badge is
-  shown without a `verificationStatus == 'verified'` record from the backend.
+- **Legacy contact/facility/payment fields:** some bundled records still contain phone
+  numbers, facility labels and payment-method claims that have not been independently
+  confirmed. They are treated as unverified and are not shown as actionable contact,
+  hours, facility or payment information in Place Details.
+- **Images:** bundled place records may contain generic Unsplash stock images; they are
+  illustrative and are now hidden in Place Details unless the place record is verified.
+- **Verification status:** bundled places carry `verified: false`; they are labelled
+  "Not yet verified". The app only treats an explicit `verificationStatus == 'verified'`
+  (or a legacy `verified: true` record with no status field) as verified.
 
 ## 3. Road advisories — 7 corridors
 

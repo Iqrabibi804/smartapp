@@ -9,6 +9,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { recordAudit } = require('../utils/audit');
 const { protect, authorize } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const { withPlaceVerification } = require('../utils/placeVerification');
 
 const router = express.Router();
 
@@ -130,10 +131,19 @@ router.put(
 
     const review = await Review.findByIdAndUpdate(
       req.params.id,
-      { status, reportCount: status === 'approved' ? 0 : undefined },
+      { status, ...(status === 'approved' ? { reportCount: 0, reportedBy: [] } : {}) },
       { new: true }
     );
     if (!review) throw new ApiError(404, 'Review not found.');
+
+    const reviewStats = await Review.aggregate([
+      { $match: { placeId: review.placeId, status: 'approved' } },
+      { $group: { _id: '$placeId', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ]);
+    await Place.findByIdAndUpdate(review.placeId, {
+      rating: Math.round((reviewStats[0]?.avgRating || 0) * 10) / 10,
+      reviewCount: reviewStats[0]?.count || 0,
+    });
 
     await recordAudit(req, {
       action: 'review.status.update',
@@ -175,11 +185,10 @@ router.get(
 router.put(
   '/places/:id',
   asyncHandler(async (req, res) => {
-    const place = await Place.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const place = await Place.findById(req.params.id);
     if (!place) throw new ApiError(404, 'Place not found.');
+    place.set(withPlaceVerification(req.body, place.toObject()));
+    await place.save();
 
     await recordAudit(req, {
       action: 'place.update',

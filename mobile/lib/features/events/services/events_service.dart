@@ -32,7 +32,7 @@ class EventsService {
       // Offline fallback
       return PunjabOfflineData.events.firstWhere(
         (e) => e.id == id,
-        orElse: () => PunjabOfflineData.events.first,
+        orElse: () => throw StateError('This event is not available offline.'),
       );
     }
   }
