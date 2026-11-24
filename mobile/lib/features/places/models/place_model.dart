@@ -29,6 +29,13 @@ class PlaceModel {
 
   bool get hasReviews => reviewCount > 0;
 
+  /// Sensitive venue details are trusted only when verification has both
+  /// source provenance and a recorded verification timestamp.
+  bool get hasVerifiedDetails =>
+      verificationStatus == 'verified' &&
+      (source?.trim().isNotEmpty ?? false) &&
+      lastVerifiedAt != null;
+
   PlaceModel({
     required this.id,
     required this.name,
