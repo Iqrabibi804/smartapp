@@ -34,7 +34,7 @@ class PlaceModel {
   bool get hasVerifiedDetails =>
       verificationStatus == 'verified' &&
       (source?.trim().isNotEmpty ?? false) &&
-      lastVerifiedAt != null;
+      DateTime.tryParse(lastVerifiedAt ?? '') != null;
 
   PlaceModel({
     required this.id,
