@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -71,7 +71,7 @@ def valid_lat_lon(record: dict[str, Any]) -> bool:
         return False
 
 
-def deduplicate_osm(records: list[dict[str, Any]], name_key: str) -> list[dict[str, Any]]:
+def deduplicate_osm(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     result = []
     for record in records:
@@ -107,10 +107,10 @@ def main() -> None:
     wb.close()
 
     data["busStations"] = [
-        r for r in deduplicate_osm(data["busStations"], "Station") if valid_lat_lon(r)
+        r for r in deduplicate_osm(data["busStations"]) if valid_lat_lon(r)
     ]
-    data["hotels"] = deduplicate_osm(data["hotels"], "Hotel / guest house")
-    data["restaurants"] = deduplicate_osm(data["restaurants"], "Restaurant")
+    data["hotels"] = deduplicate_osm(data["hotels"])
+    data["restaurants"] = deduplicate_osm(data["restaurants"])
 
     # Police directory rows come from a secondary directory, so they remain
     # reference-only and are never treated as emergency dispatch instructions.
@@ -123,7 +123,7 @@ def main() -> None:
     data["metadata"] = {
         "workbook": args.workbook.name,
         "snapshotDate": "2026-11-23",
-        "importedAt": "2026-11-24",
+        "importedAt": datetime.now(timezone.utc).date().isoformat(),
         "verificationPolicy": "All imported rows are unverified reference data.",
         "openStreetMapAttribution": "© OpenStreetMap contributors",
         "openStreetMapLicense": "Open Database License (ODbL)",
