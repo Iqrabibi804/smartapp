@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Convert the supplied Punjab directory workbook into the Flutter offline JSON asset.
+"""Import the supplied Punjab directory workbook into a Flutter JSON asset.
 
 Usage:
   python -m pip install openpyxl
-  python scripts/import_directory_workbook.py "Punjab_Islamabad_Hierarchy_Police_completed.xlsx"
+  python scripts/import_directory_workbook.py Punjab_Islamabad_Hierarchy_Police_completed.xlsx
 
-The output is deliberately marked as unverified reference data. This script does
-not promote any record to verified and does not invent missing coordinates,
-ratings, hours, operators, prices or contact information.
+All directory entries remain reference-only. This importer never marks a
+business, phone number, police station or administrative record as verified.
 """
 from __future__ import annotations
 
@@ -25,9 +24,15 @@ SHEETS = {
     "hotels": "Hotels",
     "restaurants": "Restaurants",
     "islamabadPolice": "Islamabad_Police",
+    "islamabadAreaToStation": "Islamabad_Area_to_Station",
+    "islamabadZoneSummary": "Islamabad_Zone_Summary",
     "lahorePolice": "Lahore_Police",
     "punjabHierarchy": "Punjab_Hierarchy",
+    "punjabDistrictSummary": "Punjab_District_Summary",
     "appCities": "App_Cities_81",
+    "tehsilCoverage": "Tehsil_Coverage",
+    "divisionSummary": "Division_Summary",
+    "citySummary": "City_Summary",
 }
 
 
@@ -47,91 +52,95 @@ def normalise(value: Any) -> Any:
 def sheet_records(workbook, sheet_name: str) -> list[dict[str, Any]]:
     if sheet_name not in workbook.sheetnames:
         return []
-    ws = workbook[sheet_name]
-    values = ws.iter_rows(values_only=True)
-    headers = [str(normalise(v) or "") for v in next(values, ())]
-    result = []
-    for row in values:
+    rows = workbook[sheet_name].iter_rows(values_only=True)
+    headers = [str(normalise(value) or "") for value in next(rows, ())]
+    records: list[dict[str, Any]] = []
+    for row in rows:
         record = {
-            headers[i]: normalise(value)
-            for i, value in enumerate(row)
-            if i < len(headers) and headers[i] and normalise(value) is not None
+            headers[index]: normalise(value)
+            for index, value in enumerate(row)
+            if index < len(headers) and headers[index]
+            and normalise(value) is not None
         }
         if record:
-            result.append(record)
-    return result
+            records.append(record)
+    return records
 
 
-def valid_lat_lon(record: dict[str, Any]) -> bool:
-    try:
-        lat = float(record["Latitude"])
-        lon = float(record["Longitude"])
-        return -90 <= lat <= 90 and -180 <= lon <= 180
-    except (KeyError, TypeError, ValueError):
-        return False
-
-
-def deduplicate_osm(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def annotate_osm(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
-    result = []
     for record in records:
-        osm = str(record.get("OSM link") or "").strip()
-        # Use OSM object identity when present. Do not collapse different places
-        # merely because their names happen to match.
-        if osm and osm in seen:
-            continue
-        if osm:
-            seen.add(osm)
+        osm_link = str(record.get("OSM link") or "").strip()
+        record["duplicateOSMReference"] = bool(osm_link and osm_link in seen)
+        if osm_link:
+            seen.add(osm_link)
+        try:
+            latitude = float(record["Latitude"])
+            longitude = float(record["Longitude"])
+            record["hasValidCoordinates"] = (
+                -90 <= latitude <= 90 and -180 <= longitude <= 180
+            )
+        except (KeyError, TypeError, ValueError):
+            record["hasValidCoordinates"] = False
         record["verified"] = False
         record["verificationStatus"] = "needs_verification"
         record["referenceOnly"] = True
-        result.append(record)
-    return result
+    return records
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("workbook", type=Path, help="Path to the supplied .xlsx workbook")
+    parser.add_argument("workbook", type=Path)
     parser.add_argument(
         "--output",
         type=Path,
         default=Path("mobile/assets/data/punjab_directory.json"),
-        help="Flutter asset output path",
     )
     args = parser.parse_args()
     if not args.workbook.is_file():
         raise SystemExit(f"Workbook not found: {args.workbook}")
 
-    wb = load_workbook(args.workbook, read_only=True, data_only=True)
-    data = {key: sheet_records(wb, sheet) for key, sheet in SHEETS.items()}
-    wb.close()
+    workbook = load_workbook(args.workbook, read_only=True, data_only=True)
+    data = {
+        key: sheet_records(workbook, sheet_name)
+        for key, sheet_name in SHEETS.items()
+    }
+    workbook.close()
 
-    data["busStations"] = [
-        r for r in deduplicate_osm(data["busStations"]) if valid_lat_lon(r)
-    ]
-    data["hotels"] = deduplicate_osm(data["hotels"])
-    data["restaurants"] = deduplicate_osm(data["restaurants"])
+    for key in ("busStations", "hotels", "restaurants"):
+        data[key] = annotate_osm(data[key])
 
-    # Police directory rows come from a secondary directory, so they remain
-    # reference-only and are never treated as emergency dispatch instructions.
-    for key in ("islamabadPolice", "lahorePolice"):
+    for key in ("islamabadPolice", "islamabadAreaToStation", "lahorePolice"):
         for record in data[key]:
             record["verified"] = False
             record["verificationStatus"] = "needs_official_verification"
             record["referenceOnly"] = True
 
+    for key in (
+        "islamabadZoneSummary", "punjabHierarchy", "punjabDistrictSummary",
+        "appCities", "tehsilCoverage", "divisionSummary", "citySummary",
+    ):
+        for record in data[key]:
+            record["referenceOnly"] = True
+
     data["metadata"] = {
         "workbook": args.workbook.name,
-        "snapshotDate": "2026-11-23",
-        "importedAt": datetime.now(timezone.utc).date().isoformat(),
-        "verificationPolicy": "All imported rows are unverified reference data.",
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "verificationPolicy": (
+            "Imported workbook records are reference-only and are not verified."
+        ),
         "openStreetMapAttribution": "© OpenStreetMap contributors",
         "openStreetMapLicense": "Open Database License (ODbL)",
         "sourceNotice": (
-            "OSM listings do not establish that a business is open, licensed, "
-            "reachable, safe or currently providing a service. Police listings "
-            "are secondary-source references, not an official emergency directory."
+            "OpenStreetMap listings do not establish that a business is open, "
+            "licensed, reachable, safe or currently providing a service. Phone "
+            "numbers, hours, ratings and amenities require independent current "
+            "verification. Police listings and area mappings are secondary-source "
+            "references, not an official emergency directory. Administrative "
+            "hierarchy and city profiles are supplied workbook data and should be "
+            "checked against current official records."
         ),
+        "sheetCounts": {key: len(value) for key, value in data.items()},
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -139,10 +148,10 @@ def main() -> None:
         json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",
     )
-    print("Directory asset generated:", args.output)
-    for key in SHEETS:
-        print(f"  {key}: {len(data[key])}")
-    print("All records remain unverified; OSM attribution is included in metadata.")
+    print(f"Generated: {args.output}")
+    for key, count in data["metadata"]["sheetCounts"].items():
+        print(f"  {key}: {count}")
+    print("All imported records remain reference-only / unverified.")
 
 
 if __name__ == "__main__":
