@@ -1,20 +1,26 @@
 name: Refresh vulnerable backend dependencies
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
+concurrency:
+  group: backend-dependency-refresh-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   refresh:
-    name: Update compatible backend security fixes
+    name: Apply compatible backend security fixes
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout selected branch
+      - name: Check out pull request branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -24,9 +30,9 @@ jobs:
       - name: Install locked dependencies
         working-directory: backend
         run: npm ci
-      - name: Update vulnerable direct dependencies within existing semver ranges
+      - name: Apply non-breaking npm security fixes
         working-directory: backend
-        run: npm update mongoose morgan multer express
+        run: npm audit fix
       - name: Run backend tests
         working-directory: backend
         run: npm test
@@ -35,7 +41,8 @@ jobs:
         run: |
           npm audit --omit=dev --json > npm-audit.json || true
           node -e "const a=require('./npm-audit.json'); console.log('Production audit:', a.metadata?.vulnerabilities); for (const [name,v] of Object.entries(a.vulnerabilities || {})) console.log(name, v.severity, JSON.stringify(v.fixAvailable)); if ((a.metadata?.vulnerabilities?.total || 0) > 0) process.exit(1)"
-      - name: Commit updated lockfile
+      - name: Commit updated lockfile to the pull request branch
+        if: success()
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -45,5 +52,12 @@ jobs:
             echo "No lockfile changes were required."
           else
             git commit -m "fix(deps): refresh vulnerable backend dependencies"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
           fi
+      - name: Upload audit report when refresh fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-npm-audit-report
+          path: backend/npm-audit.json
+          if-no-files-found: ignore
