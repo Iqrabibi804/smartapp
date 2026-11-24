@@ -21,7 +21,15 @@ Release and reference documents: [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md),
 [docs/API_DEPENDENCIES.md](docs/API_DEPENDENCIES.md),
 [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 
-## Release build
+## Android build configuration
+
+The Google Maps Android key is injected at build time; it is not stored in the
+manifest or source control. Set `GOOGLE_MAPS_API_KEY` in your environment or in
+`~/.gradle/gradle.properties` before building. Restrict the key in Google Cloud
+to Android package `com.smartmappunjab.app`, the release/debug signing
+certificate SHA-1 fingerprints you use, and only the required Maps SDK APIs.
+A build without this value can compile, but Google Maps tiles/features that
+require the key will not work.
 
 Release signing reads `mobile/android/key.properties` (gitignored) and
 `mobile/android/app/smartmap-release.jks` (gitignored). Back both files up; losing the
@@ -79,12 +87,12 @@ Status details, including what is unverified or missing, are in `docs/FEATURE_ST
 
 ## Known gaps (tracked in the roadmap)
 
-- Test coverage is currently a single smoke test.
+- Automated backend and Flutter tests run in CI; see the latest [Quality checks](https://github.com/Iqrabibi804/smartapp/actions/workflows/quality-checks.yml) run for the exact status.
 - Urdu localization exists in code but interface switching is incomplete.
 - Bundled fonts (Poppins / Roboto / Noto Nastaliq Urdu) are not yet declared.
 - Legacy multi-palette theme is being replaced by the canonical national identity.
-- `applicationId` is still `com.example.smartmap_ai`; release signing is not configured.
-- A `MONGO_URI` entry exists in `mobile/.env` and must never ship with the app.
+- Android release signing is optional and must be configured locally using the ignored `mobile/android/key.properties` and keystore files.
+- MongoDB credentials belong only in the backend environment; never put them in the Flutter app.
 - Facility finder, DC rate lists, permits, foreigner toolkit, digital pass, complaints,
   and differentiator features are planned, not yet implemented.
 
@@ -123,6 +131,7 @@ flutter test
 
 ## Security notes
 
+- Rotate any credentials that were ever committed; removing them from the latest source does not erase Git history.
 - Never commit `.env` files or API keys. Root `.gitignore` excludes them.
 - The mobile app must never contain database credentials or server secrets.
 - Location is shared only after explicit user action.
