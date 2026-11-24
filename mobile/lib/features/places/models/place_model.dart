@@ -32,6 +32,7 @@ class PlaceModel {
   /// Sensitive venue details are trusted only when verification has both
   /// source provenance and a recorded verification timestamp.
   bool get hasVerifiedDetails =>
+      verified &&
       verificationStatus == 'verified' &&
       (source?.trim().isNotEmpty ?? false) &&
       DateTime.tryParse(lastVerifiedAt ?? '') != null;
