@@ -118,6 +118,82 @@ class OsmFacilitiesService {
     throw StateError('Could not load OpenStreetMap results. Check your internet connection and try again.');
   }
 
+  /// Search a radius around the user's GPS point instead of a fixed city box.
+  /// This lets users in Haripur see nearby mapped places toward Attock as well.
+  Future<List<PlaceModel>> fetchNearby(
+    double latitude,
+    double longitude,
+    String category, {
+    double radiusKm = 80,
+  }) async {
+    final filters = _filters[category];
+    if (filters == null) return const [];
+
+    final radiusMeters = (radiusKm * 1000).round();
+    final query = '[out:json][timeout:35];'
+        '(${filters.map((filter) => '$filter(around:$radiusMeters,$latitude,$longitude);').join()}'
+        ');out center tags;';
+    var receivedValidResponse = false;
+
+    for (final endpoint in const [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://overpass.nchc.org.tw/api/interpreter',
+    ]) {
+      try {
+        final response = await _dio.get<dynamic>(
+          endpoint,
+          queryParameters: {'data': query},
+        );
+        final rawElements =
+            response.data is Map ? response.data['elements'] : null;
+        if (response.data is Map && rawElements is List) {
+          receivedValidResponse = true;
+        }
+        final elements = rawElements is List ? rawElements : const <dynamic>[];
+        final places = elements
+            .whereType<Map>()
+            .map((e) => _fromElement(
+                  Map<String, dynamic>.from(e),
+                  'Nearby GPS area',
+                  category,
+                ))
+            .whereType<PlaceModel>()
+            .toList();
+
+        if (places.isEmpty) continue;
+        places.sort((a, b) => distanceKm(
+              latitude, longitude, a.latitude, a.longitude,
+            ).compareTo(distanceKm(
+              latitude, longitude, b.latitude, b.longitude,
+            )));
+        OfflineCache.instance.reportOnline();
+        await OfflineCache.instance.put(
+          'osm:nearby:$latitude:$longitude:$category:$radiusKm',
+          places.map(_toCache).toList(),
+          ttl: const Duration(hours: 6),
+        );
+        return places;
+      } catch (_) {
+        // Try another public Overpass instance.
+      }
+    }
+
+    OfflineCache.instance.reportOffline();
+    final cached = OfflineCache.instance.read(
+      'osm:nearby:$latitude:$longitude:$category:$radiusKm',
+    );
+    if (cached is List) {
+      try {
+        return cached
+            .map((e) => PlaceModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      } catch (_) {}
+    }
+    if (receivedValidResponse) return const [];
+    throw StateError('Could not load nearby OpenStreetMap results. Check your internet connection and try again.');
+  }
+
   PlaceModel? _fromElement(Map<String, dynamic> element, String city, String category) {
     final tags = Map<String, dynamic>.from(element['tags'] as Map? ?? const {});
     final center = element['center'] as Map?;
