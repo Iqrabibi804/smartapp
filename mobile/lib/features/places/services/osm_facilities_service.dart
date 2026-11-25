@@ -29,51 +29,66 @@ class OsmFacilitiesService {
     'Gujranwala': '32.05,74.05,32.30,74.35',
   };
 
-  static const _filters = <String, String>{
-    'Hospitals': 'nwr["amenity"="hospital"]',
-    'Pharmacies': 'nwr["amenity"="pharmacy"]',
-    'Petrol pumps': 'nwr["amenity"="fuel"]',
-    'ATMs': 'nwr["amenity"="atm"]',
-    'Police': 'nwr["amenity"="police"]',
-    'Parks': 'nwr["leisure"="park"]',
-    'Parking': 'nwr["amenity"="parking"]',
-    'Restaurants': 'nwr["amenity"~"^(restaurant|fast_food|cafe)\$"]',
-    'Washrooms': 'nwr["amenity"="toilets"]',
-    'Drinking water': 'nwr["amenity"="drinking_water"]',
+  // Include common equivalent OSM tags rather than relying on one narrow tag.
+  static const _filters = <String, List<String>>{
+    'Hospitals': [
+      'nwr["amenity"~"^(hospital|clinic|doctors)$"]',
+      'nwr["healthcare"~"^(hospital|clinic)$"]',
+    ],
+    'Pharmacies': [
+      'nwr["amenity"="pharmacy"]',
+      'nwr["shop"="chemist"]',
+    ],
+    'Petrol pumps': ['nwr["amenity"="fuel"]'],
+    'ATMs': ['nwr["amenity"="atm"]'],
+    'Police': ['nwr["amenity"="police"]'],
+    'Parks': ['nwr["leisure"="park"]'],
+    'Parking': ['nwr["amenity"="parking"]'],
+    'Restaurants': ['nwr["amenity"~"^(restaurant|fast_food|cafe)$"]'],
+    'Washrooms': ['nwr["amenity"="toilets"]'],
+    'Drinking water': ['nwr["amenity"="drinking_water"]'],
   };
 
   Future<List<PlaceModel>> fetchCity(String city, String category) async {
     final bounds = _cityBounds[city];
-    final filter = _filters[category];
-    if (bounds == null || filter == null) return const [];
+    final filters = _filters[category];
+    if (bounds == null || filters == null) return const [];
+
     final cacheKey = 'osm:facilities:$city:$category';
-    final query = '[out:json][timeout:25];($filter($bounds););out center tags;';
-    try {
-      Response<dynamic>? response;
-      for (final endpoint in const [
-        'https://overpass-api.de/api/interpreter',
-        'https://overpass.kumi.systems/api/interpreter',
-      ]) {
-        try {
-          response = await _dio.post<dynamic>(
-            endpoint,
-            data: {'data': query},
-            options: Options(contentType: Headers.formUrlEncodedContentType),
-          );
-          break;
-        } catch (_) {
-          // Try the next free public Overpass instance.
-        }
-      }
-      if (response == null) throw StateError('All public Overpass endpoints failed');
-      final elements = (response.data is Map ? response.data['elements'] : null) as List? ?? const [];
-      final places = elements
-          .whereType<Map>()
-          .map((e) => _fromElement(Map<String, dynamic>.from(e), city, category))
-          .whereType<PlaceModel>()
-          .toList();
-      places.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      if (places.isNotEmpty) {
+    final query = '[out:json][timeout:35];'
+        '(${filters.map((filter) => '$filter($bounds);').join()}'
+        ');out center tags;';
+
+    // GET is more browser-friendly than a cross-origin form POST with headers.
+    // If one Overpass server is empty or unavailable, try the next one.
+    for (final endpoint in const [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://overpass.nchc.org.tw/api/interpreter',
+    ]) {
+      try {
+        final response = await _dio.get<dynamic>(
+          endpoint,
+          queryParameters: {'data': query},
+        );
+        final rawElements =
+            response.data is Map ? response.data['elements'] : null;
+        final elements = rawElements is List ? rawElements : const <dynamic>[];
+        final places = elements
+            .whereType<Map>()
+            .map((e) => _fromElement(
+                  Map<String, dynamic>.from(e),
+                  city,
+                  category,
+                ))
+            .whereType<PlaceModel>()
+            .toList();
+
+        if (places.isEmpty) continue;
+
+        places.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         OfflineCache.instance.reportOnline();
         await OfflineCache.instance.put(
           cacheKey,
@@ -81,15 +96,18 @@ class OsmFacilitiesService {
           ttl: const Duration(hours: 12),
         );
         return places;
+      } catch (_) {
+        // Try the next public Overpass instance.
       }
-      // Empty result can be a valid query, but use cached data if present.
-    } catch (_) {
-      OfflineCache.instance.reportOffline();
     }
+
+    OfflineCache.instance.reportOffline();
     final cached = OfflineCache.instance.read(cacheKey);
     if (cached is List) {
       try {
-        return cached.map((e) => PlaceModel.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+        return cached
+            .map((e) => PlaceModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
       } catch (_) {}
     }
     return const [];
