@@ -378,18 +378,35 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
 
   Widget faqPanel() {
     final items = faqItems(city!, selected.label);
-    return Container(padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppTokens.emerald.withValues(alpha: .045), borderRadius: BorderRadius.circular(18), border: Border.all(color: AppTokens.border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('FAQs about ' + selected.label + ' in ' + city!,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 4),
-        const Text('Helpful city-specific guidance', style: TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
-        const SizedBox(height: 8),
-        ...items.map((f) => ExpansionTile(tilePadding: EdgeInsets.zero, childrenPadding: const EdgeInsets.only(bottom: 10),
-          title: Text(f.$1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          children: [Align(alignment: Alignment.centerLeft, child: Text(f.$2, style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppTokens.textSecondary)))])),
-      ]));
+    return Material(
+      color: AppTokens.emerald.withValues(alpha: .045),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: AppTokens.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('FAQs about ' + selected.label + ' in ' + city!,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Helpful city-specific guidance', style: TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+          const SizedBox(height: 8),
+          ...items.map((f) => ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 10),
+            title: Text(f.$1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(f.$2, style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppTokens.textSecondary)),
+              ),
+            ],
+          )),
+        ]),
+      ),
+    );
   }
 
   String countLabel() => switch (selected.label) {
