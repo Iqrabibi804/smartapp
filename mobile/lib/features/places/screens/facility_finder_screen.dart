@@ -250,6 +250,9 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
     }
     if (!mounted) return;
     if (locationAvailable && userLat != null && userLng != null) {
+      // fetchNearby/fetchCity may return const [] for empty results.
+      // Copy before sorting because const lists are immutable on Flutter Web.
+      fetched = List<PlaceModel>.of(fetched);
       fetched.sort((a, b) => OsmFacilitiesService.distanceKm(userLat!, userLng!, a.latitude, a.longitude)
           .compareTo(OsmFacilitiesService.distanceKm(userLat!, userLng!, b.latitude, b.longitude)));
     }
