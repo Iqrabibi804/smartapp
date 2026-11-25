@@ -135,21 +135,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppTokens.dashboardBg,
       body: SafeArea(child: shell),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: _tabIndex == 3 ? 64 : 0),
-        child: SizedBox(
-        width: 52,
-        height: 52,
-        child: FloatingActionButton(
-          onPressed: _openAiConcierge,
-          backgroundColor: AppTokens.emerald,
-          foregroundColor: Colors.white,
-          elevation: 6,
-          shape: const CircleBorder(),
-          tooltip: isUrdu ? 'اے آئی گائیڈ' : 'AI Travel Concierge',
-          child: const Icon(Icons.auto_awesome, size: 22),
-        ),
-      )),
+      floatingActionButton: _tabIndex == 3
+          ? null
+          : SizedBox(
+              width: 52,
+              height: 52,
+              child: FloatingActionButton(
+                onPressed: _openAiConcierge,
+                backgroundColor: AppTokens.emerald,
+                foregroundColor: Colors.white,
+                elevation: 6,
+                shape: const CircleBorder(),
+                tooltip: isUrdu ? 'اے آئی گائیڈ' : 'AI Travel Concierge',
+                child: const Icon(Icons.auto_awesome, size: 22),
+              ),
+            ),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
