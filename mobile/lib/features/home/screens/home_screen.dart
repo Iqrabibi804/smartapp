@@ -1524,25 +1524,29 @@ class _EssentialsTab extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: _SectionTitle(
-                    title: t('Essentials', 'ضروریات'),
-                    subtitle: t('Hospitals, food and everyday help across Punjab',
-                        'پنجاب بھر میں ہسپتال، کھانا اور روزمرہ مدد'),
-                  ),
+                _SectionTitle(
+                  title: t('Essentials', 'ضروریات'),
+                  subtitle: t('Hospitals, food and everyday help across Punjab',
+                      'پنجاب بھر میں ہسپتال، کھانا اور روزمرہ مدد'),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: onOpenAI,
-                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                  label: Text(t('Ask AI', 'اے آئی سے پوچھیں')),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTokens.emerald,
-                    side: const BorderSide(color: AppTokens.border),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: SizedBox(
+                    width: 132,
+                    child: OutlinedButton.icon(
+                      onPressed: onOpenAI,
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                      label: Text(t('Ask AI', 'اے آئی سے پوچھیں'), maxLines: 1),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTokens.emerald,
+                        side: const BorderSide(color: AppTokens.border),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                      ),
+                    ),
                   ),
                 ),
               ],
