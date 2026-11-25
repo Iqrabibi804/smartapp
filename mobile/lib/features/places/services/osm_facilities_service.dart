@@ -32,8 +32,8 @@ class OsmFacilitiesService {
   // Include common equivalent OSM tags rather than relying on one narrow tag.
   static const _filters = <String, List<String>>{
     'Hospitals': [
-      'nwr["amenity"~"^(hospital|clinic|doctors)$"]',
-      'nwr["healthcare"~"^(hospital|clinic)$"]',
+      'nwr["amenity"~"^(hospital|clinic|doctors)\$"]',
+      'nwr["healthcare"~"^(hospital|clinic)\$"]',
     ],
     'Pharmacies': [
       'nwr["amenity"="pharmacy"]',
