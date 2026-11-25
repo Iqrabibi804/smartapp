@@ -200,17 +200,12 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
           final position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 15)),
           );
-          final center = cityCenter(selectedCity);
-          final distanceToCity = OsmFacilitiesService.distanceKm(
-            position.latitude, position.longitude, center.$1, center.$2);
-          if (distanceToCity <= 45) {
-            userLat = position.latitude;
-            userLng = position.longitude;
-            locationAvailable = true;
-            locationMessage = 'Sorted nearest-first from your current location';
-          } else {
-            locationMessage = 'Your GPS is outside $selectedCity · showing selected-city results without nearby distance';
-          }
+          // Search around the user's actual GPS point even when the selected
+          // directory city is nearby but outside the old 45 km city-center gate.
+          userLat = position.latitude;
+          userLng = position.longitude;
+          locationAvailable = true;
+          locationMessage = 'Nearby places within 80 km · sorted closest-first from your current location';
         } else {
           locationMessage = 'Location permission unavailable · showing city map data';
         }
@@ -224,7 +219,16 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
     List<PlaceModel> fetched = const [];
     String? fetchError;
     try {
-      fetched = await osmService.fetchCity(selectedCity, selected.label);
+      if (locationAvailable && userLat != null && userLng != null) {
+        fetched = await osmService.fetchNearby(
+          userLat!,
+          userLng!,
+          selected.label,
+          radiusKm: 80,
+        );
+      } else {
+        fetched = await osmService.fetchCity(selectedCity, selected.label);
+      }
     } catch (_) {
       fetchError = 'Live map data could not be reached. Check your internet connection and try again.';
     }
@@ -308,8 +312,12 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
 
   Widget cityResults(List<PlaceModel> places, Color surface, Color border) {
     return ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
-      Text(places.length.toString() + ' ' + countLabel() + ' in ' + city!,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+      Text(
+        locationAvailable
+            ? places.length.toString() + ' ' + countLabel() + ' within 80 km of your location'
+            : places.length.toString() + ' ' + countLabel() + ' in ' + city!,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+      ),
       const SizedBox(height: 5),
       Text(locationMessage, style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
       const SizedBox(height: 10),
