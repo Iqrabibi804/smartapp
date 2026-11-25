@@ -199,10 +199,17 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
           final position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 15)),
           );
-          userLat = position.latitude;
-          userLng = position.longitude;
-          locationAvailable = true;
-          locationMessage = 'Sorted by distance from your current location';
+          final center = cityCenter(selectedCity);
+          final distanceToCity = OsmFacilitiesService.distanceKm(
+            position.latitude, position.longitude, center.$1, center.$2);
+          if (distanceToCity <= 45) {
+            userLat = position.latitude;
+            userLng = position.longitude;
+            locationAvailable = true;
+            locationMessage = 'Sorted nearest-first from your current location';
+          } else {
+            locationMessage = 'Your GPS is outside $selectedCity · showing selected-city results without nearby distance';
+          }
         } else {
           locationMessage = 'Location permission unavailable · showing city map data';
         }
@@ -224,6 +231,19 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
       loadingCity = false;
     });
   }
+
+  (double, double) cityCenter(String city) => switch (city) {
+    'Attock' => (33.7667, 72.3592),
+    'Lahore' => (31.5204, 74.3587),
+    'Rawalpindi' => (33.5651, 73.0169),
+    'Islamabad' => (33.6844, 73.0479),
+    'Multan' => (30.1575, 71.5249),
+    'Sahiwal' => (30.6682, 73.1114),
+    'Murree' => (33.9070, 73.3943),
+    'Faisalabad' => (31.4504, 73.1350),
+    'Gujranwala' => (32.1877, 74.1945),
+    _ => (0, 0),
+  };
 
   Widget cityPicker(List<PlaceModel> all, Color surface, Color border) {
     final shown = cities.where((c) => c.$1.toLowerCase().contains(citySearch.text.trim().toLowerCase())).toList();
@@ -317,8 +337,9 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
             Text(p.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
             if (verified) const Padding(padding: EdgeInsets.only(top: 5), child: _VerifiedBadge()),
           ])),
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaceDetailsScreen(placeId: p.id))),
-            icon: const Icon(Icons.chevron_right_rounded)),
+          if (!p.id.startsWith('osm:'))
+            IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaceDetailsScreen(placeId: p.id))),
+              icon: const Icon(Icons.chevron_right_rounded)),
         ]),
         const SizedBox(height: 11),
         _FacilityInfo(icon: Icons.place_outlined, text: p.address.isEmpty ? 'Address not listed' : p.address),
