@@ -135,7 +135,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: AppTokens.dashboardBg,
       body: SafeArea(child: shell),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: SizedBox(
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: _tabIndex == 3 ? 64 : 0),
+        child: SizedBox(
         width: 52,
         height: 52,
         child: FloatingActionButton(
@@ -147,7 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           tooltip: isUrdu ? 'اے آئی گائیڈ' : 'AI Travel Concierge',
           child: const Icon(Icons.auto_awesome, size: 22),
         ),
-      ),
+      )),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
@@ -1417,6 +1419,22 @@ class _EssentialsTab extends ConsumerWidget {
                 query: 'pharmacy'))),
       ),
       (
+        label: t('Parks', 'پارکس'),
+        icon: Icons.park_rounded,
+        tint: AppTokens.pastelMint,
+        color: AppTokens.emerald,
+        onTap: () => push(const FacilityFinderScreen(initialType: FacilityType(
+            label: 'Parks', icon: Icons.park_rounded, query: 'park'))),
+      ),
+      (
+        label: t('Parking', 'پارکنگ'),
+        icon: Icons.local_parking_rounded,
+        tint: AppTokens.pastelBlue,
+        color: AppTokens.multaniBlue,
+        onTap: () => push(const FacilityFinderScreen(initialType: FacilityType(
+            label: 'Parking', icon: Icons.local_parking_rounded, query: 'parking'))),
+      ),
+      (
         label: t('ATMs', 'اے ٹی ایم'),
         icon: Icons.atm_rounded,
         tint: AppTokens.pastelBlue,
@@ -1452,7 +1470,8 @@ class _EssentialsTab extends ConsumerWidget {
         icon: Icons.restaurant_rounded,
         tint: AppTokens.pastelRose,
         color: const Color(0xFFB91C1C),
-        onTap: () => push(const RestaurantsScreen()),
+        onTap: () => push(const FacilityFinderScreen(initialType: FacilityType(
+            label: 'Restaurants', icon: Icons.restaurant_rounded, categoryName: 'Restaurants'))),
       ),
       (
         label: t('Hotels & Stays', 'ہوٹل اور سٹے'),
