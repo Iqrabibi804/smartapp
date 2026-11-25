@@ -101,6 +101,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
   final osmService = OsmFacilitiesService();
   List<PlaceModel> livePlaces = const [];
   String? cityLoadError;
+  bool cityFallbackForNearby = false;
   bool loadingCity = false;
   bool locationAvailable = false;
   double? userLat;
@@ -183,6 +184,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
       loadingCity = true;
       livePlaces = const [];
       cityLoadError = null;
+      cityFallbackForNearby = false;
       locationAvailable = false;
       userLat = null;
       userLng = null;
@@ -218,19 +220,33 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
 
     List<PlaceModel> fetched = const [];
     String? fetchError;
-    try {
-      if (locationAvailable && userLat != null && userLng != null) {
+    var usedCityFallback = false;
+    if (locationAvailable && userLat != null && userLng != null) {
+      try {
         fetched = await osmService.fetchNearby(
           userLat!,
           userLng!,
           selected.label,
           radiusKm: 80,
         );
-      } else {
-        fetched = await osmService.fetchCity(selectedCity, selected.label);
+      } catch (_) {
+        // A failed radius request should not prevent the selected city from
+        // being searched as a second chance.
       }
-    } catch (_) {
-      fetchError = 'Live map data could not be reached. Check your internet connection and try again.';
+      if (fetched.isEmpty) {
+        try {
+          fetched = await osmService.fetchCity(selectedCity, selected.label);
+          usedCityFallback = fetched.isNotEmpty;
+        } catch (_) {
+          fetchError = 'Nearby and selected-city map data could not be reached. Check your internet connection and try again.';
+        }
+      }
+    } else {
+      try {
+        fetched = await osmService.fetchCity(selectedCity, selected.label);
+      } catch (_) {
+        fetchError = 'Live map data could not be reached. Check your internet connection and try again.';
+      }
     }
     if (!mounted) return;
     if (locationAvailable && userLat != null && userLng != null) {
@@ -240,6 +256,10 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
     setState(() {
       livePlaces = fetched;
       cityLoadError = fetchError;
+      cityFallbackForNearby = usedCityFallback;
+      if (usedCityFallback) {
+        locationMessage = 'No nearby records returned · showing selected-city results for $selectedCity';
+      }
       loadingCity = false;
     });
   }
@@ -313,7 +333,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
   Widget cityResults(List<PlaceModel> places, Color surface, Color border) {
     return ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
       Text(
-        locationAvailable
+        locationAvailable && !cityFallbackForNearby
             ? places.length.toString() + ' ' + countLabel() + ' within 80 km of your location'
             : places.length.toString() + ' ' + countLabel() + ' in ' + city!,
         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
