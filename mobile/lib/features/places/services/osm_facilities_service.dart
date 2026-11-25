@@ -44,7 +44,7 @@ class OsmFacilitiesService {
     'Police': ['nwr["amenity"="police"]'],
     'Parks': ['nwr["leisure"="park"]'],
     'Parking': ['nwr["amenity"="parking"]'],
-    'Restaurants': ['nwr["amenity"~"^(restaurant|fast_food|cafe)$"]'],
+    'Restaurants': ['nwr["amenity"~"^(restaurant|fast_food|cafe)\\$"]'],
     'Washrooms': ['nwr["amenity"="toilets"]'],
     'Drinking water': ['nwr["amenity"="drinking_water"]'],
   };
@@ -110,7 +110,7 @@ class OsmFacilitiesService {
             .toList();
       } catch (_) {}
     }
-    return const [];
+    throw StateError('Could not load OpenStreetMap results. Check your internet connection and try again.');
   }
 
   PlaceModel? _fromElement(Map<String, dynamic> element, String city, String category) {
