@@ -163,16 +163,15 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
             );
           },
         )),
-        Expanded(child: asyncPlaces.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => _EmptyState(title: 'Could not load ' + selected.label,
-              message: 'Check your connection and try again.'),
-          data: (all) {
-            if (city == null) return cityPicker(all, surface, border);
-            if (loadingCity) return const Center(child: CircularProgressIndicator());
-            return cityResults(livePlaces, surface, border);
-          },
-        )),
+        Expanded(
+          child: city == null
+              // City selection must never depend on the legacy directory request.
+              // That request may be slow or fail while free OSM data is still usable.
+              ? cityPicker(asyncPlaces.valueOrNull ?? const <PlaceModel>[], surface, border)
+              : loadingCity
+                  ? const Center(child: CircularProgressIndicator())
+                  : cityResults(livePlaces, surface, border),
+        ),
       ]),
     );
   }
@@ -289,7 +288,8 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
                   const Spacer(),
                   Text(c.$1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 3),
-                  Text(count.toString() + ' ' + countLabel(), style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+                  Text(all.isEmpty ? 'Live map data' : count.toString() + ' ' + countLabel(),
+                    style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
                 ]))));
         },
       ),
