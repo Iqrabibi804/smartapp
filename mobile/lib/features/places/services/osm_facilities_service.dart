@@ -61,6 +61,7 @@ class OsmFacilitiesService {
 
     // GET is more browser-friendly than a cross-origin form POST with headers.
     // If one Overpass server is empty or unavailable, try the next one.
+    var receivedValidResponse = false;
     for (final endpoint in const [
       'https://overpass-api.de/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter',
@@ -73,6 +74,9 @@ class OsmFacilitiesService {
         );
         final rawElements =
             response.data is Map ? response.data['elements'] : null;
+        if (response.data is Map && rawElements is List) {
+          receivedValidResponse = true;
+        }
         final elements = rawElements is List ? rawElements : const <dynamic>[];
         final places = elements
             .whereType<Map>()
@@ -110,6 +114,7 @@ class OsmFacilitiesService {
             .toList();
       } catch (_) {}
     }
+    if (receivedValidResponse) return const [];
     throw StateError('Could not load OpenStreetMap results. Check your internet connection and try again.');
   }
 
