@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../models/place_model.dart';
@@ -33,6 +34,7 @@ const List<FacilityType> kFacilityTypes = [
   FacilityType(label: 'Petrol pumps', icon: Icons.local_gas_station_rounded, query: 'petrol'),
   FacilityType(label: 'ATMs', icon: Icons.atm_rounded, query: 'ATM'),
   FacilityType(label: 'Police', icon: Icons.local_police_rounded, query: 'police'),
+  FacilityType(label: 'Parks', icon: Icons.park_rounded, query: 'park'),
   FacilityType(label: 'Parking', icon: Icons.local_parking_rounded, query: 'parking'),
   FacilityType(
     label: 'Restaurants',
@@ -77,177 +79,294 @@ class _FacilityFinderScreenState extends ConsumerState<FacilityFinderScreen> {
   late FacilityType _selected = widget.initialType ?? kFacilityTypes.first;
 
   @override
-  Widget build(BuildContext context) {
-    final results = ref.watch(facilityResultsProvider(_selected));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppTokens.surfaceDark : Colors.white;
-    final borderColor = isDark ? AppTokens.borderDark : AppTokens.border;
+  Widget build(BuildContext context) =>
+      _CityFirstEssentialsFlow(initialType: widget.initialType);
 
+}
+
+class _CityFirstEssentialsFlow extends ConsumerStatefulWidget {
+  const _CityFirstEssentialsFlow({this.initialType});
+  final FacilityType? initialType;
+
+  @override
+  ConsumerState<_CityFirstEssentialsFlow> createState() => _CityFirstEssentialsFlowState();
+}
+
+class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFlow> {
+  late FacilityType selected = widget.initialType ?? kFacilityTypes.first;
+  String? city;
+  final citySearch = TextEditingController();
+
+  static const cities = <(String, IconData, Color)>[
+    ('Attock', Icons.account_balance_rounded, Color(0xFF1B6A4A)),
+    ('Lahore', Icons.location_city_rounded, Color(0xFFB66B28)),
+    ('Rawalpindi', Icons.apartment_rounded, Color(0xFF4269A8)),
+    ('Islamabad', Icons.forest_rounded, Color(0xFF287F78)),
+    ('Multan', Icons.mosque_rounded, Color(0xFF9363A9)),
+    ('Sahiwal', Icons.agriculture_rounded, Color(0xFF688B42)),
+    ('Murree', Icons.landscape_rounded, Color(0xFF4C7E9A)),
+    ('Faisalabad', Icons.factory_rounded, Color(0xFF9A6A3A)),
+    ('Gujranwala', Icons.storefront_rounded, Color(0xFF7C657E)),
+  ];
+
+  @override
+  void dispose() {
+    citySearch.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncPlaces = ref.watch(facilityResultsProvider(selected));
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final surface = dark ? AppTokens.surfaceDark : Colors.white;
+    final border = dark ? AppTokens.borderDark : AppTokens.border;
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Essential facilities',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              'Directory data — no live availability',
-              style: TextStyle(fontSize: 11),
-            ),
-          ],
+        leading: city == null ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => setState(() => city = null),
         ),
+        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(city ?? 'Essentials', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(city == null ? 'Choose a city to explore' : selected.label + ' in ' + city!,
+              style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+        ]),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              scrollDirection: Axis.horizontal,
-              itemCount: kFacilityTypes.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final type = kFacilityTypes[index];
-                final active = type.cacheKey == _selected.cacheKey;
-                return ChoiceChip(
-                  selected: active,
-                  onSelected: (_) => setState(() => _selected = type),
-                  avatar: Icon(
-                    type.icon,
-                    size: 16,
-                    color: active ? Colors.white : AppTokens.emerald,
-                  ),
-                  label: Text(type.label),
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    color: active ? Colors.white : null,
-                  ),
-                  selectedColor: AppTokens.emerald,
-                );
-              },
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTokens.warning.withValues(alpha: isDark ? 0.18 : 0.10),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppTokens.warning.withValues(alpha: 0.3)),
-            ),
-            child: const Text(
-              'Results come from the saved directory. A listing does not confirm '
-              'that a facility is open, stocked or currently operating — call '
-              'ahead where a phone number is shown.',
-              style: TextStyle(fontSize: 12, height: 1.4),
-            ),
-          ),
-          if (_selected.label == 'Police')
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const PoliceDirectoryScreen(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: const Text('Open Islamabad & Lahore police directory'),
-                ),
-              ),
-            ),
-          Expanded(
-            child: results.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => const _EmptyState(
-                title: 'Facility information unavailable',
-                message: 'The directory could not be loaded. Check your '
-                    'connection or try again later.',
-              ),
-              data: (places) {
-                if (places.isEmpty) {
-                  return _EmptyState(
-                    title: 'No ${_selected.label.toLowerCase()} found',
-                    message: 'The saved directory has no matching entries. This '
-                        'is not a confirmation that none exist nearby. '
-                        'Information unavailable.',
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: places.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final place = places[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              AppTokens.emerald.withValues(alpha: 0.1),
-                          child: Icon(_selected.icon,
-                              color: AppTokens.emerald, size: 20),
-                        ),
-                        title: Text(
-                          place.name,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                place.address,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Verification: ${facilityVerificationLabel(place)}'
-                                '${place.lastVerifiedAt != null ? ' · last verified ${_dateOnly(place.lastVerifiedAt!)}' : ' · verification date not recorded'}'
-                                '${place.phone != null ? ' · ${place.phone}' : ''}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppTokens.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        isThreeLine: true,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  PlaceDetailsScreen(placeId: place.id),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      body: Column(children: [
+        SizedBox(height: 52, child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          scrollDirection: Axis.horizontal,
+          itemCount: kFacilityTypes.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final type = kFacilityTypes[index];
+            final active = type.cacheKey == selected.cacheKey;
+            return ChoiceChip(
+              selected: active,
+              onSelected: (_) => setState(() { selected = type; city = null; }),
+              avatar: Icon(type.icon, size: 16, color: active ? Colors.white : AppTokens.emerald),
+              label: Text(type.label),
+              labelStyle: TextStyle(fontSize: 12, color: active ? Colors.white : null),
+              selectedColor: AppTokens.emerald,
+              backgroundColor: surface,
+              side: BorderSide(color: active ? AppTokens.emerald : border),
+            );
+          },
+        )),
+        Expanded(child: asyncPlaces.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => _EmptyState(title: 'Could not load ' + selected.label,
+              message: 'Check your connection and try again.'),
+          data: (all) {
+            if (city == null) return cityPicker(all, surface, border);
+            final filtered = all.where((p) => matchesCity(p, city!)).toList();
+            return cityResults(filtered, surface, border);
+          },
+        )),
+      ]),
     );
   }
+
+  Widget cityPicker(List<PlaceModel> all, Color surface, Color border) {
+    final shown = cities.where((c) => c.$1.toLowerCase().contains(citySearch.text.trim().toLowerCase())).toList();
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
+      Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF0B5D3B), Color(0xFF16815A)]),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(children: [
+          Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .15), borderRadius: BorderRadius.circular(15)),
+              child: Icon(selected.icon, color: Colors.white, size: 26)),
+          const SizedBox(width: 13),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Select a City', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text('Browse ' + selected.label.toLowerCase() + ' by city', style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+          ])),
+        ]),
+      ),
+      const SizedBox(height: 15),
+      TextField(controller: citySearch, onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(hintText: 'Search city', prefixIcon: const Icon(Icons.search_rounded),
+          filled: true, fillColor: surface, border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)))),
+      const SizedBox(height: 14),
+      GridView.builder(
+        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        itemCount: shown.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: MediaQuery.sizeOf(context).width >= 650 ? 3 : 2,
+          crossAxisSpacing: 12, mainAxisSpacing: 12, mainAxisExtent: 136),
+        itemBuilder: (context, i) {
+          final c = shown[i];
+          final count = all.where((p) => matchesCity(p, c.$1)).length;
+          return Material(color: surface, borderRadius: BorderRadius.circular(18),
+            child: InkWell(borderRadius: BorderRadius.circular(18), onTap: () => setState(() => city = c.$1),
+              child: Container(padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(width: 42, height: 42, decoration: BoxDecoration(color: c.$3.withValues(alpha: .12), borderRadius: BorderRadius.circular(13)),
+                    child: Icon(c.$2, color: c.$3, size: 23)),
+                  const Spacer(),
+                  Text(c.$1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 3),
+                  Text(count.toString() + ' ' + countLabel(), style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+                ]))));
+        },
+      ),
+      const SizedBox(height: 12),
+      const Text('Counts reflect entries currently available in the directory.', style: TextStyle(fontSize: 11, color: AppTokens.textSecondary)),
+    ]);
+  }
+
+  Widget cityResults(List<PlaceModel> places, Color surface, Color border) {
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
+      Text(places.length.toString() + ' ' + countLabel() + ' in ' + city!,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 10),
+      if (places.isEmpty)
+        _EmptyState(title: 'No ' + selected.label.toLowerCase() + ' listed in ' + city!,
+          message: 'No matching records were found in the available city dataset. This does not mean the city has none.')
+      else
+        ...places.map((p) => facilityCard(p, surface, border)),
+      const SizedBox(height: 20),
+      faqPanel(),
+    ]);
+  }
+
+  Widget facilityCard(PlaceModel p, Color surface, Color border) {
+    final verified = p.verificationStatus == 'verified' || p.verified;
+    final hours = p.openingHours.isEmpty ? 'Hours not listed' : p.openingHours.values.join(' · ');
+    final price = p.priceRange.toLowerCase().contains('free') ? 'Free'
+        : (p.priceRange.toLowerCase() == 'unknown' || p.priceRange.toLowerCase() == 'medium')
+            ? 'Price not listed' : 'Paid · ' + p.priceRange;
+    final mapUrl = 'https://www.openstreetmap.org/?mlat=' + p.latitude.toString() +
+        '&mlon=' + p.longitude.toString() + '#map=17/' + p.latitude.toString() + '/' + p.longitude.toString();
+    return Container(margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(width: 43, height: 43, decoration: BoxDecoration(color: AppTokens.emerald.withValues(alpha: .10), borderRadius: BorderRadius.circular(13)),
+            child: Icon(selected.icon, color: AppTokens.emerald)),
+          const SizedBox(width: 11),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(p.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            if (verified) const Padding(padding: EdgeInsets.only(top: 5), child: _VerifiedBadge()),
+          ])),
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaceDetailsScreen(placeId: p.id))),
+            icon: const Icon(Icons.chevron_right_rounded)),
+        ]),
+        const SizedBox(height: 11),
+        _FacilityInfo(icon: Icons.place_outlined, text: p.address.isEmpty ? 'Address not listed' : p.address),
+        const SizedBox(height: 6),
+        _FacilityInfo(icon: Icons.schedule_rounded, text: hours),
+        const SizedBox(height: 6),
+        _FacilityInfo(icon: Icons.payments_outlined, text: price),
+        if (p.phone?.trim().isNotEmpty == true) ...[
+          const SizedBox(height: 6), _FacilityInfo(icon: Icons.phone_outlined, text: p.phone!),
+        ],
+        const SizedBox(height: 12),
+        SizedBox(width: double.infinity, child: FilledButton.icon(
+          onPressed: p.latitude == 0 && p.longitude == 0 ? null : () => launchUrl(Uri.parse(mapUrl), mode: LaunchMode.externalApplication),
+          icon: const Icon(Icons.directions_rounded, size: 18), label: const Text('Directions / Map'),
+          style: FilledButton.styleFrom(backgroundColor: AppTokens.emerald, padding: const EdgeInsets.symmetric(vertical: 12)),
+        )),
+      ]));
+  }
+
+  Widget faqPanel() {
+    final items = faqItems(city!, selected.label);
+    return Container(padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: AppTokens.emerald.withValues(alpha: .045), borderRadius: BorderRadius.circular(18), border: Border.all(color: AppTokens.border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('FAQs about ' + selected.label + ' in ' + city!,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 4),
+        const Text('Helpful city-specific guidance', style: TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+        const SizedBox(height: 8),
+        ...items.map((f) => ExpansionTile(tilePadding: EdgeInsets.zero, childrenPadding: const EdgeInsets.only(bottom: 10),
+          title: Text(f.$1, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          children: [Align(alignment: Alignment.centerLeft, child: Text(f.$2, style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppTokens.textSecondary)))])),
+      ]));
+  }
+
+  String countLabel() => switch (selected.label) {
+    'Parks' => 'Parks', 'Parking' => 'Parking Areas', 'ATMs' => 'ATMs',
+    'Hospitals' => 'Hospitals', 'Restaurants' => 'Restaurants',
+    'Pharmacies' => 'Pharmacies', 'Petrol pumps' => 'Petrol Pumps',
+    'Police' => 'Police Facilities', 'Washrooms' => 'Washrooms', _ => 'Places',
+  };
+}
+
+bool matchesCity(PlaceModel p, String city) {
+  final aliases = <String, List<String>>{
+    'Islamabad': ['islamabad', 'ict'], 'Rawalpindi': ['rawalpindi', 'pindi'],
+    'Lahore': ['lahore'], 'Attock': ['attock'], 'Multan': ['multan'],
+    'Sahiwal': ['sahiwal'], 'Murree': ['murree'],
+    'Faisalabad': ['faisalabad', 'lyallpur'], 'Gujranwala': ['gujranwala'],
+  };
+  final terms = aliases[city] ?? [city.toLowerCase()];
+  final cityField = (p.city ?? '').toLowerCase();
+  final address = p.address.toLowerCase();
+  return terms.any((term) => cityField == term || cityField.contains(term) || address.contains(term));
+}
+
+List<(String, String)> faqItems(String city, String category) {
+  final route = 'For ' + city + ', use the listed address and open map directions before travelling. If the pin looks wrong, choose another result.';
+  switch (category) {
+    case 'Hospitals': return [
+      ('How do I find emergency care in ' + city + '?', 'Use the list to locate hospitals and call ahead where possible. This directory does not confirm emergency capacity or bed availability.'),
+      ('Are services and hours guaranteed?', 'No. Contact the hospital to confirm its current emergency department, services and operating status.'),
+      ('How do I get there?', route),
+    ];
+    case 'Parks': return [
+      ('Which parks can I visit in ' + city + '?', 'The entries above are the parks currently listed for ' + city + '. Check local signage and management notices before entering.'),
+      ('Are parks free?', 'Entry fees may vary by park, attraction or event. Confirm the current fee at the entrance.'),
+      ('What are the park timings?', 'Timings appear only when available in the directory. Confirm locally, especially on holidays.'),
+    ];
+    case 'Parking': return [
+      ('Where can I park in ' + city + '?', 'Use the listed parking areas and map directions. Follow traffic signs and keep emergency access clear.'),
+      ('Is parking free or paid?', 'The label uses available directory information. Confirm the current fee at the entrance.'),
+      ('Can I reserve a space?', 'This directory does not provide live parking-space availability or reservations.'),
+    ];
+    case 'ATMs': return [
+      ('Are these ATMs working now?', 'The directory does not provide live cash or machine status. Check the ATM before relying on it.'),
+      ('Is an ATM open 24/7?', 'Access hours are not guaranteed by this listing. Confirm with the bank or ATM operator.'),
+      ('How do I reach one?', route),
+    ];
+    case 'Restaurants': return [
+      ('How can I find restaurants in ' + city + '?', 'Browse the city-filtered entries and open map directions to check the exact location.'),
+      ('Are menu prices current?', 'Menu and prices can change. Confirm directly with the restaurant.'),
+      ('How can I check opening status?', 'Call the restaurant or check its current notice; a directory listing alone does not confirm it is open.'),
+    ];
+    default: return [
+      ('How do I use ' + category + ' in ' + city + '?', route),
+      ('Is this live availability?', 'These are city-filtered directory results. They do not guarantee current operation or availability.'),
+      ('How can I confirm details?', 'Call the facility where a number is shown or check with its official operator.'),
+    ];
+  }
+}
+
+class _FacilityInfo extends StatelessWidget {
+  const _FacilityInfo({required this.icon, required this.text});
+  final IconData icon; final String text;
+  @override
+  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Icon(icon, size: 15, color: AppTokens.textSecondary), const SizedBox(width: 7),
+    Expanded(child: Text(text, style: const TextStyle(fontSize: 12, height: 1.35, color: AppTokens.textSecondary))),
+  ]);
+}
+
+class _VerifiedBadge extends StatelessWidget {
+  const _VerifiedBadge();
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(color: AppTokens.emerald.withValues(alpha: .10), borderRadius: BorderRadius.circular(20)),
+    child: const Text('Verified', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTokens.emerald)),
+  );
 }
 
 String _dateOnly(String value) {
