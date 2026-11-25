@@ -100,6 +100,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
   final citySearch = TextEditingController();
   final osmService = OsmFacilitiesService();
   List<PlaceModel> livePlaces = const [];
+  String? cityLoadError;
   bool loadingCity = false;
   bool locationAvailable = false;
   double? userLat;
@@ -181,6 +182,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
       city = selectedCity;
       loadingCity = true;
       livePlaces = const [];
+      cityLoadError = null;
       locationAvailable = false;
       userLat = null;
       userLng = null;
@@ -219,7 +221,13 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
       locationMessage = 'Could not get GPS location · showing city map data';
     }
 
-    final fetched = await osmService.fetchCity(selectedCity, selected.label);
+    List<PlaceModel> fetched = const [];
+    String? fetchError;
+    try {
+      fetched = await osmService.fetchCity(selectedCity, selected.label);
+    } catch (_) {
+      fetchError = 'Live map data could not be reached. Check your internet connection and try again.';
+    }
     if (!mounted) return;
     if (locationAvailable && userLat != null && userLng != null) {
       fetched.sort((a, b) => OsmFacilitiesService.distanceKm(userLat!, userLng!, a.latitude, a.longitude)
@@ -227,6 +235,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
     }
     setState(() {
       livePlaces = fetched;
+      cityLoadError = fetchError;
       loadingCity = false;
     });
   }
@@ -288,8 +297,8 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
                   const Spacer(),
                   Text(c.$1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 3),
-                  Text(all.isEmpty ? 'Live map data' : count.toString() + ' ' + countLabel(),
-                    style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+                  const Text('Tap to load map data',
+                    style: TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
                 ]))));
         },
       ),
@@ -308,8 +317,13 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
       const Text('OpenStreetMap data · not live operating status', style: TextStyle(fontSize: 10.5, color: AppTokens.textSecondary)),
       const SizedBox(height: 10),
       if (places.isEmpty)
-        _EmptyState(title: 'No ' + selected.label.toLowerCase() + ' listed in ' + city!,
-          message: 'No matching records were found in the available city dataset. This does not mean the city has none.')
+        _EmptyState(
+          title: cityLoadError != null
+              ? 'Could not load ' + selected.label.toLowerCase() + ' in ' + city!
+              : 'No mapped ' + selected.label.toLowerCase() + ' found in ' + city!,
+          message: cityLoadError ??
+              'No matching places were returned by OpenStreetMap. This does not mean the city has none.',
+        )
       else
         ...places.map((p) => facilityCard(p, surface, border)),
       if (places.isNotEmpty) const Padding(padding: EdgeInsets.only(top: 4), child: Text('Map data © OpenStreetMap contributors', style: TextStyle(fontSize: 10, color: AppTokens.textSecondary))),
