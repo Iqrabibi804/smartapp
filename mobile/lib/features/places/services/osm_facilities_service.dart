@@ -49,11 +49,23 @@ class OsmFacilitiesService {
     final cacheKey = 'osm:facilities:$city:$category';
     final query = '[out:json][timeout:25];($filter($bounds););out center tags;';
     try {
-      final response = await _dio.post<dynamic>(
+      Response<dynamic>? response;
+      for (final endpoint in const [
         'https://overpass-api.de/api/interpreter',
-        data: {'data': query},
-        options: Options(contentType: Headers.formUrlEncodedContentType),
-      );
+        'https://overpass.kumi.systems/api/interpreter',
+      ]) {
+        try {
+          response = await _dio.post<dynamic>(
+            endpoint,
+            data: {'data': query},
+            options: Options(contentType: Headers.formUrlEncodedContentType),
+          );
+          break;
+        } catch (_) {
+          // Try the next free public Overpass instance.
+        }
+      }
+      if (response == null) throw StateError('All public Overpass endpoints failed');
       final elements = (response.data is Map ? response.data['elements'] : null) as List? ?? const [];
       final places = elements
           .whereType<Map>()
