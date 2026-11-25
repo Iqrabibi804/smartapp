@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/design_tokens.dart';
 import '../models/place_model.dart';
 import '../services/places_providers.dart';
+import '../services/osm_facilities_service.dart';
 import 'place_details_screen.dart';
 import 'police_directory_screen.dart';
 
@@ -96,6 +98,13 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
   late FacilityType selected = widget.initialType ?? kFacilityTypes.first;
   String? city;
   final citySearch = TextEditingController();
+  final osmService = OsmFacilitiesService();
+  List<PlaceModel> livePlaces = const [];
+  bool loadingCity = false;
+  bool locationAvailable = false;
+  double? userLat;
+  double? userLng;
+  String locationMessage = 'Location not requested yet';
 
   static const cities = <(String, IconData, Color)>[
     ('Attock', Icons.account_balance_rounded, Color(0xFF1B6A4A)),
@@ -144,7 +153,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
             final active = type.cacheKey == selected.cacheKey;
             return ChoiceChip(
               selected: active,
-              onSelected: (_) => setState(() { selected = type; city = null; }),
+              onSelected: (_) => setState(() { selected = type; city = null; livePlaces = const []; loadingCity = false; }),
               avatar: Icon(type.icon, size: 16, color: active ? Colors.white : AppTokens.emerald),
               label: Text(type.label),
               labelStyle: TextStyle(fontSize: 12, color: active ? Colors.white : null),
@@ -160,12 +169,60 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
               message: 'Check your connection and try again.'),
           data: (all) {
             if (city == null) return cityPicker(all, surface, border);
-            final filtered = all.where((p) => matchesCity(p, city!)).toList();
-            return cityResults(filtered, surface, border);
+            if (loadingCity) return const Center(child: CircularProgressIndicator());
+            return cityResults(livePlaces, surface, border);
           },
         )),
       ]),
     );
+  }
+
+  Future<void> selectCity(String selectedCity) async {
+    setState(() {
+      city = selectedCity;
+      loadingCity = true;
+      livePlaces = const [];
+      locationAvailable = false;
+      userLat = null;
+      userLng = null;
+      locationMessage = 'Finding nearby facilities…';
+    });
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        var permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always) {
+          final position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 15)),
+          );
+          userLat = position.latitude;
+          userLng = position.longitude;
+          locationAvailable = true;
+          locationMessage = 'Sorted by distance from your current location';
+        } else {
+          locationMessage = 'Location permission unavailable · showing city map data';
+        }
+      } else {
+        locationMessage = 'Location services are off · showing city map data';
+      }
+    } catch (_) {
+      locationMessage = 'Could not get GPS location · showing city map data';
+    }
+
+    final fetched = await osmService.fetchCity(selectedCity, selected.label);
+    if (!mounted) return;
+    if (locationAvailable && userLat != null && userLng != null) {
+      fetched.sort((a, b) => OsmFacilitiesService.distanceKm(userLat!, userLng!, a.latitude, a.longitude)
+          .compareTo(OsmFacilitiesService.distanceKm(userLat!, userLng!, b.latitude, b.longitude)));
+    }
+    setState(() {
+      livePlaces = fetched;
+      loadingCity = false;
+    });
   }
 
   Widget cityPicker(List<PlaceModel> all, Color surface, Color border) {
@@ -203,7 +260,7 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
           final c = shown[i];
           final count = all.where((p) => matchesCity(p, c.$1)).length;
           return Material(color: surface, borderRadius: BorderRadius.circular(18),
-            child: InkWell(borderRadius: BorderRadius.circular(18), onTap: () => setState(() => city = c.$1),
+            child: InkWell(borderRadius: BorderRadius.circular(18), onTap: () => selectCity(c.$1),
               child: Container(padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -225,12 +282,17 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
     return ListView(padding: const EdgeInsets.fromLTRB(16, 10, 16, 120), children: [
       Text(places.length.toString() + ' ' + countLabel() + ' in ' + city!,
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 5),
+      Text(locationMessage, style: const TextStyle(fontSize: 11.5, color: AppTokens.textSecondary)),
+      const SizedBox(height: 10),
+      const Text('OpenStreetMap data · not live operating status', style: TextStyle(fontSize: 10.5, color: AppTokens.textSecondary)),
       const SizedBox(height: 10),
       if (places.isEmpty)
         _EmptyState(title: 'No ' + selected.label.toLowerCase() + ' listed in ' + city!,
           message: 'No matching records were found in the available city dataset. This does not mean the city has none.')
       else
         ...places.map((p) => facilityCard(p, surface, border)),
+      if (places.isNotEmpty) const Padding(padding: EdgeInsets.only(top: 4), child: Text('Map data © OpenStreetMap contributors', style: TextStyle(fontSize: 10, color: AppTokens.textSecondary))),
       const SizedBox(height: 20),
       faqPanel(),
     ]);
@@ -260,6 +322,10 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
         ]),
         const SizedBox(height: 11),
         _FacilityInfo(icon: Icons.place_outlined, text: p.address.isEmpty ? 'Address not listed' : p.address),
+        if (locationAvailable && userLat != null && userLng != null) ...[
+          const SizedBox(height: 6),
+          _FacilityInfo(icon: Icons.near_me_outlined, text: distanceText(OsmFacilitiesService.distanceKm(userLat!, userLng!, p.latitude, p.longitude))),
+        ],
         const SizedBox(height: 6),
         _FacilityInfo(icon: Icons.schedule_rounded, text: hours),
         const SizedBox(height: 6),
@@ -368,6 +434,8 @@ class _VerifiedBadge extends StatelessWidget {
     child: const Text('Verified', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTokens.emerald)),
   );
 }
+
+String distanceText(double km) => km < 1 ? '${(km * 1000).round()} m away' : '${km.toStringAsFixed(1)} km away';
 
 String _dateOnly(String value) {
   final parsed = DateTime.tryParse(value);
