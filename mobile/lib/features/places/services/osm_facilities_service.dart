@@ -44,7 +44,7 @@ class OsmFacilitiesService {
     'Police': ['nwr["amenity"="police"]'],
     'Parks': ['nwr["leisure"="park"]'],
     'Parking': ['nwr["amenity"="parking"]'],
-    'Restaurants': ['nwr["amenity"~"^(restaurant|fast_food|cafe)\\$"]'],
+    'Restaurants': ['nwr["amenity"~"^(restaurant|fast_food|cafe)\$"]'],
     'Washrooms': ['nwr["amenity"="toilets"]'],
     'Drinking water': ['nwr["amenity"="drinking_water"]'],
   };
