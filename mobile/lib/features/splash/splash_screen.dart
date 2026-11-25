@@ -122,9 +122,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                                 height: 34,
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xCC032713),
-                                  border: Border.all(color: _gold.withValues(alpha: .75)),
-                                  borderRadius: BorderRadius.circular(24),
+                                  color: Colors.black26,
+                                  border: Border.all(color: _gold, width: 1),
+                                  borderRadius: BorderRadius.circular(20),
                                   boxShadow: const [
                                     BoxShadow(color: Colors.black26, blurRadius: 10),
                                   ],
@@ -299,11 +299,13 @@ class _SolidWelcomePinPainter extends CustomPainter {
     final w = size.width;
     final center = Offset(w * .5, w * .39);
     final radius = w * .285;
+    // One continuous, closed teardrop silhouette: rounded head and tapered tip.
     final pin = Path()
       ..moveTo(center.dx, w * .96)
-      ..cubicTo(w * .43, w * .79, w * .18, w * .59, w * .18, center.dy)
-      ..arcTo(Rect.fromCircle(center: center, radius: radius), math.pi, -math.pi, false)
-      ..cubicTo(w * .82, w * .59, w * .57, w * .79, center.dx, w * .96)
+      ..cubicTo(w * .43, w * .79, w * .18, w * .62, w * .18, center.dy)
+      ..cubicTo(w * .18, w * .22, w * .32, w * .105, center.dx, w * .105)
+      ..cubicTo(w * .68, w * .105, w * .82, w * .22, w * .82, center.dy)
+      ..cubicTo(w * .82, w * .62, w * .57, w * .79, center.dx, w * .96)
       ..close();
 
     canvas.drawPath(
@@ -414,7 +416,12 @@ class _WelcomeBackdropPainter extends CustomPainter {
       ..color = _gold.withValues(alpha: .72)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    canvas.drawRect(Rect.fromLTWH(16, 16, size.width - 32, size.height - 32), frame);
+    final frameRect = Rect.fromLTWH(16, 16, size.width - 32, size.height - 32);
+    // Keep the inset frame but omit its full-width top stroke so it doesn't
+    // visually underline or compete with the language control.
+    canvas.drawLine(Offset(frameRect.left, frameRect.top), Offset(frameRect.left, frameRect.bottom), frame);
+    canvas.drawLine(Offset(frameRect.right, frameRect.top), Offset(frameRect.right, frameRect.bottom), frame);
+    canvas.drawLine(Offset(frameRect.left, frameRect.bottom), Offset(frameRect.right, frameRect.bottom), frame);
 
     final ornament = Paint()
       ..color = _gold.withValues(alpha: .82)
@@ -453,9 +460,9 @@ class _WelcomeBackdropPainter extends CustomPainter {
 
     // Detailed, low-contrast architectural line art in a dedicated bottom band.
     final art = Paint()
-      ..color = const Color(0xFFD4AF37).withValues(alpha: .19)
+      ..color = const Color(0xFFD4AF37).withValues(alpha: .18)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.15
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final base = size.height * .875;
