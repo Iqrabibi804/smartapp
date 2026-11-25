@@ -84,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 2:
         return const SmartBudgetPlannerScreen();
       case 3:
-        return const _EssentialsTab();
+        return _EssentialsTab(onOpenAI: _openAiConcierge);
       default:
         return _ExploreTab(
           onOpenTab: (index) => setState(() => _tabIndex = index),
@@ -1396,7 +1396,8 @@ class _PhotoPlaceholder extends StatelessWidget {
 // ── Essentials tab ──────────────────────────────────────────────────────────
 
 class _EssentialsTab extends ConsumerWidget {
-  const _EssentialsTab();
+  const _EssentialsTab({required this.onOpenAI});
+  final VoidCallback onOpenAI;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1523,10 +1524,28 @@ class _EssentialsTab extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 112),
           children: [
-            _SectionTitle(
-              title: t('Essentials', 'ضروریات'),
-              subtitle: t('Hospitals, food and everyday help across Punjab',
-                  'پنجاب بھر میں ہسپتال، کھانا اور روزمرہ مدد'),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _SectionTitle(
+                    title: t('Essentials', 'ضروریات'),
+                    subtitle: t('Hospitals, food and everyday help across Punjab',
+                        'پنجاب بھر میں ہسپتال، کھانا اور روزمرہ مدد'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: onOpenAI,
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                  label: Text(t('Ask AI', 'اے آئی سے پوچھیں')),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTokens.emerald,
+                    side: const BorderSide(color: AppTokens.border),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
             Row(
