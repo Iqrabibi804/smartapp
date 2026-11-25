@@ -286,7 +286,6 @@ class _CityFirstEssentialsFlowState extends ConsumerState<_CityFirstEssentialsFl
           crossAxisSpacing: 12, mainAxisSpacing: 12, mainAxisExtent: 136),
         itemBuilder: (context, i) {
           final c = shown[i];
-          final count = all.where((p) => matchesCity(p, c.$1)).length;
           return Material(color: surface, borderRadius: BorderRadius.circular(18),
             child: InkWell(borderRadius: BorderRadius.circular(18), onTap: () => selectCity(c.$1),
               child: Container(padding: const EdgeInsets.all(14),
