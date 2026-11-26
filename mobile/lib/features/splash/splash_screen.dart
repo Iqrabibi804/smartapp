@@ -55,7 +55,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFF06371B), Color(0xFF021F0E)],
+                colors: [Color(0xFFF0C66B), Color(0xFF1B6A3A), Color(0xFF06371B), Color(0xFF021F0E)],
+                stops: [0.0, 0.24, 0.58, 1.0],
               ),
             ),
           ),
@@ -192,15 +193,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             ),
                           ),
                           const SizedBox(height: 9),
-                          Text(
-                            _urdu
-                                ? '81 شہر  •  آف لائن رہنمائی  •  درست معلومات'
-                                : '81 cities  •  Offline-ready guidance  •  Honest information',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: _champagne.withValues(alpha: .95),
-                              fontSize: compact ? 10.5 : 12,
-                              height: 1.35,
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .09),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: Colors.white.withValues(alpha: .22)),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black12, blurRadius: 18, offset: Offset(0, 5)),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.location_city_rounded, color: _goldLight, size: 17),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    _urdu ? '81 شہر' : '81 Cities',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 9), color: Colors.white30),
+                                const Icon(Icons.offline_pin_rounded, color: _goldLight, size: 17),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    _urdu ? 'آف لائن رہنمائی' : 'Offline-ready',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           SizedBox(height: compact ? 20 : 30),
