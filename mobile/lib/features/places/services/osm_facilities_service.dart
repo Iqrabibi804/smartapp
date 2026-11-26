@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../../core/offline/offline_cache.dart';
 import '../models/place_model.dart';
@@ -12,7 +13,11 @@ class OsmFacilitiesService {
           connectTimeout: const Duration(seconds: 18),
           receiveTimeout: const Duration(seconds: 25),
           sendTimeout: const Duration(seconds: 18),
-          headers: const {'User-Agent': 'SmartMapPunjab/1.0 (free OSM facilities search)'},
+          // Browsers forbid setting User-Agent from Flutter Web. Native requests
+          // identify SmartMap; Web uses the browser's standard User-Agent.
+          headers: kIsWeb
+              ? const {}
+              : const {'User-Agent': 'SmartMapPunjab/1.0 (free OSM facilities search)'},
         ));
 
   final Dio _dio;
