@@ -90,12 +90,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: SafeArea(
               top: false,
               child: Text(
-                'Independent tourism & navigation guide  |  v1.0',
+                'Independent Tourism & Navigation Guide • v1.0',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: const Color(0xFFA3B8AA).withValues(alpha: .92),
                   fontSize: 10,
-                  letterSpacing: .15,
+                  letterSpacing: .1,
                 ),
               ),
             ),
@@ -120,24 +120,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                               borderRadius: BorderRadius.circular(24),
                               onTap: () => setState(() => _urdu = !_urdu),
                               child: Container(
-                                height: 34,
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                height: 42,
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.black26,
-                                  border: Border.all(color: _gold, width: 1),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(color: Colors.black26, blurRadius: 10),
-                                  ],
+                                  color: Colors.white.withValues(alpha: .17),
+                                  border: Border.all(color: Colors.white.withValues(alpha: .38), width: 1),
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 14, offset: Offset(0, 3))],
                                 ),
-                                child: Text(
-                                  _urdu ? 'EN  |  اردو' : 'اردو  |  EN',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: _goldLight,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 31,
+                                      height: 31,
+                                      alignment: Alignment.center,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [Color(0xFFFFE08A), Color(0xFFD9A52E)],
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _urdu ? 'اردو' : 'EN',
+                                        style: const TextStyle(color: Color(0xFF19351F), fontSize: 12, fontWeight: FontWeight.w800),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Container(width: 1, height: 21, color: Colors.white.withValues(alpha: .55)),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      _urdu ? 'EN' : 'اردو',
+                                      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -196,9 +212,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .09),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: Colors.white.withValues(alpha: .22)),
+                              color: Colors.white.withValues(alpha: .15),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.white.withValues(alpha: .30)),
                               boxShadow: const [
                                 BoxShadow(color: Colors.black12, blurRadius: 18, offset: Offset(0, 5)),
                               ],
@@ -209,12 +225,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                                 const Icon(Icons.location_city_rounded, color: _goldLight, size: 16),
                                 const SizedBox(width: 5),
                                 Flexible(child: Text(_urdu ? '81 شہر' : '81 Cities', textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
                                 Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 7), color: Colors.white30),
                                 const Icon(Icons.offline_pin_rounded, color: _goldLight, size: 16),
                                 const SizedBox(width: 5),
                                 Flexible(child: Text(_urdu ? 'آف لائن نقشے' : 'Offline Maps', textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
                                 Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 7), color: Colors.white30),
                                 const Icon(Icons.verified_user_rounded, color: _goldLight, size: 16),
                                 const SizedBox(width: 5),
@@ -359,10 +375,18 @@ class _SolidWelcomePinPainter extends CustomPainter {
       pin,
       Paint()
         ..style = PaintingStyle.stroke
+        ..strokeWidth = w * .028
+        ..color = const Color(0xFFD6A83C),
+    );
+    canvas.drawPath(
+      pin,
+      Paint()
+        ..style = PaintingStyle.stroke
         ..strokeWidth = 1
         ..color = Colors.white.withValues(alpha: .95),
     );
 
+    canvas.drawCircle(center, radius * .76, Paint()..color = const Color(0xFFD9B45C));
     canvas.drawCircle(
       center,
       radius * .73,
@@ -431,104 +455,120 @@ class _WelcomeBackdropPainter extends CustomPainter {
       }
     }
 
-    final frame = Paint()
-      ..color = _gold.withValues(alpha: .72)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    final frameRect = Rect.fromLTWH(16, 16, size.width - 32, size.height - 32);
-    // Keep the inset frame but omit its full-width top stroke so it doesn't
-    // visually underline or compete with the language control.
-    canvas.drawLine(Offset(frameRect.left, frameRect.top), Offset(frameRect.left, frameRect.bottom), frame);
-    canvas.drawLine(Offset(frameRect.right, frameRect.top), Offset(frameRect.right, frameRect.bottom), frame);
-    canvas.drawLine(Offset(frameRect.left, frameRect.bottom), Offset(frameRect.right, frameRect.bottom), frame);
+    // Soft edge vignette; the current reference has no ornate border frame.
+    final edgeShade = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment.center,
+        radius: 1.12,
+        colors: [Color(0x00000000), Color(0x2600150A)],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, edgeShade);
 
-    final ornament = Paint()
-      ..color = _gold.withValues(alpha: .82)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.1;
-    for (final corner in [
-      const Offset(16, 16),
-      Offset(size.width - 16, 16),
-      Offset(16, size.height - 16),
-      Offset(size.width - 16, size.height - 16),
-    ]) {
-      final sx = corner.dx < size.width / 2 ? 1.0 : -1.0;
-      final sy = corner.dy < size.height / 2 ? 1.0 : -1.0;
-      for (var n = 0; n < 3; n++) {
-        final r = 12.0 + n * 8;
-        final path = Path()
-          ..moveTo(corner.dx, corner.dy + sy * r)
-          ..lineTo(corner.dx + sx * r, corner.dy)
-          ..lineTo(corner.dx + sx * r * 1.35, corner.dy + sy * r * .35)
-          ..lineTo(corner.dx + sx * r * .35, corner.dy + sy * r * 1.35)
-          ..close();
-        canvas.drawPath(path, ornament);
-      }
-      canvas.drawCircle(corner, 2.6, Paint()..color = _gold);
-    }
-    for (final x in [16.0, size.width - 16]) {
-      final cy = size.height * .5;
-      final diamond = Path()
-        ..moveTo(x, cy - 9)
-        ..lineTo(x + (x < size.width / 2 ? 9 : -9), cy)
-        ..lineTo(x, cy + 9)
-        ..lineTo(x + (x < size.width / 2 ? -9 : 9), cy)
-        ..close();
-      canvas.drawPath(diamond, Paint()..color = _gold);
-    }
-
-    // Warm sunset scene and landmark silhouettes behind the brand, inspired by the app reference.
-    final horizon = size.height * .43;
+    // Upper half: misty Lahore skyline silhouettes in the golden-hour scene.
+    final horizon = size.height * .415;
     final sun = Offset(size.width * .18, horizon - size.height * .105);
-    canvas.drawCircle(sun, size.width * .028, Paint()..color = const Color(0xFFFFF1B8).withValues(alpha: .82));
-    final skylinePaint = Paint()
-      ..color = const Color(0xFF173B26).withValues(alpha: .46)
+    canvas.drawCircle(sun, size.width * .024, Paint()..color = const Color(0xFFFFE9A8).withValues(alpha: .72));
+    final silhouette = Paint()
+      ..color = const Color(0xFF102F20).withValues(alpha: .78)
       ..style = PaintingStyle.fill;
-    // Low skyline and mosque domes on the left.
-    final skyline = Path()
-      ..moveTo(0, horizon + 30)
-      ..lineTo(0, horizon - 12)
-      ..lineTo(size.width * .045, horizon - 12)
-      ..lineTo(size.width * .045, horizon - 48)
-      ..lineTo(size.width * .065, horizon - 58)
-      ..lineTo(size.width * .085, horizon - 48)
-      ..lineTo(size.width * .085, horizon - 10)
-      ..lineTo(size.width * .13, horizon - 10)
-      ..lineTo(size.width * .13, horizon - 30)
-      ..quadraticBezierTo(size.width * .19, horizon - 92, size.width * .25, horizon - 30)
-      ..lineTo(size.width * .25, horizon - 8)
-      ..lineTo(size.width * .31, horizon - 8)
-      ..lineTo(size.width * .31, horizon - 28)
-      ..quadraticBezierTo(size.width * .36, horizon - 82, size.width * .41, horizon - 28)
-      ..lineTo(size.width * .41, horizon + 20)
+    final mosqueLeft = size.width * .025;
+    final mosqueRight = size.width * .635;
+    final mosqueBase = horizon + size.height * .055;
+    // Mosque courtyard and roof line.
+    final mosque = Path()
+      ..moveTo(mosqueLeft, mosqueBase)
+      ..lineTo(mosqueLeft, horizon + 8)
+      ..lineTo(size.width * .09, horizon + 8)
+      ..lineTo(size.width * .09, horizon - 15)
+      ..lineTo(size.width * .16, horizon - 15)
+      ..lineTo(size.width * .16, horizon - 3)
+      ..lineTo(size.width * .22, horizon - 3)
+      ..lineTo(size.width * .22, horizon - 17)
+      ..lineTo(size.width * .30, horizon - 17)
+      ..lineTo(size.width * .30, horizon - 5)
+      ..lineTo(size.width * .39, horizon - 5)
+      ..lineTo(size.width * .39, horizon - 18)
+      ..lineTo(size.width * .47, horizon - 18)
+      ..lineTo(size.width * .47, horizon - 3)
+      ..lineTo(size.width * .56, horizon - 3)
+      ..lineTo(size.width * .56, horizon + 8)
+      ..lineTo(mosqueRight, horizon + 8)
+      ..lineTo(mosqueRight, mosqueBase)
       ..close();
-    canvas.drawPath(skyline, skylinePaint);
-    // Minar-e-Pakistan silhouette at the right side of the sunset band.
-    final towerX = size.width * .79;
-    final tower = Path()
-      ..moveTo(towerX - 18, horizon + 18)
-      ..quadraticBezierTo(towerX - 29, horizon + 7, towerX - 16, horizon - 2)
-      ..lineTo(towerX - 9, horizon - 16)
-      ..lineTo(towerX - 5, horizon - 105)
-      ..lineTo(towerX, horizon - 128)
-      ..lineTo(towerX + 5, horizon - 105)
-      ..lineTo(towerX + 9, horizon - 16)
-      ..lineTo(towerX + 16, horizon - 2)
-      ..quadraticBezierTo(towerX + 29, horizon + 7, towerX + 18, horizon + 18)
-      ..close();
-    canvas.drawPath(tower, skylinePaint);
-    for (var band = 1; band < 6; band++) {
-      final y = horizon - 16 - band * 14.5;
-      canvas.drawLine(Offset(towerX - 7, y), Offset(towerX + 7, y), Paint()
-        ..color = const Color(0xFFE0C36A).withValues(alpha: .26)
-        ..strokeWidth = 1);
+    canvas.drawPath(mosque, silhouette);
+    void dome(double cx, double baseY, double rx, double height) {
+      final p = Path()
+        ..moveTo(cx - rx, baseY)
+        ..cubicTo(cx - rx * .94, baseY - height * .60, cx - rx * .40, baseY - height, cx, baseY - height)
+        ..cubicTo(cx + rx * .40, baseY - height, cx + rx * .94, baseY - height * .60, cx + rx, baseY)
+        ..close();
+      canvas.drawPath(p, silhouette);
+      canvas.drawRect(Rect.fromLTWH(cx - rx, baseY - 2, rx * 2, 5), silhouette);
+      canvas.drawLine(Offset(cx, baseY - height), Offset(cx, baseY - height - 13), Paint()
+        ..color = silhouette.color
+        ..strokeWidth = 1.4);
     }
-    // Soft dark-green transition protects text contrast over the skyline.
-    canvas.drawRect(Rect.fromLTWH(0, horizon, size.width, size.height * .18),
+    dome(size.width * .30, horizon - 15, size.width * .082, size.height * .115);
+    dome(size.width * .205, horizon - 3, size.width * .052, size.height * .073);
+    dome(size.width * .395, horizon - 3, size.width * .052, size.height * .073);
+    // Tall minarets on either side of the mosque.
+    void minaret(double x, double baseY, double h, double width) {
+      final p = Path()
+        ..moveTo(x - width, baseY)
+        ..lineTo(x - width * .62, baseY - h * .15)
+        ..lineTo(x - width * .95, baseY - h * .18)
+        ..lineTo(x - width * .62, baseY - h * .22)
+        ..lineTo(x - width * .45, baseY - h * .88)
+        ..lineTo(x - width * 1.05, baseY - h * .91)
+        ..lineTo(x, baseY - h)
+        ..lineTo(x + width * 1.05, baseY - h * .91)
+        ..lineTo(x + width * .45, baseY - h * .88)
+        ..lineTo(x + width * .62, baseY - h * .22)
+        ..lineTo(x + width * .95, baseY - h * .18)
+        ..lineTo(x + width * .62, baseY - h * .15)
+        ..lineTo(x + width, baseY)
+        ..close();
+      canvas.drawPath(p, silhouette);
+      canvas.drawRect(Rect.fromLTWH(x - width * 1.6, baseY - h * .20, width * 3.2, 3), silhouette);
+      canvas.drawRect(Rect.fromLTWH(x - width * 1.45, baseY - h * .87, width * 2.9, 3), silhouette);
+    }
+    minaret(size.width * .07, mosqueBase, size.height * .22, size.width * .012);
+    minaret(size.width * .585, mosqueBase, size.height * .22, size.width * .012);
+    // Minar-e-Pakistan silhouette to the right, with a stepped taper.
+    final tx = size.width * .86;
+    final tb = horizon + size.height * .045;
+    final th = size.height * .28;
+    final tower = Path()
+      ..moveTo(tx - size.width * .045, tb)
+      ..quadraticBezierTo(tx - size.width * .06, tb - 12, tx - size.width * .025, tb - 20)
+      ..lineTo(tx - size.width * .016, tb - th * .22)
+      ..lineTo(tx - size.width * .024, tb - th * .28)
+      ..lineTo(tx - size.width * .014, tb - th * .34)
+      ..lineTo(tx - size.width * .009, tb - th * .86)
+      ..lineTo(tx - size.width * .014, tb - th * .92)
+      ..lineTo(tx, tb - th)
+      ..lineTo(tx + size.width * .014, tb - th * .92)
+      ..lineTo(tx + size.width * .009, tb - th * .86)
+      ..lineTo(tx + size.width * .014, tb - th * .34)
+      ..lineTo(tx + size.width * .024, tb - th * .28)
+      ..lineTo(tx + size.width * .016, tb - th * .22)
+      ..lineTo(tx + size.width * .025, tb - 20)
+      ..quadraticBezierTo(tx + size.width * .06, tb - 12, tx + size.width * .045, tb)
+      ..close();
+    canvas.drawPath(tower, silhouette);
+    for (var band = 1; band < 8; band++) {
+      final y = tb - th * band / 8;
+      final half = size.width * (.009 + band * .0015);
+      canvas.drawLine(Offset(tx - half, y), Offset(tx + half, y), Paint()
+        ..color = const Color(0xFFD9B65C).withValues(alpha: .18)
+        ..strokeWidth: 1);
+    }
+    // A gentle green mist blends the photographic-style skyline into the app's forest palette.
+    canvas.drawRect(Rect.fromLTWH(0, horizon, size.width, size.height * .19),
       Paint()..shader = const LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0x001B6E3B), Color(0xCC0A2B18)],
-      ).createShader(Rect.fromLTWH(0, horizon, size.width, size.height * .18)));
+        colors: [Color(0x001B6E3B), Color(0xD90A2B18)],
+      ).createShader(Rect.fromLTWH(0, horizon, size.width, size.height * .19)));
 
     // Detailed, low-contrast architectural line art in a dedicated bottom band.
     final art = Paint()
