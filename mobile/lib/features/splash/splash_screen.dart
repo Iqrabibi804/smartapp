@@ -130,14 +130,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                                     BoxShadow(color: Colors.black26, blurRadius: 10),
                                   ],
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    _urdu ? 'EN  |  اردو' : 'اردو  |  EN',
-                                    style: const TextStyle(
-                                      color: _goldLight,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                child: Text(
+                                  _urdu ? 'EN  |  اردو' : 'اردو  |  EN',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: _goldLight,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
