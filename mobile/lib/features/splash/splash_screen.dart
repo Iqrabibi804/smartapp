@@ -55,8 +55,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFF0C66B), Color(0xFF1B6A3A), Color(0xFF06371B), Color(0xFF021F0E)],
-                stops: [0.0, 0.24, 0.58, 1.0],
+                colors: [Color(0xFFB8A862), Color(0xFF6B8C52), Color(0xFF1B6E3B), Color(0xFF0A2B18)],
+                stops: [0.0, 0.20, 0.65, 1.0],
               ),
             ),
           ),
@@ -103,7 +103,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final compact = constraints.maxHeight < 720;
+                final compact = constraints.maxHeight < 760;
                 final logoSize = (constraints.maxHeight * (compact ? .17 : .205))
                     .clamp(112.0, 174.0);
                 return SingleChildScrollView(
@@ -142,7 +142,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: compact ? 16 : 28),
+                          SizedBox(height: compact ? 10 : 18),
                           _WelcomePinMark(size: logoSize),
                           SizedBox(height: compact ? 12 : 20),
                           Text(
@@ -166,7 +166,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: AppTokens.fontUrdu,
-                              color: _goldLight,
+                              color: Colors.white,
                               fontSize: compact ? 23 : 27,
                               shadows: const [
                                 Shadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 2)),
@@ -175,7 +175,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                           ),
                           const SizedBox(height: 14),
                           Container(
-                            width: 60,
+                            width: 74,
                             height: 1.5,
                             decoration: const BoxDecoration(
                               gradient: LinearGradient(colors: [_gold, _goldLight, _gold]),
@@ -206,38 +206,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.location_city_rounded, color: _goldLight, size: 17),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    _urdu ? '81 شہر' : '81 Cities',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 9), color: Colors.white30),
-                                const Icon(Icons.offline_pin_rounded, color: _goldLight, size: 17),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    _urdu ? 'آف لائن رہنمائی' : 'Offline-ready',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
+                                const Icon(Icons.location_city_rounded, color: _goldLight, size: 16),
+                                const SizedBox(width: 5),
+                                Flexible(child: Text(_urdu ? '81 شہر' : '81 Cities', textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
+                                Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 7), color: Colors.white30),
+                                const Icon(Icons.offline_pin_rounded, color: _goldLight, size: 16),
+                                const SizedBox(width: 5),
+                                Flexible(child: Text(_urdu ? 'آف لائن نقشے' : 'Offline Maps', textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
+                                Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 7), color: Colors.white30),
+                                const Icon(Icons.verified_user_rounded, color: _goldLight, size: 16),
+                                const SizedBox(width: 5),
+                                Flexible(child: Text(_urdu ? 'مصدقہ گائیڈ' : 'Honest Guides', textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))),
                               ],
-                            ),
-                          ),
+                            )                          ),
                           SizedBox(height: compact ? 20 : 30),
                           SizedBox(
-                            width: 220,
-                            height: 52,
+                            width: 250,
+                            height: 56,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
-                                  colors: [Color(0xFFE6C15A), Color(0xFFB88A2E)],
+                                  colors: [Color(0xFFDFB852), Color(0xFFC5952C)],
                                 ),
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
@@ -290,7 +284,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: compact ? 155 : 190),
+                          SizedBox(height: compact ? 135 : 165),
                         ],
                       ),
                     ),
@@ -482,6 +476,59 @@ class _WelcomeBackdropPainter extends CustomPainter {
         ..close();
       canvas.drawPath(diamond, Paint()..color = _gold);
     }
+
+    // Warm sunset scene and landmark silhouettes behind the brand, inspired by the app reference.
+    final horizon = size.height * .43;
+    final sun = Offset(size.width * .18, horizon - size.height * .105);
+    canvas.drawCircle(sun, size.width * .028, Paint()..color = const Color(0xFFFFF1B8).withValues(alpha: .82));
+    final skylinePaint = Paint()
+      ..color = const Color(0xFF173B26).withValues(alpha: .46)
+      ..style = PaintingStyle.fill;
+    // Low skyline and mosque domes on the left.
+    final skyline = Path()
+      ..moveTo(0, horizon + 30)
+      ..lineTo(0, horizon - 12)
+      ..lineTo(size.width * .045, horizon - 12)
+      ..lineTo(size.width * .045, horizon - 48)
+      ..lineTo(size.width * .065, horizon - 58)
+      ..lineTo(size.width * .085, horizon - 48)
+      ..lineTo(size.width * .085, horizon - 10)
+      ..lineTo(size.width * .13, horizon - 10)
+      ..lineTo(size.width * .13, horizon - 30)
+      ..quadraticBezierTo(size.width * .19, horizon - 92, size.width * .25, horizon - 30)
+      ..lineTo(size.width * .25, horizon - 8)
+      ..lineTo(size.width * .31, horizon - 8)
+      ..lineTo(size.width * .31, horizon - 28)
+      ..quadraticBezierTo(size.width * .36, horizon - 82, size.width * .41, horizon - 28)
+      ..lineTo(size.width * .41, horizon + 20)
+      ..close();
+    canvas.drawPath(skyline, skylinePaint);
+    // Minar-e-Pakistan silhouette at the right side of the sunset band.
+    final towerX = size.width * .79;
+    final tower = Path()
+      ..moveTo(towerX - 18, horizon + 18)
+      ..quadraticBezierTo(towerX - 29, horizon + 7, towerX - 16, horizon - 2)
+      ..lineTo(towerX - 9, horizon - 16)
+      ..lineTo(towerX - 5, horizon - 105)
+      ..lineTo(towerX, horizon - 128)
+      ..lineTo(towerX + 5, horizon - 105)
+      ..lineTo(towerX + 9, horizon - 16)
+      ..lineTo(towerX + 16, horizon - 2)
+      ..quadraticBezierTo(towerX + 29, horizon + 7, towerX + 18, horizon + 18)
+      ..close();
+    canvas.drawPath(tower, skylinePaint);
+    for (var band = 1; band < 6; band++) {
+      final y = horizon - 16 - band * 14.5;
+      canvas.drawLine(Offset(towerX - 7, y), Offset(towerX + 7, y), Paint()
+        ..color = const Color(0xFFE0C36A).withValues(alpha: .26)
+        ..strokeWidth = 1);
+    }
+    // Soft dark-green transition protects text contrast over the skyline.
+    canvas.drawRect(Rect.fromLTWH(0, horizon, size.width, size.height * .18),
+      Paint()..shader = const LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0x001B6E3B), Color(0xCC0A2B18)],
+      ).createShader(Rect.fromLTWH(0, horizon, size.width, size.height * .18)));
 
     // Detailed, low-contrast architectural line art in a dedicated bottom band.
     final art = Paint()
