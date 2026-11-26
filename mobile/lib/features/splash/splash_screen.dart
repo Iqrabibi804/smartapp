@@ -561,7 +561,7 @@ class _WelcomeBackdropPainter extends CustomPainter {
       final half = size.width * (.009 + band * .0015);
       canvas.drawLine(Offset(tx - half, y), Offset(tx + half, y), Paint()
         ..color = const Color(0xFFD9B65C).withValues(alpha: .18)
-        ..strokeWidth: 1);
+        ..strokeWidth = 1);
     }
     // A gentle green mist blends the photographic-style skyline into the app's forest palette.
     canvas.drawRect(Rect.fromLTWH(0, horizon, size.width, size.height * .19),
@@ -581,16 +581,16 @@ class _WelcomeBackdropPainter extends CustomPainter {
     final unit = size.width / 390;
 
     // Badshahi Mosque: four minarets, onion domes, arched entrances.
-    final mosqueLeft = size.width * .035;
+    final bottomMosqueLeft = size.width * .035;
     final mosqueWidth = size.width * .39;
-    canvas.drawLine(Offset(mosqueLeft, base), Offset(mosqueLeft + mosqueWidth, base), art);
-    for (final x in [mosqueLeft + mosqueWidth * .10, mosqueLeft + mosqueWidth * .90]) {
+    canvas.drawLine(Offset(bottomMosqueLeft, base), Offset(bottomMosqueLeft + mosqueWidth, base), art);
+    for (final x in [bottomMosqueLeft + mosqueWidth * .10, bottomMosqueLeft + mosqueWidth * .90]) {
       _minaret(canvas, x, base, size.height * .145, art);
     }
-    _dome(canvas, Offset(mosqueLeft + mosqueWidth * .5, base - size.height * .065), mosqueWidth * .16, art);
-    _dome(canvas, Offset(mosqueLeft + mosqueWidth * .29, base - size.height * .035), mosqueWidth * .105, art);
-    _dome(canvas, Offset(mosqueLeft + mosqueWidth * .71, base - size.height * .035), mosqueWidth * .105, art);
-    final hall = Rect.fromLTWH(mosqueLeft + mosqueWidth * .20, base - size.height * .075, mosqueWidth * .60, size.height * .075);
+    _dome(canvas, Offset(bottomMosqueLeft + mosqueWidth * .5, base - size.height * .065), mosqueWidth * .16, art);
+    _dome(canvas, Offset(bottomMosqueLeft + mosqueWidth * .29, base - size.height * .035), mosqueWidth * .105, art);
+    _dome(canvas, Offset(bottomMosqueLeft + mosqueWidth * .71, base - size.height * .035), mosqueWidth * .105, art);
+    final hall = Rect.fromLTWH(bottomMosqueLeft + mosqueWidth * .20, base - size.height * .075, mosqueWidth * .60, size.height * .075);
     canvas.drawRect(hall, art);
     for (var a = 0; a < 5; a++) {
       final ax = hall.left + hall.width * (a + .5) / 5;
